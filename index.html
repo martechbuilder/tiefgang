@@ -238,6 +238,11 @@ input{font:inherit;color:inherit}
 .selfrate .y{background:rgba(143,208,168,.16);color:#d9f3e3}.selfrate .n{background:rgba(229,138,138,.12);color:#f3d5d5}
 .loading{min-height:70vh;display:flex;align-items:center;justify-content:center;color:var(--txt3);font-size:15px}
 .flag{display:inline-flex;align-items:center;gap:6px;margin:6px 0 4px;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--txt3);background:var(--glass-lo);border:1px solid var(--line)}
+.news{display:block;padding:13px 16px;border-bottom:1px solid var(--line)}.news:last-child{border-bottom:0}
+.news .m{font-size:11.5px;letter-spacing:.04em;color:var(--txt3);text-transform:uppercase;font-weight:650}
+.news a{display:block;color:var(--txt);text-decoration:none;font-weight:650;font-size:15.5px;line-height:1.32;margin-top:3px}
+.news .s{font-size:13.5px;color:var(--txt2);line-height:1.45;margin-top:4px}
+.news .nrel{display:inline-block;margin:7px 6px 0 0;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:600;color:#bcd2f2;background:rgba(93,138,214,.16);border:1px solid rgba(93,138,214,.3);text-align:left}
 .sheet-bg{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
 .sheet{width:min(560px,100%);padding:20px 18px calc(var(--sb) + 18px);border-radius:22px 22px 0 0}
 .sheet h3{margin:0 0 4px;font-size:18px}.sheet .small{margin:0 0 12px}
@@ -394,7 +399,7 @@ async function checkUpdate(btn){
 function render(){
   renderTabs();setTimeout(showVer,0);
   const v=route.v;
-  const html=v==="home"?vHome():v==="discover"?vDiscover():v==="cat"?vCat():v==="book"?vBook():v==="library"?vLibrary():v==="search"?vSearch():v==="trainer"?vTrainer():v==="studien"?vStudien():v==="settings"?vSettings():vHome();
+  const html=v==="home"?vHome():v==="discover"?vDiscover():v==="cat"?vCat():v==="book"?vBook():v==="library"?vLibrary():v==="search"?vSearch():v==="trainer"?vTrainer():v==="studien"?vStudien():v==="news"?vNews():v==="settings"?vSettings():vHome();
   $("#app").innerHTML=`<div class="view">${html}</div>`;
   if(v==="studien"){const i=$("#sq");i.value=route.sq||"";i.addEventListener("input",()=>{route.sq=i.value;route.sn=0;$("#stuhits").innerHTML=stuHits();});}
   if(v==="search"){const i=$("#q");i.value=route.q||"";i.addEventListener("input",()=>{route.q=i.value;$("#hits").innerHTML=hits(i.value);});if(!route.q)setTimeout(()=>i.focus(),50);}
@@ -420,6 +425,8 @@ document.addEventListener("click",e=>{
   else if(d.go==="trread"){route.tr=route.tr==="read"?null:"read";TR=null;render();}
   else if(d.go==="trbook"){if(d.id){hist.length=0;route={v:"trainer",tb:d.id};}else route.tb=null;TR=null;render();window.scrollTo(0,0);}
   else if(d.go==="studien")go({v:"studien",tab:"discover"});
+  else if(d.go==="news")go({v:"news",tab:"home"});
+  else if(d.go==="newssrc"){route.ns=d.k||null;render();}
   else if(d.go==="stug"){route.sg=d.k;route.sn=0;render();}
   else if(d.go==="stuc"){route.sc=d.k;route.sn=0;render();}
   else if(d.go==="stuok"){route.so=!route.so;route.sn=0;render();}
@@ -469,6 +476,7 @@ function vHome(){
     <div class="stat glass"><b>${S.days[today()]||0}</b><span>Häppchen heute</span></div>
     <div class="stat glass"><b>${Math.round(readN/Math.max(1,totalCh)*100)}%</b><span>von ${totalCh}</span></div>
   </div>
+  ${newsBlock()}
   <div class="h-sec"><h2>Für heute</h2><button data-tab="discover" onclick="hist.length=0;go({v:'discover'},false)">Alle</button></div>
   <div class="hscroll">${picks.map(bookCard).join("")}</div>
   ${prog.length>1?`<div class="h-sec"><h2>Angefangen</h2></div><div class="list">${prog.slice(1,6).map(b=>row(b)).join("")}</div>`:""}
@@ -752,6 +760,29 @@ function paperBox(p,b){
   const u=p.url||(b&&b.studien&&b.studien[0]&&b.studien[0].url)||"";const link=p.doi?`https://doi.org/${encodeURI(p.doi)}`:u;
   return `<div class="paper glass"><div class="k">Das Paper</div><div class="zi">${esc(p.zitat||"")}</div><div class="pm">${[p.feld,p.typ,p.jahr].filter(Boolean).map(esc).join(" · ")}${p.geprueft?` · <span class="ok">✓ DOI geprüft</span>`:""}</div>${link?`<a href="${esc(link)}" target="_blank" rel="noopener">Original lesen${p.doi?": doi:"+esc(p.doi):""} ↗</a>`:""}</div>`;
 }
+/* ================= Nachrichten (news.json, alle 3 Std. per GitHub Actions) ================= */
+let NEWS=null,_newsAt=0;
+async function loadNews(force){
+  if(!force&&Date.now()-_newsAt<20*60e3)return;_newsAt=Date.now();
+  try{const r=await fetch("news.json");if(!r.ok)return;const d=await r.json();if(d&&Array.isArray(d.items)){NEWS=d;if(["home","news"].includes(route.v)){const y=window.scrollY;render();window.scrollTo(0,y);}}}catch(_){}
+}
+function ago(t){const m=Math.round((Date.now()/1e3-t)/60);if(m<60)return "vor "+Math.max(1,m)+" Min.";const h=Math.round(m/60);if(h<24)return "vor "+h+" Std.";return new Date(t*1e3).toLocaleDateString("de-DE",{day:"numeric",month:"short"});}
+function newsItem(x){
+  const rel=(x.rel||[]).map(id=>BY_ID[id]).filter(Boolean);
+  return `<div class="news"><div class="m">${esc(x.src)} · ${ago(x.t)}</div><a href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.title)}</a>${x.teaser?`<div class="s">${esc(x.teaser)}</div>`:""}${rel.map(b=>`<button class="nrel" data-go="book" data-id="${b.id}">→ Hintergrund: ${esc(b.title)}</button>`).join("")}</div>`;
+}
+function newsBlock(){
+  if(!NEWS||!NEWS.items.length)return "";
+  return `<div class="h-sec"><h2>Nachrichten</h2><button data-go="news">Alle</button></div><div class="glass" style="padding:2px 0">${NEWS.items.slice(0,5).map(newsItem).join("")}</div>`;
+}
+function vNews(){
+  const top=`<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button></div><div class="h-big" style="font-size:30px">Nachrichten</div>`;
+  if(!NEWS)return top+`<div class="empty">Noch keine Nachrichten geladen. Ohne Netz siehst du den letzten Stand.</div>`;
+  const srcs=[...new Set(NEWS.items.map(x=>x.src))];const L=NEWS.items.filter(x=>!route.ns||x.src===route.ns);
+  return top+`<p class="small" style="margin:-6px 2px 14px">Die wichtigsten Schlagzeilen, alle drei Stunden automatisch aktualisiert. Stand: ${new Date(NEWS.updated*1e3).toLocaleString("de-DE",{weekday:"short",hour:"2-digit",minute:"2-digit"})} Uhr. „Hintergrund“ verlinkt passende Titel aus Tiefgang (automatischer Wortabgleich).</p>
+  <div class="chips"><button class="chip ${!route.ns?"on":""}" data-go="newssrc" data-k="">Alle</button>${srcs.map(x=>`<button class="chip ${route.ns===x?"on":""}" data-go="newssrc" data-k="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+  <div class="glass" style="padding:2px 0">${L.map(newsItem).join("")||`<div class="empty">Nichts von dieser Quelle.</div>`}</div>`;
+}
 function argCard(a){
   const m=String(a).match(/^\s*(?:Wenn jemand sagt:?)?\s*[„"]?(.+?)[“"]?\s*(?:→|->)\s*(?:Antwort:?)?\s*(.+)$/s);
   if(!m)return `<div class="ta glass">${md(a)}</div>`;
@@ -844,6 +875,7 @@ function suggestNext(b){
 render();
 try{if(S.cur&&BY_ID[S.cur.id]&&Date.now()-S.cur.t<36*3600e3){const c=S.cur;openReader(c.id,c.i,c.y);}}catch(_){}
 setTimeout(()=>loadAll(),1200);
+loadNews(true);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")loadNews();});
 if("serviceWorker" in navigator&&location.protocol!=="file:"){
   const hadCtl=!!navigator.serviceWorker.controller;
   navigator.serviceWorker.register("sw.js").then(r=>{document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")r.update().catch(()=>{});});}).catch(()=>{});

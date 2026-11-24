@@ -1,4 +1,4 @@
-const CACHE = "tiefgang-202611241629";
+const CACHE = "tiefgang-202611242034";
 const CORE = ["./", "./index.html", "./content.js", "./manifest.json",
   "./icons/icon-nacht-180.png", "./icons/icon-glas-180.png", "./icons/icon-hell-180.png", "./icons/icon-getoent-180.png",
   "./icons/preview-nacht.svg", "./icons/preview-glas.svg", "./icons/preview-hell.svg", "./icons/preview-getoent.svg"];
@@ -39,6 +39,11 @@ self.addEventListener("fetch", e => {
       fetch(req).then(res => { clearTimeout(t); putCache(req, res); if (!done) { done = true; resolve(res); } })
         .catch(() => { clearTimeout(t); fallback(); });
     }));
+    return;
+  }
+  // Nachrichten: immer frisch aus dem Netz, offline der letzte Stand
+  if (new URL(req.url).pathname.endsWith("/news.json")) {
+    e.respondWith(fetch(req, { cache: "no-store" }).then(res => putCache(req, res)).catch(() => caches.match(req, { ignoreSearch: true })));
     return;
   }
   // Inhalte, Bilder, Icons: sofort aus dem Cache, im Hintergrund aktualisieren
