@@ -1,8 +1,8 @@
-const CACHE = "tiefgang-202611241319";
+const CACHE = "tiefgang-202611241402";
 const CORE = ["./", "./index.html", "./content.js", "./manifest.json",
   "./icons/icon-nacht-180.png", "./icons/icon-glas-180.png", "./icons/icon-hell-180.png", "./icons/icon-getoent-180.png",
   "./icons/preview-nacht.svg", "./icons/preview-glas.svg", "./icons/preview-hell.svg", "./icons/preview-getoent.svg"];
-const ART = ["biologie","debatten","denken","digital","eu","geschichte","klima","patriarchat","philosophie","physik","politik",
+const ART = ["biologie","debatten","denken","digital","eu","geschichte","klima","koepfe","patriarchat","philosophie","physik","politik",
   "populismus","psychologie","schluesselpaper","sozialismus","streitfragen","technologie","waswaerewenn","weltall","werkzeugkasten","wirtschaft"]
   .map(c => "./art/" + c + ".jpg");
 
