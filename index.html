@@ -362,8 +362,24 @@ function renderTabs(){
 }
 $("#tabbar").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;hist.length=0;go({v:b.dataset.tab},false);});
 
+async function curVer(){try{const k=(await caches.keys()).find(x=>x.startsWith("tiefgang-"));return k?k.slice(9):"";}catch(e){return "";}}
+const fmtVer=v=>v&&v.length>=12?`${+v.slice(6,8)}.${+v.slice(4,6)}.${v.slice(0,4)}, ${v.slice(8,10)}:${v.slice(10,12)} Uhr`:"unbekannt";
+async function showVer(){const el=$("#verline");if(el)el.textContent="Stand: "+fmtVer(await curVer());}
+async function checkUpdate(btn){
+  if(btn.dataset.busy)return;btn.dataset.busy=1;const old=btn.innerHTML;btn.textContent="Suche …";
+  try{
+    const t=await (await fetch("sw.js?"+Date.now(),{cache:"no-store"})).text();
+    const v=(t.match(/tiefgang-(\d+)/)||[])[1],cur=await curVer();
+    if(v&&v===cur){toast("Alles aktuell");btn.innerHTML=old;delete btn.dataset.busy;return;}
+    btn.textContent="Lade neue Version …";
+    await Promise.all(["./","index.html","content.js","sw.js"].map(u=>fetch(u,{cache:"reload"}).catch(()=>{})));
+    const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)));
+    const r=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();if(r)await r.update().catch(()=>{});
+    location.reload();
+  }catch(e){toast("Keine Verbindung, später nochmal");btn.innerHTML=old;delete btn.dataset.busy;}
+}
 function render(){
-  renderTabs();
+  renderTabs();setTimeout(showVer,0);
   const v=route.v;
   const html=v==="home"?vHome():v==="discover"?vDiscover():v==="cat"?vCat():v==="book"?vBook():v==="library"?vLibrary():v==="search"?vSearch():v==="trainer"?vTrainer():v==="studien"?vStudien():v==="settings"?vSettings():vHome();
   $("#app").innerHTML=`<div class="view">${html}</div>`;
@@ -395,6 +411,7 @@ document.addEventListener("click",e=>{
   else if(d.go==="stuc"){route.sc=d.k;route.sn=0;render();}
   else if(d.go==="stuok"){route.so=!route.so;route.sn=0;render();}
   else if(d.go==="stumore"){route.sn=(route.sn||0)+1;$("#stuhits").innerHTML=stuHits();}
+  else if(d.go==="update")checkUpdate(a);
   else if(d.go==="trnext"){trNext();render();window.scrollTo(0,0);}
 });
 const tabOf=()=>["home","discover","trainer","library","search"].includes(route.v)?route.v:route.tab;
@@ -444,7 +461,8 @@ function vHome(){
   ${prog.length>1?`<div class="h-sec"><h2>Angefangen</h2></div><div class="list">${prog.slice(1,6).map(b=>row(b)).join("")}</div>`:""}
   <div class="h-sec"><h2>Kategorien</h2></div>
   <div class="chips" style="flex-wrap:wrap;overflow:visible">${CAT_ORDER.filter(c=>BOOKS.some(b=>b.cat===c)).map(c=>`<button class="chip" data-go="cat" data-cat="${c}">${CATS[c].n}</button>`).join("")}</div>
-  <p class="small" style="text-align:center;margin-top:26px">${BOOKS.length} Titel · ${totalCh} Häppchen · rund ${Math.round(BOOKS.reduce((a,b)=>a+b._min,0)/60)} Stunden Lesestoff</p>`;
+  <p class="small" style="text-align:center;margin-top:26px">${BOOKS.length} Titel · ${totalCh} Häppchen · rund ${Math.round(BOOKS.reduce((a,b)=>a+b._min,0)/60)} Stunden Lesestoff</p>
+  <div style="text-align:center;margin-top:10px"><button class="chip" data-go="update">${ic(I.shuffle).replace('class="ic"','class="ic" style="width:14px;height:14px"')} Nach Updates suchen</button><div class="small" id="verline" style="margin-top:8px"></div></div>`;
 }
 function vDiscover(){
   const sn=stuIndex().length,pn=BOOKS.filter(b=>b.cat==="schluesselpaper").length;
@@ -542,6 +560,7 @@ function vSettings(){
   const styles=[["nacht","Nacht"],["glas","Glas"],["hell","Hell"],["getoent","Getönt"]];
   return `<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button></div>
   <div class="h-big" style="font-size:30px">Einstellungen</div>
+  <div class="glass set" style="margin-bottom:14px"><div class="setrow"><span>App-Version<br><span class="small" id="verline"></span></span><button class="chip" data-go="update">Nach Updates suchen</button></div></div>
   <div class="glass set">
     <div class="setrow"><span>Schriftgröße</span><div class="seg" id="sz">${[17,19,21,23].map(s=>`<button data-s="${s}" class="${st.size===s?"on":""}">${s}</button>`).join("")}</div></div>
     <div class="setrow"><span>Dein Name</span><input id="nm" value="${esc(st.name||"")}" placeholder="optional" style="background:var(--glass-lo);border:1px solid var(--line);border-radius:999px;padding:7px 12px;width:140px;font-size:14px;outline:0"></div>
