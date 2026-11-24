@@ -798,7 +798,13 @@ function suggestNext(b){
 
 render();
 try{if(S.cur&&BY_ID[S.cur.id]&&Date.now()-S.cur.t<36*3600e3){const c=S.cur;openReader(c.id,c.i);R.restoreY=c.y;drawReader();}}catch(_){}
-if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWorker.register("sw.js").catch(()=>{});
+if("serviceWorker" in navigator&&location.protocol!=="file:"){
+  const hadCtl=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register("sw.js").then(r=>{document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")r.update().catch(()=>{});});}).catch(()=>{});
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!hadCtl||document.getElementById("upd"))return;
+    const el=document.createElement("button");el.id="upd";el.className="toast glass";el.style.animation="none";el.textContent="Neue Inhalte da · Tippen zum Laden";
+    el.onclick=()=>location.reload();document.body.appendChild(el);});
+}
 </script>
 </body>
 </html>
