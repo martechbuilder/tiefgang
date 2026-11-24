@@ -229,6 +229,14 @@ input{font:inherit;color:inherit}
 .selfrate{display:flex;gap:10px;margin-top:14px}.selfrate button{flex:1;padding:13px;border-radius:14px;font-weight:700;border:1px solid var(--line)}
 .selfrate .y{background:rgba(143,208,168,.16);color:#d9f3e3}.selfrate .n{background:rgba(229,138,138,.12);color:#f3d5d5}
 .loading{min-height:70vh;display:flex;align-items:center;justify-content:center;color:var(--txt3);font-size:15px}
+.flag{display:inline-flex;align-items:center;gap:6px;margin:6px 0 4px;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--txt3);background:var(--glass-lo);border:1px solid var(--line)}
+.sheet-bg{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:min(560px,100%);padding:20px 18px calc(var(--sb) + 18px);border-radius:22px 22px 0 0}
+.sheet h3{margin:0 0 4px;font-size:18px}.sheet .small{margin:0 0 12px}
+.sheet textarea{width:100%;min-height:90px;background:var(--glass-lo);border:1px solid var(--line);border-radius:14px;color:var(--txt);padding:12px;font:inherit;font-size:15px;line-height:1.45;resize:vertical;outline:0;margin-bottom:10px}
+.sheet .row2{display:flex;gap:10px}.sheet .row2 button{flex:1;padding:13px;border-radius:999px;font-weight:700}
+.fl-item{padding:12px 16px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.45}.fl-item:last-child{border-bottom:0}
+.fl-item .q{color:var(--txt)}.fl-item .m{color:var(--txt3);font-size:12px;margin-top:4px}.fl-item button{margin-top:6px}
 .empty{text-align:center;color:var(--txt3);padding:40px 20px;font-size:15px;line-height:1.5}
 </style>
 </head>
@@ -236,6 +244,7 @@ input{font:inherit;color:inherit}
 <div id="app"><div class="loading">Bibliothek wird geladen …</div></div>
 <nav id="tabbar" class="glass"></nav>
 <div id="reader" class="hidden"></div>
+<div id="sheet"></div>
 <script src="content.js"></script>
 <script>
 "use strict";
@@ -520,6 +529,9 @@ function vSettings(){
     <div class="icons" id="icsel">${styles.map(([k,l])=>`<button data-i="${k}" class="${st.icon===k?"on":""}"><img src="icons/preview-${k}.svg" alt=""><span>${l}</span></button>`).join("")}</div>
     <div class="hint">Der Stil gilt nur beim Hinzufügen und muss in <b>Safari</b> gewählt werden (nicht in der installierten App). Achtung: Wer das Icon vom Homescreen löscht, löscht auch den Lesefortschritt der App. Vorher unten „Sichern“ und danach „Wiederherstellen“. Die iOS-Modi Dunkel, Getönt und Klar (Homescreen lange drücken → Bearbeiten → Anpassen) wirken ohne Neuinstallation auf jedes Icon.</div>
   </div>
+  <div class="h-sec"><h2>Prüfliste</h2>${(S.flags||[]).length?`<button id="flshare">Teilen</button>`:""}</div>
+  <div class="glass set">${(S.flags||[]).length?S.flags.map((f,k)=>`<div class="fl-item"><div class="q">„${esc(f.text.slice(0,240))}${f.text.length>240?"…":""}“</div>${f.note?`<div class="m">Notiz: ${esc(f.note)}</div>`:""}<div class="m">${esc(f.title||f.id)} · ${esc(f.kind)} · ${new Date(f.t).toLocaleDateString("de-DE")}</div><button class="copy" data-fldel="${k}">Entfernen</button></div>`).join("")
+   :`<div class="hint" style="padding:14px 16px">Noch nichts markiert. Im Reader „⚑ Aussage prüfen lassen“ tippen, auf Diskussions- und Studienkarten „⚑ Prüfen“. Die Liste teilst du dann mit Claude, das prüft alles gesammelt mit Quellen nach.</div>`}</div>
   <div class="h-sec"><h2>Fortschritt</h2></div>
   <div class="glass set">
     <div class="setrow"><span>Sichern</span><button class="chip" id="exp">Kopieren</button></div>
@@ -534,11 +546,11 @@ document.addEventListener("click",async e=>{
   const sz=e.target.closest("#sz [data-s]");if(sz){S.settings.size=+sz.dataset.s;save();applySettings();render();return;}
   const ff=e.target.closest("#ff [data-f]");if(ff){S.settings.font=ff.dataset.f;save();applySettings();render();return;}
   const isel=e.target.closest("#icsel [data-i]");if(isel){S.settings.icon=isel.dataset.i;save();applySettings();render();toast("Icon gewählt");return;}
-  if(e.target.closest("#exp")){const t=JSON.stringify({v:2,read:S.read,saved:S.saved,days:S.days,pos:S.pos,trainer:S.trainer||null,settings:S.settings});try{await navigator.clipboard.writeText(t);toast("In die Zwischenablage kopiert");}catch(_){prompt("Kopieren:",t);}return;}
+  if(e.target.closest("#exp")){const t=JSON.stringify({v:2,read:S.read,saved:S.saved,days:S.days,pos:S.pos,trainer:S.trainer||null,settings:S.settings,flags:S.flags||[]});try{await navigator.clipboard.writeText(t);toast("In die Zwischenablage kopiert");}catch(_){prompt("Kopieren:",t);}return;}
   if(e.target.closest("#imp")){const t=prompt("Gesicherten Text einfügen:");if(!t)return;try{const o=JSON.parse(t);const obj=x=>x&&typeof x==="object"&&!Array.isArray(x);
     if(!obj(o)||!obj(o.read))throw 0;
     S.read=o.read;S.saved=Array.isArray(o.saved)?o.saved.filter(x=>typeof x==="string"&&BY_ID[x]):[];S.days=obj(o.days)?o.days:{};S.pos=obj(o.pos)?o.pos:{};
-    if(obj(o.trainer))S.trainer=o.trainer;if(obj(o.settings))S.settings=Object.assign(defState().settings,o.settings);
+    if(obj(o.trainer))S.trainer=o.trainer;if(Array.isArray(o.flags))S.flags=o.flags.filter(f=>f&&typeof f.text==="string");if(obj(o.settings))S.settings=Object.assign(defState().settings,o.settings);
     save();applySettings();render();toast("Wiederhergestellt");}catch(_){toast("Das ist kein gültiger Sicherungstext");}return;}
   if(e.target.closest("#rst")){if(confirm("Wirklich den gesamten Lesefortschritt löschen?")){const st=S.settings;S=defState();S.settings=st;save();render();toast("Zurückgesetzt");}return;}
 });
@@ -568,7 +580,7 @@ function drawReader(){
   const segs=b.chapters.map((_,j)=>`<i class="${j<i||isRead(b.id,j)&&j!==i?"f":j===i?"c":""}"></i>`).join("");
   let inner;
   if(!atEnd){
-    inner=`<div class="k">Häppchen ${i+1} von ${n}</div><h2>${esc(c.h)}</h2><div class="body">${paras(c.body)}</div>`;
+    inner=`<div class="k">Häppchen ${i+1} von ${n}</div><h2>${esc(c.h)}</h2><div class="body">${paras(c.body)}</div><button class="flag" data-flag="${b.id}" data-fi="${i}" data-fk="kapitel">⚑ Aussage prüfen lassen</button><p class="small" style="margin:4px 2px 0">Tipp: Erst den zweifelhaften Satz markieren, dann tippen.</p>`;
   }else{
     const nb=suggestNext(b);
     inner=`<div class="k">Zum Mitnehmen</div><h2>${esc(b.title)}</h2>
@@ -602,11 +614,38 @@ function advance(){
   const hasEnd=(b.takeaways||[]).length||(b.argue||[]).length||(b.debatte||[]).length||(b.studien||[]).length;
   if(i<n-1||hasEnd){R.i=i+1;drawReader();}else closeReader();
 }
+/* ================= Prüfliste ================= */
+function openFlagSheet(item){
+  const sel=(window._lastSel||"")||(window.getSelection?String(window.getSelection()).trim():"");window._lastSel="";
+  if(sel&&item.kind==="kapitel")item.text=sel;
+  $("#sheet").innerHTML=`<div class="sheet-bg" id="shbg"><div class="sheet glass"><h3>Aussage prüfen lassen</h3><p class="small">${esc(item.title||"")}${item.kind==="kapitel"?" · Häppchen "+(item.i+1):""}</p>
+   <textarea id="fltext" placeholder="Welche Aussage ist zweifelhaft?">${esc(item.text||"")}</textarea>
+   <textarea id="flnote" style="min-height:60px" placeholder="Was kommt dir komisch vor? (optional)"></textarea>
+   <div class="row2"><button class="chip" id="flcancel">Abbrechen</button><button class="cta" style="margin:0" id="flsave">Auf die Prüfliste</button></div></div></div>`;
+  window._flitem=item;
+}
+["touchstart","mousedown"].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest("[data-flag]")){window._lastSel=window.getSelection?String(window.getSelection()).trim():"";}},{passive:true,capture:true}));
+function closeSheet(){$("#sheet").innerHTML="";}
+function flagsText(){
+  return "Tiefgang Prüfliste ("+new Date().toLocaleDateString("de-DE")+")\nBitte mit Quellen prüfen und in den Inhaltsdateien korrigieren:\n\n"+
+   (S.flags||[]).map((f,k)=>`${k+1}. [${f.id}${f.kind==="kapitel"?" · Kapitel "+(f.i+1):" · "+f.kind}] „${f.text}“${f.note?"\n   Notiz: "+f.note:""}`).join("\n\n");
+}
+document.addEventListener("click",async e=>{
+  const fb=e.target.closest("[data-flag]");
+  if(fb){e.preventDefault();e.stopPropagation();const b=BY_ID[fb.dataset.flag];const i=+fb.dataset.fi;openFlagSheet({id:b.id,title:b.title,i,kind:"kapitel",text:""});return;}
+  const ft=e.target.closest("[data-flagtext]");
+  if(ft){e.preventDefault();e.stopPropagation();const bid=(R&&R.b&&R.b.id)||route.id||"";const b=BY_ID[bid];openFlagSheet({id:bid,title:b?b.title:"",kind:ft.dataset.fk,text:ft.dataset.flagtext});return;}
+  if(e.target.id==="shbg"||e.target.id==="flcancel"){closeSheet();return;}
+  if(e.target.id==="flsave"){const it=window._flitem||{};const text=$("#fltext").value.trim();if(!text){toast("Bitte die Aussage eintragen");return;}
+    S.flags=S.flags||[];S.flags.push({id:it.id,title:it.title,i:it.i,kind:it.kind,text:text.slice(0,1200),note:$("#flnote").value.trim().slice(0,500),t:Date.now()});save();closeSheet();toast("Auf der Prüfliste ("+S.flags.length+")");return;}
+  const del=e.target.closest("[data-fldel]");if(del){S.flags.splice(+del.dataset.fldel,1);save();render();return;}
+  if(e.target.id==="flshare"){const t=flagsText();try{if(navigator.share){await navigator.share({title:"Tiefgang Prüfliste",text:t});return;}}catch(_){return;}try{await navigator.clipboard.writeText(t);toast("Prüfliste kopiert");}catch(_){prompt("Kopieren:",t);}return;}
+});
 function stuCard(x){
   const link=x.doi?`https://doi.org/${encodeURI(x.doi)}`:(x.url||"");
   return `<div class="stu"><span class="ty">${esc(x.typ||"Quelle")}</span>${x.geprueft?`<span class="ok">✓ DOI geprüft</span>`:""}
   <div class="zi">${esc(x.zitat)}</div>${x.befund?`<div class="be">${md(x.befund)}</div>`:""}${x.grenzen?`<div class="gr">Grenzen: ${md(x.grenzen)}</div>`:""}
-  ${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${x.doi?"doi:"+esc(x.doi):"Zur Quelle"} ↗</a>`:""} <button class="copy" data-copy="${esc(x.zitat+(x.doi?" https://doi.org/"+x.doi:""))}">Zitat kopieren</button></div>`;
+  ${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${x.doi?"doi:"+esc(x.doi):"Zur Quelle"} ↗</a>`:""} <button class="copy" data-copy="${esc(x.zitat+(x.doi?" https://doi.org/"+x.doi:""))}">Zitat kopieren</button> <button class="copy" data-flagtext="${esc(x.zitat+": "+(x.befund||""))}" data-fk="studie">⚑ Prüfen</button></div>`;
 }
 function argCard(a){
   const m=String(a).match(/^\s*(?:Wenn jemand sagt:?)?\s*[„"]?(.+?)[“"]?\s*(?:→|->)\s*(?:Antwort:?)?\s*(.+)$/s);
@@ -619,7 +658,7 @@ function debCard(d){
   ${d.warum?`<b>Warum es nicht trägt</b>${md(d.warum)}`:""}
   ${d.kontra?`<b>Die Fakten</b>${md(d.kontra)}`:""}
   ${d.zugeben?`<b>Was stimmt</b>${md(d.zugeben)}`:""}
-  ${d.satz?`<div class="say">${md(d.satz)}</div>`:""}<button class="copy" data-copy="${esc((d.satz?d.satz+" ":"")+(d.kontra||""))}">Konter kopieren</button></div></details>`;
+  ${d.satz?`<div class="say">${md(d.satz)}</div>`:""}<button class="copy" data-copy="${esc((d.satz?d.satz+" ":"")+(d.kontra||""))}">Konter kopieren</button> <button class="copy" data-flagtext="${esc(d.claim+" → "+(d.kontra||""))}" data-fk="diskussion">⚑ Prüfen</button></div></details>`;
 }
 /* ================= Trainer ================= */
 const DEB=BOOKS.flatMap(b=>(b.debatte||[]).filter(d=>d&&d.claim&&d.taktik).map((d,i)=>({...d,b,key:b.id+"#"+i})));
