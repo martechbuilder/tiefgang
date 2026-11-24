@@ -362,7 +362,7 @@ function renderTabs(){
 }
 $("#tabbar").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;hist.length=0;go({v:b.dataset.tab},false);});
 
-async function curVer(){try{const k=(await caches.keys()).find(x=>x.startsWith("tiefgang-"));return k?k.slice(9):"";}catch(e){return "";}}
+async function curVer(){return window.TG_VER||"";}
 const fmtVer=v=>v&&v.length>=12?`${+v.slice(6,8)}.${+v.slice(4,6)}.${v.slice(0,4)}, ${v.slice(8,10)}:${v.slice(10,12)} Uhr`:"unbekannt";
 async function showVer(){const el=$("#verline");if(el)el.textContent="Stand: "+fmtVer(await curVer());}
 async function checkUpdate(btn){
