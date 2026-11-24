@@ -1,13 +1,25 @@
-const CACHE = "tiefgang-202611241528";
+const CACHE = "tiefgang-202611241629";
 const CORE = ["./", "./index.html", "./content.js", "./manifest.json",
   "./icons/icon-nacht-180.png", "./icons/icon-glas-180.png", "./icons/icon-hell-180.png", "./icons/icon-getoent-180.png",
   "./icons/preview-nacht.svg", "./icons/preview-glas.svg", "./icons/preview-hell.svg", "./icons/preview-getoent.svg"];
 const ART = ["biologie","debatten","denken","digital","eu","geschichte","klima","koepfe","patriarchat","philosophie","physik","politik",
   "populismus","psychologie","schluesselpaper","sozialismus","streitfragen","technologie","waswaerewenn","weltall","werkzeugkasten","wirtschaft"]
   .map(c => "./art/" + c + ".jpg");
+const DATA = ["./data/biologie.f83599b8dc.js", "./data/debatten.c7c4f9a862.js", "./data/denken.59115affa4.js", "./data/digital.1cd0f626b9.js", "./data/eu.ad64f71e20.js", "./data/geschichte.2f7d490d3d.js", "./data/klima.02ba95d605.js", "./data/koepfe.43be37b747.js", "./data/patriarchat.bd6dd6a393.js", "./data/philosophie.6e3ccb2008.js", "./data/physik.29bbcaa889.js", "./data/politik.8efd292423.js", "./data/populismus.1a0387ba50.js", "./data/psychologie.a9f84593a3.js", "./data/schluesselpaper.7445b3f8aa.js", "./data/sozialismus.f0da0c539b.js", "./data/streitfragen.1202c0cd67.js", "./data/technologie.35fb360bfa.js", "./data/waswaerewenn.d8e45b40f1.js", "./data/weltall.e0795e7f15.js", "./data/werkzeugkasten.560456831e.js", "./data/wirtschaft.930224097c.js"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE).then(() => c.addAll(ART).catch(() => {}))).then(() => self.skipWaiting()));
+  e.waitUntil((async () => {
+    const c = await caches.open(CACHE);
+    await c.addAll(CORE);
+    // Textdateien tragen einen Hash im Namen: unveränderte aus dem alten Cache übernehmen, nur neue laden
+    for (const u of DATA) {
+      const hit = await caches.match(u);
+      if (hit) await c.put(u, hit);
+      else { try { const r = await fetch(u); if (r.ok) await c.put(u, r); } catch (_) {} }
+    }
+    try { await c.addAll(ART); } catch (_) {}
+    await self.skipWaiting();
+  })());
 });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
