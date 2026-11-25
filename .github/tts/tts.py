@@ -84,7 +84,8 @@ def abschnitte(t, maxc=230, minc=50):
     for s in ss:
         if out and (len(out[-1]) < minc or len(out[-1]) + len(s) + 1 <= maxc): out[-1] += " " + s
         else: out.append(s)
-    if len(out) > 1 and len(out[-1]) < minc: out[-2] += " " + out.pop()
+    if len(out) > 1 and len(out[-1]) < minc:
+        last = out.pop(); out[-1] += " " + last
     return out
 
 if a.chapter < 0:
