@@ -93,7 +93,7 @@ if a.chapter < 0:
     paras = [text]
 else:
     c = b["chapters"][a.chapter]
-    paras = [c["h"] + "."] + [p for p in c["body"].split("\n\n") if p.strip()]
+    paras = [f"Häppchen {num2words(a.chapter + 1, lang='de')}. " + c["h"].rstrip(".") + "."] + [p for p in c["body"].split("\n\n") if p.strip()]
     if a.max_paras: paras = paras[:a.max_paras + 1]
 
 # ---------- Sprechen ----------
@@ -145,7 +145,9 @@ for pi, p in enumerate(paras):
         for versuch in range(3):  # Abschnitt ohne erkennbare Sprache (nur Rauschen) neu erzeugen
             w = m.generate(c, language_id="de", audio_prompt_path=REF, exaggeration=0.52, cfg_weight=0.35, temperature=0.68)
             yc, ok = clean(w)
-            if ok: break
+            erwartet = len(c) / 16.0  # grob 16 Zeichen pro Sekunde
+            if ok and len(yc) / SR >= 0.45 * erwartet: break
+            ok = False
             print("Neuversuch wegen fehlender Sprache:", c[:60], flush=True)
         out.append(yc)
         if ci < len(chunks) - 1: out.append(stille(0.32))
