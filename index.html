@@ -502,7 +502,7 @@ function vHome(){
     <div class="stat glass"><b>${S.days[today()]||0}</b><span>Häppchen heute</span></div>
     <div class="stat glass"><b>${Math.round(readN/Math.max(1,totalCh)*100)}%</b><span>von ${totalCh}</span></div>
   </div>
-  ${qaBlock()}${newsBlock()}
+  ${qaBlock()}${audBlock()}${newsBlock()}
   <div class="h-sec"><h2>Für heute</h2><button data-tab="discover" onclick="hist.length=0;go({v:'discover'},false)">Alle</button></div>
   <div class="hscroll">${picks.map(bookCard).join("")}</div>
   ${prog.length>1?`<div class="h-sec"><h2>Angefangen</h2></div><div class="list">${prog.slice(1,6).map(b=>row(b)).join("")}</div>`:""}
@@ -583,7 +583,7 @@ function vLibrary(){
   if(lt==="merk")bs=S.saved.map(id=>BY_ID[id]).filter(Boolean);
   if(lt==="fertig")bs=BOOKS.filter(b=>readCount(b)===b.chapters.length).sort((a,b)=>lastTouch(b)-lastTouch(a));
   return `<div class="topnav" style="margin-bottom:0"><div class="h-big" style="flex:1;margin:0">Bibliothek</div><button class="iconbtn" aria-label="Hörliste" data-go="hoeren"><svg class="ic" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0116 0v2M4 14h3v6H4zM17 14h3v6h-3z"/></svg></button><button class="iconbtn" aria-label="Einstellungen" data-go="settings">${ic(I.gear)}</button></div>
-  <div class="chips" style="margin-top:18px">${[["offen","Angefangen"],["merk","Gemerkt"],["fertig","Gelesen"]].map(([k,l])=>`<button class="chip ${lt===k?"on":""}" data-go="libtab" data-k="${k}">${l}</button>`).join("")}</div>
+  <div class="chips" style="margin-top:18px">${[["offen","Angefangen"],["merk","Gemerkt"],["fertig","Gelesen"]].map(([k,l])=>`<button class="chip ${lt===k?"on":""}" data-go="libtab" data-k="${k}">${l}</button>`).join("")}<button class="chip" data-go="hoeren">🎧 Hörliste${AUD.items.length?` <span style="opacity:.55">${AUD.items.length}</span>`:""}</button></div>
   <div class="list">${bs.map(b=>row(b)).join("")||`<div class="empty">${lt==="merk"?"Mit dem Lesezeichen oben auf einer Titelseite merkst du dir Titel für später.":lt==="fertig"?"Noch nichts komplett gelesen.":"Noch nichts angefangen. Tipp auf Heute → Ein Häppchen lesen."}</div>`}</div>`;
 }
 function vSearch(){
@@ -942,6 +942,8 @@ async function loadAud(){if(!API.startsWith("https"))return;try{const r=await tf
 const feedUrl=()=>API+"/feed/"+devKey()+".xml";
 function audState(x){return x.state==="done"?"Fertig":x.state==="running"?"Wird gerade eingesprochen":x.state==="failed"?"Fehlgeschlagen, wird erneut versucht":"In der Warteschlange";}
 function fmtDur(s){s=+s||0;const m=Math.round(s/60);return m+" Min";}
+function audBlock(){const d=AUD.items.filter(x=>x.state==="done").length,w=AUD.items.length-d;
+  return `<button class="cont glass" data-go="hoeren"><div class="cover" style="background:linear-gradient(150deg,#2a6a7a,#06101f 85%)"><svg viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0116 0v2M4 14h3v6H4zM17 14h3v6h-3z"/></svg></div><div class="meta"><div class="h-eyebrow" style="font-size:11px">Hörliste</div><div class="t">${d?d+(d===1?" Folge":" Folgen")+" zum Hören":"Titel als Hörfolge"}</div><div class="s">${w?w+" in Arbeit. ":""}${d?"Auch im Auto über Apple Podcasts.":"Auf einer Titelseite „🎧 Zur Hörliste“ tippen."}</div></div></button>`;}
 function vHoeren(){
   const top=`<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button></div><div class="h-big" style="font-size:30px">Hörliste</div>`;
   const done=AUD.items.filter(x=>x.state==="done");
