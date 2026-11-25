@@ -58,6 +58,7 @@ jobs:
           path: ~/.cache/huggingface
           key: hf-chatterbox-0.1.7
       - run: pip install -q --extra-index-url https://download.pytorch.org/whl/cpu -r .github/tts/requirements.txt
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
       - run: python .github/tts/tts.py --id "${{ needs.plan.outputs.id }}" --chapter ${{ matrix.ch }} --out part.wav
       - run: ffmpeg -loglevel error -y -i part.wav -ac 1 -ar 24000 -c:a libmp3lame -b:a 64k "part_$(printf '%03d' $(( ${{ matrix.ch }} + 1 ))).mp3"
       - uses: actions/upload-artifact@v4
@@ -70,6 +71,7 @@ jobs:
     if: needs.plan.outputs.id != '' && !cancelled()
     runs-on: ubuntu-latest
     steps:
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
       - uses: actions/download-artifact@v4
         with:
           path: parts
