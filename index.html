@@ -243,6 +243,11 @@ input{font:inherit;color:inherit}
 .news a{display:block;color:var(--txt);text-decoration:none;font-weight:650;font-size:15.5px;line-height:1.32;margin-top:3px}
 .news .s{font-size:13.5px;color:var(--txt2);line-height:1.45;margin-top:4px}
 .news .nrel{display:inline-block;margin:7px 6px 0 0;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:600;color:#bcd2f2;background:rgba(93,138,214,.16);border:1px solid rgba(93,138,214,.3);text-align:left}
+.qa{padding:14px 16px;border-bottom:1px solid var(--line)}.qa:last-child{border-bottom:0}
+.qa .m{font-size:11.5px;color:var(--txt3);letter-spacing:.04em;text-transform:uppercase;font-weight:650}
+.qa .q{font-weight:650;font-size:15.5px;line-height:1.4;margin-top:4px}.qa .ctx{font-size:13px;color:var(--txt3);margin-top:4px;font-style:italic}
+.qa .a{font-size:15px;line-height:1.55;color:var(--txt2);margin-top:8px;white-space:pre-wrap}.qa .w{font-size:13px;color:var(--txt3);margin-top:8px}
+.qa.new{background:rgba(93,138,214,.10)}
 .sheet-bg{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
 .sheet{width:min(560px,100%);padding:20px 18px calc(var(--sb) + 18px);border-radius:22px 22px 0 0}
 .sheet h3{margin:0 0 4px;font-size:18px}.sheet .small{margin:0 0 12px}
@@ -399,7 +404,7 @@ async function checkUpdate(btn){
 function render(){
   renderTabs();setTimeout(showVer,0);
   const v=route.v;
-  const html=v==="home"?vHome():v==="discover"?vDiscover():v==="cat"?vCat():v==="book"?vBook():v==="library"?vLibrary():v==="search"?vSearch():v==="trainer"?vTrainer():v==="studien"?vStudien():v==="news"?vNews():v==="settings"?vSettings():vHome();
+  const html=v==="home"?vHome():v==="discover"?vDiscover():v==="cat"?vCat():v==="book"?vBook():v==="library"?vLibrary():v==="search"?vSearch():v==="trainer"?vTrainer():v==="studien"?vStudien():v==="news"?vNews():v==="fragen"?vFragen():v==="settings"?vSettings():vHome();
   $("#app").innerHTML=`<div class="view">${html}</div>`;
   if(v==="studien"){const i=$("#sq");i.value=route.sq||"";i.addEventListener("input",()=>{route.sq=i.value;route.sn=0;$("#stuhits").innerHTML=stuHits();});}
   if(v==="search"){const i=$("#q");i.value=route.q||"";i.addEventListener("input",()=>{route.q=i.value;$("#hits").innerHTML=hits(i.value);});if(!route.q)setTimeout(()=>i.focus(),50);}
@@ -426,6 +431,7 @@ document.addEventListener("click",e=>{
   else if(d.go==="trbook"){if(d.id){hist.length=0;route={v:"trainer",tb:d.id};}else route.tb=null;TR=null;render();window.scrollTo(0,0);}
   else if(d.go==="studien")go({v:"studien",tab:"discover"});
   else if(d.go==="news")go({v:"news",tab:"home"});
+  else if(d.go==="fragen")go({v:"fragen",tab:route.tab||tabOf()});
   else if(d.go==="newssrc"){route.ns=d.k||null;render();}
   else if(d.go==="stug"){route.sg=d.k;route.sn=0;render();}
   else if(d.go==="stuc"){route.sc=d.k;route.sn=0;render();}
@@ -476,7 +482,7 @@ function vHome(){
     <div class="stat glass"><b>${S.days[today()]||0}</b><span>Häppchen heute</span></div>
     <div class="stat glass"><b>${Math.round(readN/Math.max(1,totalCh)*100)}%</b><span>von ${totalCh}</span></div>
   </div>
-  ${newsBlock()}
+  ${qaBlock()}${newsBlock()}
   <div class="h-sec"><h2>Für heute</h2><button data-tab="discover" onclick="hist.length=0;go({v:'discover'},false)">Alle</button></div>
   <div class="hscroll">${picks.map(bookCard).join("")}</div>
   ${prog.length>1?`<div class="h-sec"><h2>Angefangen</h2></div><div class="list">${prog.slice(1,6).map(b=>row(b)).join("")}</div>`:""}
@@ -539,6 +545,7 @@ function vBook(){
     <div class="facts"><span>${b._min} Min</span><span>${n} Häppchen</span>${r?`<span class="done">${r}/${n} gelesen</span>`:""}</div>
     <button class="cta" data-go="read" data-id="${b.id}">${ic(I.play)} ${r===0?"Lesen":r===n?"Nochmal lesen":"Weiterlesen"}</button>
   </div>
+  <button class="flag" style="margin-top:12px" data-ask="${b.id}">💬 Frage zu diesem Titel</button>
   ${b.paper?paperBox(b.paper,b):""}${b.person?personBox(b.person):""}
   ${b.summary?`<div class="summary glass">${md(b.summary)}</div>`:""}
   <div class="h-sec"><h2>Häppchen</h2></div>
@@ -597,6 +604,8 @@ function vSettings(){
     <div class="icons" id="icsel">${styles.map(([k,l])=>`<button data-i="${k}" class="${st.icon===k?"on":""}"><img src="icons/preview-${k}.svg" alt=""><span>${l}</span></button>`).join("")}</div>
     <div class="hint">Der Stil gilt nur beim Hinzufügen und muss in <b>Safari</b> gewählt werden (nicht in der installierten App). Achtung: Wer das Icon vom Homescreen löscht, löscht auch den Lesefortschritt der App. Vorher unten „Sichern“ und danach „Wiederherstellen“. Die iOS-Modi Dunkel, Getönt und Klar (Homescreen lange drücken → Bearbeiten → Anpassen) wirken ohne Neuinstallation auf jedes Icon.</div>
   </div>
+  <div class="h-sec"><h2>Meine Fragen</h2><button data-go="fragen">Öffnen</button></div>
+  <div class="glass set"><div class="hint" style="padding:14px 16px">Fragen, die du im Leser oder auf Titelseiten mit „💬“ stellst, landen in einem Postfach. Beim nächsten Update beantwortet Claude sie mit Quellen. Die Antworten erscheinen hier und auf der Startseite.</div></div>
   <div class="h-sec"><h2>Prüfliste</h2>${(S.flags||[]).length?`<button id="flshare">Teilen</button>`:""}</div>
   <div class="glass set">${(S.flags||[]).length?S.flags.map((f,k)=>`<div class="fl-item"><div class="q">„${esc(f.text.slice(0,240))}${f.text.length>240?"…":""}“</div>${f.note?`<div class="m">Notiz: ${esc(f.note)}</div>`:""}<div class="m">${esc(f.title||f.id)} · ${esc(f.kind)} · ${new Date(f.t).toLocaleDateString("de-DE")}</div><button class="copy" data-fldel="${k}">Entfernen</button></div>`).join("")
    :`<div class="hint" style="padding:14px 16px">Noch nichts markiert. Im Reader „⚑ Aussage prüfen lassen“ tippen, auf Diskussions- und Studienkarten „⚑ Prüfen“. Die Liste teilst du dann mit Claude, das prüft alles gesammelt mit Quellen nach.</div>`}</div>
@@ -649,7 +658,7 @@ function drawReader(){
   const segs=b.chapters.map((_,j)=>`<i class="${j<i||isRead(b.id,j)&&j!==i?"f":j===i?"c":""}"></i>`).join("");
   let inner;
   if(!atEnd){
-    inner=`<div class="k">Häppchen ${i+1} von ${n}</div><h2>${esc(c.h)}</h2><div class="body">${paras(c.body)}</div><button class="flag" data-flag="${b.id}" data-fi="${i}" data-fk="kapitel">⚑ Aussage prüfen lassen</button><p class="small" style="margin:4px 2px 0">Tipp: Erst den zweifelhaften Satz markieren, dann tippen.</p>`;
+    inner=`<div class="k">Häppchen ${i+1} von ${n}</div><h2>${esc(c.h)}</h2><div class="body">${paras(c.body)}</div><button class="flag" data-flag="${b.id}" data-fi="${i}" data-fk="kapitel">⚑ Aussage prüfen lassen</button> <button class="flag" data-ask="${b.id}" data-fi="${i}">💬 Frage stellen</button><p class="small" style="margin:4px 2px 0">Tipp: Erst den zweifelhaften Satz markieren, dann tippen.</p>`;
   }else{
     const nb=suggestNext(b);
     inner=`<div class="k">Zum Mitnehmen</div><h2>${esc(b.title)}</h2>
@@ -761,11 +770,35 @@ function paperBox(p,b){
   return `<div class="paper glass"><div class="k">Das Paper</div><div class="zi">${esc(p.zitat||"")}</div><div class="pm">${[p.feld,p.typ,p.jahr].filter(Boolean).map(esc).join(" · ")}${p.geprueft?` · <span class="ok">✓ DOI geprüft</span>`:""}</div>${link?`<a href="${esc(link)}" target="_blank" rel="noopener">Original lesen${p.doi?": doi:"+esc(p.doi):""} ↗</a>`:""}</div>`;
 }
 /* ================= Nachrichten (news.json, alle 3 Std. per GitHub Actions) ================= */
-let NEWS=null,_newsAt=0;
-async function loadNews(force){
-  if(!force&&Date.now()-_newsAt<20*60e3)return;_newsAt=Date.now();
-  try{const r=await fetch("news.json");if(!r.ok)return;const d=await r.json();if(d&&Array.isArray(d.items)){NEWS=d;if(["home","news"].includes(route.v)){const y=window.scrollY;render();window.scrollTo(0,y);}}}catch(_){}
+const API="https://tiefgang-api.teamplaner.workers.dev";
+let NEWS=null,_newsAt=0,_KW=null;
+function tfetch(u,o={},ms=7000){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);return fetch(u,{...o,signal:c.signal}).finally(()=>clearTimeout(t));}
+// Schlagwort-Abgleich: Wörter, die für höchstens 3 Titel typisch sind; Nachname 3, Titelwort 2, sonst 1
+const NSTOP=new Set("Warum Wenn Wie Was Wer Wo Die Der Das Den Dem Des Ein Eine Und Oder Aber Nicht Mehr Wird Werden Wurde Gegen Über Unter Nach Seit Ohne Durch Alle Jeder Zwischen Zeit Jahr Jahre Jahrhundert Geschichte Welt Mensch Menschen Leben Frage Fragen Idee Ideen Macht Staat Politik Deutschland Europa Bilanz Mythos Wahrheit Kritik Debatte Streit Ende Anfang Neue Neuen Alte Große Großen Kleine Wirklich Richtig Falsch Zahlen Zahl Daten Studie Studien Forschung Wissen Denken Deutschen Deutsche Berliner Gespräch Vergleich Entwicklung Rechte Alltag Zukunft Richter Vorwurf Forscher Millionen Million Zustimmung Bürger Institutionen Behörden Webseite System Systeme Modell Gesellschaft Freiheit Gerechtigkeit Wirtschaft Arbeit Triumph Erfolg Erfolgs Programm Programme Analyse Interview Nachricht Nachrichten Alltags Brille Brillen Livestream Bericht Berichte Experten Mitglieder Probleme Problem Prozent Milliarden Woche Wochen Monate Mächte Kampf Krise Krisen Ordnung Revolution Grenzen Planeten Schritt Lehren Fehler".split(" "));
+function newsKW(){
+  if(_KW)return _KW;const W=/[A-ZÄÖÜ][\wäöüß]{5,}/g;const docs=[],df={};
+  for(const b of BOOKS){if(b.cat==="waswaerewenn")continue;const tw=new Set(b.title.match(W)||[]);
+    const ws=new Set(((b.title+" "+(b.subtitle||"")+" "+(b.summary||"")+" "+b.chapters.map(c=>c.h).join(" ")).match(W)||[]).filter(w=>!NSTOP.has(w)));
+    ws.forEach(w=>df[w]=(df[w]||0)+1);docs.push([b,ws,tw]);}
+  _KW=docs.map(([b,ws,tw])=>{const kw={};ws.forEach(w=>{if(df[w]<=3&&(tw.has(w)||w.length>=7))kw[w]=tw.has(w)?2:1;});
+    if(b.person&&b.person.name)kw[b.person.name.split(" ").pop()]=3;
+    const pats=Object.keys(kw).map(w=>[w,new RegExp("(^|[^\\wäöüß])"+(w.length>=7?w.slice(0,-1):w).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"[\\wäöüßÄÖÜ]{0,3}(?![\\wäöüß])")]);
+    return [b.id,kw,pats];}).filter(x=>x[2].length);
+  return _KW;
 }
+function newsRel(x){const text=x.title+" "+(x.teaser||"");const out=[];
+  for(const [id,kw,pats] of newsKW()){const hits=[],st=new Set();for(const [w,rx] of pats){if(!st.has(w.slice(0,5))&&rx.test(text)){hits.push(w);st.add(w.slice(0,5));}}
+    const sc=hits.reduce((a,w)=>a+kw[w],0);if(sc>=3||(sc>=2&&hits.length>=2))out.push([sc,hits.length,id]);}
+  return out.sort((a,b)=>b[0]-a[0]||b[1]-a[1]).slice(0,2).map(r=>r[2]);}
+async function loadNews(force){
+  if(!force&&Date.now()-_newsAt<15*60e3)return;_newsAt=Date.now();
+  let d=null;
+  if(API.startsWith("https"))try{const r=await tfetch(API+"/news");if(r.ok)d=await r.json();}catch(_){}
+  if(!d||!d.items||!d.items.length)try{const r=await fetch("news.json");if(r.ok)d=await r.json();}catch(_){}
+  if(d&&Array.isArray(d.items)&&d.items.length){d.items.forEach(x=>{if(!x.rel)x.rel=newsRel(x);});NEWS=d;try{localStorage.setItem("tiefgang.news",JSON.stringify(d));}catch(_){}
+    if(["home","news"].includes(route.v)){const y=window.scrollY;render();window.scrollTo(0,y);}}
+}
+try{const c=JSON.parse(localStorage.getItem("tiefgang.news")||"null");if(c&&c.items)NEWS=c;}catch(_){}
 function ago(t){const m=Math.round((Date.now()/1e3-t)/60);if(m<60)return "vor "+Math.max(1,m)+" Min.";const h=Math.round(m/60);if(h<24)return "vor "+h+" Std.";return new Date(t*1e3).toLocaleDateString("de-DE",{day:"numeric",month:"short"});}
 function newsItem(x){
   const rel=(x.rel||[]).map(id=>BY_ID[id]).filter(Boolean);
@@ -779,9 +812,53 @@ function vNews(){
   const top=`<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button></div><div class="h-big" style="font-size:30px">Nachrichten</div>`;
   if(!NEWS)return top+`<div class="empty">Noch keine Nachrichten geladen. Ohne Netz siehst du den letzten Stand.</div>`;
   const srcs=[...new Set(NEWS.items.map(x=>x.src))];const L=NEWS.items.filter(x=>!route.ns||x.src===route.ns);
-  return top+`<p class="small" style="margin:-6px 2px 14px">Die wichtigsten Schlagzeilen, alle drei Stunden automatisch aktualisiert. Stand: ${new Date(NEWS.updated*1e3).toLocaleString("de-DE",{weekday:"short",hour:"2-digit",minute:"2-digit"})} Uhr. „Hintergrund“ verlinkt passende Titel aus Tiefgang (automatischer Wortabgleich).</p>
+  return top+`<p class="small" style="margin:-6px 2px 14px">Die wichtigsten Schlagzeilen, beim Öffnen frisch geladen (höchstens 15 Minuten alt). Stand: ${new Date(NEWS.updated*1e3).toLocaleString("de-DE",{weekday:"short",hour:"2-digit",minute:"2-digit"})} Uhr. „Hintergrund“ verlinkt passende Titel aus Tiefgang (automatischer Wortabgleich).</p>
   <div class="chips"><button class="chip ${!route.ns?"on":""}" data-go="newssrc" data-k="">Alle</button>${srcs.map(x=>`<button class="chip ${route.ns===x?"on":""}" data-go="newssrc" data-k="${esc(x)}">${esc(x)}</button>`).join("")}</div>
   <div class="glass" style="padding:2px 0">${L.map(newsItem).join("")||`<div class="empty">Nichts von dieser Quelle.</div>`}</div>`;
+}
+/* ================= Fragen an Claude (Postfach im Worker) ================= */
+function devKey(){if(!S.k){const a=new Uint8Array(16);crypto.getRandomValues(a);S.k=[...a].map(x=>(x%36).toString(36)).join("");save();}return S.k;}
+let QA=[];try{QA=JSON.parse(localStorage.getItem("tiefgang.qa")||"[]");}catch(_){}
+async function loadQA(){
+  if(!API.startsWith("https"))return;await flushQ();
+  try{const r=await tfetch(API+"/answers?k="+devKey());if(!r.ok)return;const d=await r.json();QA=mergeQA(d.items||[]);localStorage.setItem("tiefgang.qa",JSON.stringify(QA));
+    if(["home","fragen"].includes(route.v)){const y=window.scrollY;render();window.scrollTo(0,y);}}catch(_){}
+}
+function mergeQA(srv){S.sent=(S.sent||[]).filter(r=>!srv.some(x=>x.qid===r.qid)&&Date.now()-r.t<864e5);save();
+  const m=new Map();[...srv,...S.sent,...(S.qq||[]).map(q=>({...q,qid:"p"+q.t,pending:true}))].forEach(x=>{if(!m.has(x.qid))m.set(x.qid,x);});return [...m.values()].sort((a,b)=>b.t-a.t);}
+async function flushQ(){S.qq=S.qq||[];while(S.qq.length){const q=S.qq[0];let qid=null;
+  try{const r=await tfetch(API+"/q",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(q)});if(!r.ok&&r.status!==400)return;if(r.ok)qid=(await r.json()).qid;}catch(_){return;}
+  S.qq.shift();if(qid){S.sent=S.sent||[];S.sent.push({...q,qid,t:q.t||Date.now()});}save();}}
+const newAnswers=()=>QA.filter(x=>x.a&&x.at>(S.qseen||0));
+function qaBlock(){const n=newAnswers().length;if(!n)return "";
+  return `<button class="cont glass" data-go="fragen"><div class="cover" style="background:linear-gradient(150deg,#3a66b4,#06101f 85%)"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></div><div class="meta"><div class="h-eyebrow" style="font-size:11px">Meine Fragen</div><div class="t">${n===1?"Eine neue Antwort":n+" neue Antworten"}</div><div class="s">Claude hat deine Fragen beantwortet. Antippen zum Lesen.</div></div></button>`;}
+function openAskSheet(b,i){
+  const sel=(window._lastSel||"")||(window.getSelection?String(window.getSelection()).trim():"");window._lastSel="";
+  const ctx=sel||(i!=null&&b.chapters[i]?b.chapters[i].h:"");
+  $("#sheet").innerHTML=`<div class="sheet-bg" id="shbg"><div class="sheet glass"><h3>💬 Frage stellen</h3><p class="small">${esc(b.title)}${i!=null?" · Häppchen "+(i+1):""}. Wird beim nächsten Update mit Quellen beantwortet.</p>
+   ${ctx?`<p class="small" style="font-style:italic">Bezug: „${esc(ctx.slice(0,200))}${ctx.length>200?"…":""}“</p>`:""}
+   <textarea id="asktext" placeholder="Was möchtest du wissen? Was ist unklar?"></textarea>
+   <div class="row2"><button class="chip" id="flcancel">Abbrechen</button><button class="cta" style="margin:0" id="asksend">Absenden</button></div></div></div>`;
+  window._askitem={b,i,ctx};setTimeout(()=>{const t=$("#asktext");if(t)t.focus();},60);
+}
+["touchstart","mousedown"].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest("[data-ask]")){window._lastSel=window.getSelection?String(window.getSelection()).trim():"";}},{passive:true,capture:true}));
+document.addEventListener("click",async e=>{
+  const a=e.target.closest("[data-ask]");if(a){const b=BY_ID[a.dataset.ask];if(b)openAskSheet(b,a.dataset.fi!=null?+a.dataset.fi:null);return;}
+  if(e.target.id==="asksend"){const it=window._askitem;const q=($("#asktext").value||"").trim();if(!it||q.length<3){toast("Bitte eine Frage eingeben");return;}
+    const rec={k:devKey(),id:it.b.id,title:it.b.title,i:it.i,text:it.ctx||"",q:q.slice(0,2000),t:Date.now()};
+    S.qq=S.qq||[];S.qq.push(rec);save();closeSheet();
+    QA=mergeQA(QA.filter(x=>!x.pending&&!String(x.qid).startsWith("p")));localStorage.setItem("tiefgang.qa",JSON.stringify(QA));
+    toast("Frage gespeichert");await flushQ();loadQA();return;}
+});
+function vFragen(){
+  const top=`<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button></div><div class="h-big" style="font-size:30px">Meine Fragen</div>`;
+  const seen=S.qseen||0;S.qseen=Date.now();save();
+  if(!QA.length)return top+`<div class="empty">Noch keine Fragen. Im Leser oder auf einer Titelseite auf „💬 Frage stellen“ tippen.</div>`;
+  const offen=QA.filter(x=>!x.a).length;
+  return top+`<p class="small" style="margin:-6px 2px 14px">${offen?offen+" offen, werden beim nächsten Update beantwortet. ":""}Antworten stammen von Claude und sind mit Quellen belegt, können aber Fehler enthalten.</p>
+  <div class="glass" style="padding:2px 0">${QA.map(x=>{const b=BY_ID[x.id];return `<div class="qa ${x.a&&x.at>seen?"new":""}"><div class="m">${b?`<button class="nrel" style="margin:0" data-go="book" data-id="${b.id}">${esc(b.title)}${x.i!=null?" · Häppchen "+(x.i+1):""}</button>`:esc(x.title||"")} · ${new Date(x.t).toLocaleDateString("de-DE")}</div>
+   ${x.text?`<div class="ctx">Bezug: „${esc(x.text.slice(0,160))}${x.text.length>160?"…":""}“</div>`:""}<div class="q">${esc(x.q)}</div>
+   ${x.a?`<div class="a">${md(x.a)}</div>`:`<div class="w">${x.pending?"Noch nicht gesendet, wird bei Verbindung übertragen.":"Wartet auf Antwort."}</div>`}</div>`;}).join("")}</div>`;
 }
 function argCard(a){
   const m=String(a).match(/^\s*(?:Wenn jemand sagt:?)?\s*[„"]?(.+?)[“"]?\s*(?:→|->)\s*(?:Antwort:?)?\s*(.+)$/s);
@@ -875,7 +952,7 @@ function suggestNext(b){
 render();
 try{if(S.cur&&BY_ID[S.cur.id]&&Date.now()-S.cur.t<36*3600e3){const c=S.cur;openReader(c.id,c.i,c.y);}}catch(_){}
 setTimeout(()=>loadAll(),1200);
-loadNews(true);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")loadNews();});
+loadNews(true);loadQA();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){loadNews();loadQA();}});
 if("serviceWorker" in navigator&&location.protocol!=="file:"){
   const hadCtl=!!navigator.serviceWorker.controller;
   navigator.serviceWorker.register("sw.js").then(r=>{document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")r.update().catch(()=>{});});}).catch(()=>{});
