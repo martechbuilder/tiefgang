@@ -250,6 +250,8 @@ input{font:inherit;color:inherit}
 .qa.new{background:rgba(93,138,214,.10)}
 .gl{all:unset;display:inline;cursor:pointer;border-bottom:1.5px dotted rgba(160,190,235,.55);-webkit-tap-highlight-color:transparent}
 .gl:active{background:rgba(93,138,214,.2)}
+.rin .body p.tts-now{background:rgba(93,138,214,.13);border-radius:8px;box-shadow:0 0 0 6px rgba(93,138,214,.13)}
+#rtts.on{background:rgba(58,102,180,.35)}
 .sheet-bg{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
 .sheet{width:min(560px,100%);padding:20px 18px calc(var(--sb) + 18px);border-radius:22px 22px 0 0}
 .sheet h3{margin:0 0 4px;font-size:18px}.sheet .small{margin:0 0 12px}
@@ -621,6 +623,13 @@ function vSettings(){
     <div class="icons" id="icsel">${styles.map(([k,l])=>`<button data-i="${k}" class="${st.icon===k?"on":""}"><img src="icons/preview-${k}.svg" alt=""><span>${l}</span></button>`).join("")}</div>
     <div class="hint">Der Stil gilt nur beim Hinzufügen und muss in <b>Safari</b> gewählt werden (nicht in der installierten App). Achtung: Wer das Icon vom Homescreen löscht, löscht auch den Lesefortschritt der App. Vorher unten „Sichern“ und danach „Wiederherstellen“. Die iOS-Modi Dunkel, Getönt und Klar (Homescreen lange drücken → Bearbeiten → Anpassen) wirken ohne Neuinstallation auf jedes Icon.</div>
   </div>
+  <div class="h-sec"><h2>Vorlesen</h2></div>
+  <div class="glass set">
+    <div class="setrow"><span>Stimme</span><select id="ttsvoice" style="max-width:58%;background:var(--glass-lo);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:7px 8px;font:inherit;font-size:14px">${ttsVoices().map(v=>`<option value="${esc(v.name)}" ${v.name===(ttsVoice()||{}).name?"selected":""}>${esc(v.name)}</option>`).join("")||"<option>Keine deutsche Stimme gefunden</option>"}</select></div>
+    <div class="setrow"><span>Tempo</span><div class="seg" id="ttsrate">${[["0.8","Ruhig"],["0.9","Gelassen"],["1","Normal"]].map(([r,l])=>`<button data-r="${r}" class="${String(st.ttsRate||0.9)===r?"on":""}">${l}</button>`).join("")}</div></div>
+    <div class="setrow"><span>Probe hören</span><button class="chip" id="ttstest">▶ Abspielen</button></div>
+    <div class="hint" style="padding:12px 16px">Im Leser oben auf den Lautsprecher tippen: liest Häppchen für Häppchen vor und blättert selbst weiter. Der Bildschirm bleibt dabei an, denn bei gesperrtem iPhone stoppt iOS das Vorlesen. Natürlichere Stimmen: iPhone-Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch, dort eine Stimme mit „Erweitert“ oder „Premium“ laden (ruhig und männlich klingen z. B. Viktor oder Markus). Danach Tiefgang neu öffnen und hier auswählen.</div>
+  </div>
   <div class="h-sec"><h2>Meine Fragen</h2><button data-go="fragen">Öffnen</button></div>
   <div class="glass set"><div class="hint" style="padding:14px 16px">Fragen, die du im Leser oder auf Titelseiten mit „💬“ stellst, landen in einem Postfach. Beim nächsten Update beantwortet Claude sie mit Quellen. Die Antworten erscheinen hier und auf der Startseite.</div></div>
   <div class="h-sec"><h2>Prüfliste</h2>${(S.flags||[]).length?`<button id="flshare">Teilen</button>`:""}</div>
@@ -668,7 +677,7 @@ function openReader(id,i,y){
   $("#reader").classList.remove("hidden");document.body.style.overflow="hidden";
   drawReader();
 }
-function closeReader(){$("#reader").classList.add("hidden");document.body.style.overflow="";R=null;S.cur=null;save();render();}
+function closeReader(){if(TTS.on)ttsStop();$("#reader").classList.add("hidden");document.body.style.overflow="";R=null;S.cur=null;save();render();}
 function drawReader(){
   const {b,i}=R;const n=b.chapters.length;const atEnd=i>=n;
   const c=b.chapters[Math.min(i,n-1)];
@@ -688,7 +697,7 @@ function drawReader(){
   }
   $("#reader").innerHTML=`
     <div class="rtop"><div class="segs">${segs}${(b.takeaways||[]).length?`<i class="${atEnd?"c":""}" style="flex:.5"></i>`:""}</div>
-      <div class="rbar"><button class="iconbtn" aria-label="Schließen" id="rclose">${ic(I.close)}</button><div class="rt">${esc(b.title)}</div><button class="iconbtn" aria-label="Zur Titelseite" id="rinfo">${ic(I.lib)}</button></div></div>
+      <div class="rbar"><button class="iconbtn" aria-label="Schließen" id="rclose">${ic(I.close)}</button><div class="rt">${esc(b.title)}</div><button class="iconbtn ${TTS.on?"on":""}" aria-label="Vorlesen" id="rtts"><svg class="ic" viewBox="0 0 24 24"><path d="${TTS.on?"M7 5h3v14H7zM14 5h3v14h-3z":"M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"}"/></svg></button><button class="iconbtn" aria-label="Zur Titelseite" id="rinfo">${ic(I.lib)}</button></div></div>
     <div id="rscroll"><div class="rin">${inner}</div></div>
     <div class="rbot"><button class="prev" id="rprev" ${i===0?"disabled style='opacity:.35'":""}>${ic(I.back)}</button>
       ${atEnd?`<button class="next" id="rdone">Fertig</button>`:`<button class="next" id="rnext">${i===n-1?"Abschließen":"Weiter"}</button>`}</div>`;
@@ -698,6 +707,8 @@ function drawReader(){
   let st0=0;sc.addEventListener("scroll",()=>{upd();const now=Date.now();if(now-st0>800){st0=now;S.cur={id:b.id,i,y:sc.scrollTop,t:now};save();}},{passive:true});upd();
   S.cur={id:b.id,i,y:(R.restoreY||0),t:Date.now()};save();if(R.restoreY){sc.scrollTop=R.restoreY;R.restoreY=0;}
   $("#rclose").onclick=closeReader;
+  $("#rtts").onclick=()=>{TTS.on?ttsStop():ttsStart();drawReaderBar();};
+  if(TTS.on)setTimeout(ttsStart,250);
   $("#rinfo").onclick=()=>{const id=b.id;closeReader();go({v:"book",id,tab:tabOf()});};
   $("#rprev").onclick=()=>{if(R.i>0){R.i--;drawReader();}};
   const nx=$("#rnext");if(nx)nx.onclick=advance;
@@ -878,6 +889,38 @@ function vFragen(){
    ${x.text?`<div class="ctx">Bezug: „${esc(x.text.slice(0,160))}${x.text.length>160?"…":""}“</div>`:""}<div class="q">${esc(x.q)}</div>
    ${x.a?`<div class="a">${md(x.a)}</div>`:`<div class="w">${x.pending?"Noch nicht gesendet, wird bei Verbindung übertragen.":"Wartet auf Antwort."}</div>`}</div>`;}).join("")}</div>`;
 }
+/* ================= Vorlesen (Web Speech, lokal auf dem Gerät) ================= */
+const TTS={on:false,q:[],k:0,lock:null,gen:0};
+const synth=window.speechSynthesis;
+function ttsVoices(){if(!synth)return [];return synth.getVoices().filter(v=>/^de/i.test(v.lang)).sort((a,b)=>ttsScore(b)-ttsScore(a));}
+function ttsScore(v){let s=0;if(/premium/i.test(v.name))s+=6;if(/erweitert|enhanced|verbessert/i.test(v.name))s+=4;if(/viktor|markus|yannick|martin|helmut|reed|eddy|grandpa/i.test(v.name))s+=3;if(/de-DE/i.test(v.lang))s+=1;if(/compact|kompakt/i.test(v.name))s-=2;return s;}
+function ttsVoice(){const vs=ttsVoices();return vs.find(v=>v.name===S.settings.ttsVoice)||vs[0]||null;}
+if(synth&&synth.addEventListener)synth.addEventListener("voiceschanged",()=>{if(route.v==="settings")render();});
+function ttsChunks(t){const out=[];String(t).replace(/\*\*/g,"").split(/(?<=[.!?…:;])\s+/).forEach(s=>{if(out.length&&(out[out.length-1].length+s.length)<220)out[out.length-1]+=" "+s;else out.push(s);});return out.filter(x=>x.trim());}
+function ttsSay(text,onend){const u=new SpeechSynthesisUtterance(text);const v=ttsVoice();if(v){u.voice=v;u.lang=v.lang;}else u.lang="de-DE";
+  u.rate=+(S.settings.ttsRate||0.9);u.pitch=0.95;u.onend=onend;u.onerror=onend;synth.speak(u);}
+async function ttsWake(on){try{if(on&&"wakeLock" in navigator&&!TTS.lock){TTS.lock=await navigator.wakeLock.request("screen");TTS.lock.addEventListener("release",()=>{TTS.lock=null;});}
+  if(!on&&TTS.lock){await TTS.lock.release();TTS.lock=null;}}catch(_){}}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&TTS.on)ttsWake(true);});
+function ttsStart(){
+  if(!synth){toast("Vorlesen wird hier nicht unterstützt");return;}if(!R)return;
+  synth.cancel();TTS.on=true;const g=++TTS.gen;ttsWake(true);
+  const {b,i}=R;const n=b.chapters.length;const items=[];
+  if(i<n){const c=b.chapters[i];items.push({t:c.h+".",p:-1});c.body.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean).forEach((para,pi)=>ttsChunks(para).forEach(t=>items.push({t,p:pi})));}
+  else{items.push({t:"Zum Mitnehmen.",p:-1});(b.takeaways||[]).forEach(t=>items.push({t:t.replace(/\*\*/g,""),p:-1}));}
+  let k=0;
+  const next=()=>{if(g!==TTS.gen||!TTS.on)return;
+    document.querySelectorAll("#reader .body p.tts-now").forEach(x=>x.classList.remove("tts-now"));
+    if(k>=items.length){if(i<n){advance();if(!R||!TTS.on)ttsStop();}else ttsStop();return;}
+    const it=items[k++];if(it.p>=0){const el=document.querySelectorAll("#reader .body p")[it.p];if(el){el.classList.add("tts-now");if(k===1||items[k-2].p!==it.p)el.scrollIntoView({behavior:"smooth",block:"center"});}}
+    ttsSay(it.t,next);};
+  next();
+}
+function ttsStop(){TTS.on=false;TTS.gen++;if(synth)synth.cancel();ttsWake(false);document.querySelectorAll("#reader .body p.tts-now").forEach(x=>x.classList.remove("tts-now"));drawReaderBar();}
+function drawReaderBar(){const b=$("#rtts");if(!b)return;b.classList.toggle("on",TTS.on);b.querySelector("path").setAttribute("d",TTS.on?"M7 5h3v14H7zM14 5h3v14h-3z":"M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11");}
+document.addEventListener("change",e=>{if(e.target.id==="ttsvoice"){S.settings.ttsVoice=e.target.value;save();}});
+document.addEventListener("click",e=>{const r=e.target.closest("#ttsrate [data-r]");if(r){S.settings.ttsRate=+r.dataset.r;save();render();return;}
+  if(e.target.id==="ttstest"){if(!synth)return;synth.cancel();ttsSay("Willkommen bei Tiefgang. So klingt diese Stimme, wenn sie dir ein Häppchen vorliest.",()=>{});}});
 function argCard(a){
   const m=String(a).match(/^\s*(?:Wenn jemand sagt:?)?\s*[„"]?(.+?)[“"]?\s*(?:→|->)\s*(?:Antwort:?)?\s*(.+)$/s);
   if(!m)return `<div class="ta glass">${md(a)}</div>`;
