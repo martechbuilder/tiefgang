@@ -85,7 +85,7 @@ jobs:
           if [ -z "$(ls parts 2>/dev/null)" ]; then
             curl -s -X POST -H "X-Admin: $ADMIN" -H "Content-Type: application/json" -d "{\"id\":\"$ID\",\"state\":\"failed\"}" "$API/admin/audio-state"; exit 1; fi
           for f in $(ls parts/*.mp3 | sort); do echo "file '$PWD/$f'"; done > list.txt
-          ffmpeg -loglevel error -y -f concat -safe 0 -i list.txt -c:a libmp3lame -b:a 64k -ac 1 "$ID.mp3"
+          ffmpeg -loglevel error -y -f concat -safe 0 -i list.txt -af "loudnorm=I=-18:TP=-1.5:LRA=9" -ar 24000 -c:a libmp3lame -b:a 64k -ac 1 "$ID.mp3"
           DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$ID.mp3" | cut -d. -f1)
           SIZE=$(stat -c %s "$ID.mp3")
           gh release upload audio "$ID.mp3" --clobber -R "$GITHUB_REPOSITORY"
