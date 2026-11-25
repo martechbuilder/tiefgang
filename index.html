@@ -629,6 +629,7 @@ function vSettings(){
     <div class="setrow"><span>Stimme</span><select id="ttsvoice" style="max-width:58%;background:var(--glass-lo);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:7px 8px;font:inherit;font-size:14px">${ttsVoices().map(v=>`<option value="${esc(v.name)}" ${v.name===(ttsVoice()||{}).name?"selected":""}>${esc(v.name)}</option>`).join("")||"<option>Keine deutsche Stimme gefunden</option>"}</select></div>
     <div class="setrow"><span>Tempo</span><div class="seg" id="ttsrate">${[["0.8","Ruhig"],["0.9","Gelassen"],["1","Normal"]].map(([r,l])=>`<button data-r="${r}" class="${String(st.ttsRate||0.9)===r?"on":""}">${l}</button>`).join("")}</div></div>
     <div class="setrow"><span>Probe hören</span><button class="chip" id="ttstest">▶ Abspielen</button></div>
+    <div class="small" id="ttsdiag" style="padding:0 16px 10px"></div>
     <div class="hint" style="padding:12px 16px">Im Leser oben auf den Lautsprecher tippen: liest Häppchen für Häppchen vor und blättert selbst weiter. Der Bildschirm bleibt dabei an, denn bei gesperrtem iPhone stoppt iOS das Vorlesen. Natürlichere Stimmen: iPhone-Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch, dort eine Stimme mit „Erweitert“ oder „Premium“ laden (ruhig und männlich klingen z. B. Viktor oder Markus). Danach Tiefgang neu öffnen und hier auswählen.</div>
   </div>
   <div class="h-sec"><h2>Meine Fragen</h2><button data-go="fragen">Öffnen</button></div>
@@ -900,17 +901,18 @@ if(synth&&synth.addEventListener)synth.addEventListener("voiceschanged",()=>{if(
 function ttsChunks(t){const out=[];String(t).replace(/\*\*/g,"").split(/(?<=[.!?…:;])\s+/).forEach(s=>{if(out.length&&(out[out.length-1].length+s.length)<220)out[out.length-1]+=" "+s;else out.push(s);});return out.filter(x=>x.trim());}
 function ttsSay(text,onend){const u=new SpeechSynthesisUtterance(text);const v=ttsVoice();if(v){u.voice=v;u.lang=v.lang;}else u.lang="de-DE";
   u.rate=+(S.settings.ttsRate||0.9);u.pitch=0.95;u.onstart=()=>{TTS.started=true;};
-  let done=false;const fin=()=>{if(done)return;done=true;onend&&onend();};u.onend=fin;u.onerror=fin;
+  let done=false;const fin=()=>{if(done)return;done=true;onend&&onend();};u.onend=fin;u.onerror=e=>{TTS.err=(e&&e.error)||"unbekannt";fin();};
   try{synth.resume();}catch(_){}synth.speak(u);}
 async function ttsWake(on){try{if(on&&"wakeLock" in navigator&&!TTS.lock){TTS.lock=await navigator.wakeLock.request("screen");TTS.lock.addEventListener("release",()=>{TTS.lock=null;});}
   if(!on&&TTS.lock){await TTS.lock.release();TTS.lock=null;}}catch(_){}}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&TTS.on)ttsWake(true);});
+function ttsDiag(){const v=ttsVoice();return `Stimmen: ${synth?synth.getVoices().length:0} (de: ${ttsVoices().length}) · gewählt: ${v?v.name:"keine"} · spricht: ${synth&&synth.speaking?"ja":"nein"} · Fehler: ${TTS.err||"keiner"} · Modus: ${matchMedia("(display-mode: standalone)").matches||navigator.standalone?"Homescreen-App":"Browser"}`;}
 function ttsUnlock(){if(!synth||TTS.unlocked)return;try{synth.resume();const u=new SpeechSynthesisUtterance(" ");u.volume=0;u.lang="de-DE";synth.speak(u);TTS.unlocked=true;}catch(_){}}
 function ttsStart(){
   if(!synth){toast("Vorlesen wird hier nicht unterstützt");return;}if(!R)return;
   const busy=synth.speaking||synth.pending;if(busy)synth.cancel();
   TTS.on=true;const g=++TTS.gen;ttsWake(true);TTS.started=false;
-  setTimeout(()=>{if(g===TTS.gen&&TTS.on&&!TTS.started){toast("Kein Ton? Stummschalter und Lautstärke prüfen oder in den Einstellungen eine andere Stimme wählen.");}},4000);
+  setTimeout(()=>{if(g===TTS.gen&&TTS.on&&!TTS.started){toast("Kein Ton. "+ttsDiag());}},4000);
   const {b,i}=R;const n=b.chapters.length;const items=[];
   if(i<n){const c=b.chapters[i];items.push({t:c.h+".",p:-1});c.body.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean).forEach((para,pi)=>ttsChunks(para).forEach(t=>items.push({t,p:pi})));}
   else{items.push({t:"Zum Mitnehmen.",p:-1});(b.takeaways||[]).forEach(t=>items.push({t:t.replace(/\*\*/g,""),p:-1}));}
@@ -926,7 +928,7 @@ function ttsStop(){TTS.on=false;TTS.gen++;if(synth)synth.cancel();ttsWake(false)
 function drawReaderBar(){const b=$("#rtts");if(!b)return;b.classList.toggle("on",TTS.on);b.querySelector("path").setAttribute("d",TTS.on?"M7 5h3v14H7zM14 5h3v14h-3z":"M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11");}
 document.addEventListener("change",e=>{if(e.target.id==="ttsvoice"){S.settings.ttsVoice=e.target.value;save();}});
 document.addEventListener("click",e=>{const r=e.target.closest("#ttsrate [data-r]");if(r){S.settings.ttsRate=+r.dataset.r;save();render();return;}
-  if(e.target.id==="ttstest"){if(!synth)return;ttsUnlock();if(synth.speaking)synth.cancel();ttsSay("Willkommen bei Tiefgang. So klingt diese Stimme, wenn sie dir ein Häppchen vorliest.",()=>{});}});
+  if(e.target.id==="ttstest"){if(!synth){toast("Kein Web Speech in diesem Browser");return;}TTS.err="";TTS.started=false;setTimeout(()=>{const el=$("#ttsdiag");if(el)el.textContent=(TTS.started?"Ton gestartet. ":"Kein Start. ")+ttsDiag();},3000);ttsUnlock();if(synth.speaking)synth.cancel();ttsSay("Willkommen bei Tiefgang. So klingt diese Stimme, wenn sie dir ein Häppchen vorliest.",()=>{});}});
 /* ================= Hörliste (Chatterbox über GitHub Actions, Podcast-Feed im Worker) ================= */
 const AUD={items:[],ids:new Set()};
 try{const c=JSON.parse(localStorage.getItem("tiefgang.aud")||"[]");AUD.items=c;AUD.ids=new Set(c.map(x=>x.id));}catch(_){}

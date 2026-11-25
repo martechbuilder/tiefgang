@@ -1,11 +1,11 @@
-const CACHE = "tiefgang-202611251331";
+const CACHE = "tiefgang-202611251332";
 const CORE = ["./", "./index.html", "./content.js", "./manifest.json",
   "./icons/icon-nacht-180.png", "./icons/icon-glas-180.png", "./icons/icon-hell-180.png", "./icons/icon-getoent-180.png",
   "./icons/preview-nacht.svg", "./icons/preview-glas.svg", "./icons/preview-hell.svg", "./icons/preview-getoent.svg"];
 const ART = ["biologie","debatten","denken","digital","eu","geschichte","klima","koepfe","patriarchat","philosophie","physik","politik",
   "populismus","psychologie","schluesselpaper","sozialismus","streitfragen","technologie","waswaerewenn","weltall","werkzeugkasten","wirtschaft"]
   .map(c => "./art/" + c + ".jpg");
-const DATA = ["./data/biologie.cb20dc9c0b.js", "./data/debatten.6f8adaa7c8.js", "./data/denken.6c8fca25b7.js", "./data/digital.6c8fe0f851.js", "./data/eu.b10fcc7fd2.js", "./data/geschichte.3609121187.js", "./data/klima.dd018ba70d.js", "./data/koepfe.43be37b747.js", "./data/patriarchat.fba38d18e6.js", "./data/philosophie.8b93f5d8fa.js", "./data/physik.ccb12dd492.js", "./data/politik.58598cc1a5.js", "./data/populismus.676658a53e.js", "./data/psychologie.890f2a4f99.js", "./data/schluesselpaper.2868495db8.js", "./data/sozialismus.f8e8baf434.js", "./data/streitfragen.037db70de7.js", "./data/technologie.d02f473889.js", "./data/waswaerewenn.988bef6adf.js", "./data/weltall.752d2c4aa0.js", "./data/werkzeugkasten.79bacb6205.js", "./data/wirtschaft.33810ac84b.js", "./data/glossar.dae75c988b.js"];
+const DATA = ["./data/biologie.cb20dc9c0b.js", "./data/debatten.4125f83be0.js", "./data/denken.6c8fca25b7.js", "./data/digital.7cd03f4d00.js", "./data/eu.b10fcc7fd2.js", "./data/geschichte.3609121187.js", "./data/klima.dd018ba70d.js", "./data/koepfe.944a7a4040.js", "./data/patriarchat.fba38d18e6.js", "./data/philosophie.8b93f5d8fa.js", "./data/physik.ccb12dd492.js", "./data/politik.79f0dae89d.js", "./data/populismus.a317d2ce6b.js", "./data/psychologie.890f2a4f99.js", "./data/schluesselpaper.58161b3632.js", "./data/sozialismus.0ee9f14ef0.js", "./data/streitfragen.cd0ad75e93.js", "./data/technologie.d02f473889.js", "./data/waswaerewenn.7dd9c35dbe.js", "./data/weltall.752d2c4aa0.js", "./data/werkzeugkasten.e6dbc3643a.js", "./data/wirtschaft.33810ac84b.js", "./data/glossar.dae75c988b.js"];
 
 self.addEventListener("install", e => {
   e.waitUntil((async () => {
