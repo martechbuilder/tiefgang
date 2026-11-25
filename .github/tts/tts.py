@@ -108,7 +108,9 @@ m = ChatterboxMultilingualTTS.from_pretrained(device=dev)
 REF = str(pathlib.Path(__file__).with_name("thorsten_ref.wav"))
 SR = m.sr
 def clean(w):
+    """Gibt (audio, sprache_gefunden) zurück."""
     y = w.squeeze().detach().cpu().numpy().astype(np.float32)
+    found = False
     y, _ = librosa.effects.trim(y, top_db=38, frame_length=1024, hop_length=256)  # Ruhe am Rand entfernen
     # Atmer und Rauschen am Rand: dort schneiden, wo die eigentliche Sprache beginnt bzw. endet
     hop = int(SR * 0.01); fr = librosa.feature.rms(y=y, frame_length=hop * 3, hop_length=hop)[0]
@@ -118,7 +120,8 @@ def clean(w):
         n = min(len(vf), len(fr))
         loud = fr[:n] > 0.15 * np.percentile(fr, 90)
         vi = np.where(vf[:n] & loud)[0]
-        if len(vi):
+        if len(vi) >= 8:
+            found = True
             # Inseln: letzte stimmhafte Gruppe mit mindestens 80 ms, damit einzelne Fehlklassifikationen nicht zählen
             groups, start = [], vi[0]
             for i0, i1 in zip(vi[:-1], vi[1:]):
@@ -133,14 +136,18 @@ def clean(w):
     if len(y) > 4 * f:
         y[:f] *= np.linspace(0, 1, f); y[-f:] *= np.linspace(1, 0, f)  # weiche Ränder, keine Knackser
     rms = np.sqrt(np.mean(y ** 2)) + 1e-9
-    return y * min(0.08 / rms, 4.0)  # gleiche Lautheit je Abschnitt
+    return y * min(0.08 / rms, 4.0), found  # gleiche Lautheit je Abschnitt
 stille = lambda s: np.zeros(int(SR * s), dtype=np.float32)
 out = []
 for pi, p in enumerate(paras):
     chunks = abschnitte(norm(p))
     for ci, c in enumerate(chunks):
-        w = m.generate(c, language_id="de", audio_prompt_path=REF, exaggeration=0.52, cfg_weight=0.35, temperature=0.68)
-        out.append(clean(w))
+        for versuch in range(3):  # Abschnitt ohne erkennbare Sprache (nur Rauschen) neu erzeugen
+            w = m.generate(c, language_id="de", audio_prompt_path=REF, exaggeration=0.52, cfg_weight=0.35, temperature=0.68)
+            yc, ok = clean(w)
+            if ok: break
+            print("Neuversuch wegen fehlender Sprache:", c[:60], flush=True)
+        out.append(yc)
         if ci < len(chunks) - 1: out.append(stille(0.32))
     out.append(stille(1.05 if pi == 0 else 0.75))
 y = np.concatenate(out)
