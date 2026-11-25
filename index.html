@@ -708,7 +708,7 @@ function drawReader(){
   let st0=0;sc.addEventListener("scroll",()=>{upd();const now=Date.now();if(now-st0>800){st0=now;S.cur={id:b.id,i,y:sc.scrollTop,t:now};save();}},{passive:true});upd();
   S.cur={id:b.id,i,y:(R.restoreY||0),t:Date.now()};save();if(R.restoreY){sc.scrollTop=R.restoreY;R.restoreY=0;}
   $("#rclose").onclick=closeReader;
-  $("#rtts").onclick=()=>{TTS.on?ttsStop():ttsStart();drawReaderBar();};
+  $("#rtts").onclick=()=>{if(TTS.on){ttsStop();}else{ttsUnlock();ttsStart();}drawReaderBar();};
   if(TTS.on)setTimeout(ttsStart,250);
   $("#rinfo").onclick=()=>{const id=b.id;closeReader();go({v:"book",id,tab:tabOf()});};
   $("#rprev").onclick=()=>{if(R.i>0){R.i--;drawReader();}};
@@ -899,13 +899,18 @@ function ttsVoice(){const vs=ttsVoices();return vs.find(v=>v.name===S.settings.t
 if(synth&&synth.addEventListener)synth.addEventListener("voiceschanged",()=>{if(route.v==="settings")render();});
 function ttsChunks(t){const out=[];String(t).replace(/\*\*/g,"").split(/(?<=[.!?…:;])\s+/).forEach(s=>{if(out.length&&(out[out.length-1].length+s.length)<220)out[out.length-1]+=" "+s;else out.push(s);});return out.filter(x=>x.trim());}
 function ttsSay(text,onend){const u=new SpeechSynthesisUtterance(text);const v=ttsVoice();if(v){u.voice=v;u.lang=v.lang;}else u.lang="de-DE";
-  u.rate=+(S.settings.ttsRate||0.9);u.pitch=0.95;u.onend=onend;u.onerror=onend;synth.speak(u);}
+  u.rate=+(S.settings.ttsRate||0.9);u.pitch=0.95;u.onstart=()=>{TTS.started=true;};
+  let done=false;const fin=()=>{if(done)return;done=true;onend&&onend();};u.onend=fin;u.onerror=fin;
+  try{synth.resume();}catch(_){}synth.speak(u);}
 async function ttsWake(on){try{if(on&&"wakeLock" in navigator&&!TTS.lock){TTS.lock=await navigator.wakeLock.request("screen");TTS.lock.addEventListener("release",()=>{TTS.lock=null;});}
   if(!on&&TTS.lock){await TTS.lock.release();TTS.lock=null;}}catch(_){}}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&TTS.on)ttsWake(true);});
+function ttsUnlock(){if(!synth||TTS.unlocked)return;try{synth.resume();const u=new SpeechSynthesisUtterance(" ");u.volume=0;u.lang="de-DE";synth.speak(u);TTS.unlocked=true;}catch(_){}}
 function ttsStart(){
   if(!synth){toast("Vorlesen wird hier nicht unterstützt");return;}if(!R)return;
-  synth.cancel();TTS.on=true;const g=++TTS.gen;ttsWake(true);
+  const busy=synth.speaking||synth.pending;if(busy)synth.cancel();
+  TTS.on=true;const g=++TTS.gen;ttsWake(true);TTS.started=false;
+  setTimeout(()=>{if(g===TTS.gen&&TTS.on&&!TTS.started){toast("Kein Ton? Stummschalter und Lautstärke prüfen oder in den Einstellungen eine andere Stimme wählen.");}},4000);
   const {b,i}=R;const n=b.chapters.length;const items=[];
   if(i<n){const c=b.chapters[i];items.push({t:c.h+".",p:-1});c.body.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean).forEach((para,pi)=>ttsChunks(para).forEach(t=>items.push({t,p:pi})));}
   else{items.push({t:"Zum Mitnehmen.",p:-1});(b.takeaways||[]).forEach(t=>items.push({t:t.replace(/\*\*/g,""),p:-1}));}
@@ -915,13 +920,13 @@ function ttsStart(){
     if(k>=items.length){if(i<n){advance();if(!R||!TTS.on)ttsStop();}else ttsStop();return;}
     const it=items[k++];if(it.p>=0){const el=document.querySelectorAll("#reader .body p")[it.p];if(el){el.classList.add("tts-now");if(k===1||items[k-2].p!==it.p)el.scrollIntoView({behavior:"smooth",block:"center"});}}
     ttsSay(it.t,next);};
-  next();
+  if(busy)setTimeout(next,250);else next();
 }
 function ttsStop(){TTS.on=false;TTS.gen++;if(synth)synth.cancel();ttsWake(false);document.querySelectorAll("#reader .body p.tts-now").forEach(x=>x.classList.remove("tts-now"));drawReaderBar();}
 function drawReaderBar(){const b=$("#rtts");if(!b)return;b.classList.toggle("on",TTS.on);b.querySelector("path").setAttribute("d",TTS.on?"M7 5h3v14H7zM14 5h3v14h-3z":"M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11");}
 document.addEventListener("change",e=>{if(e.target.id==="ttsvoice"){S.settings.ttsVoice=e.target.value;save();}});
 document.addEventListener("click",e=>{const r=e.target.closest("#ttsrate [data-r]");if(r){S.settings.ttsRate=+r.dataset.r;save();render();return;}
-  if(e.target.id==="ttstest"){if(!synth)return;synth.cancel();ttsSay("Willkommen bei Tiefgang. So klingt diese Stimme, wenn sie dir ein Häppchen vorliest.",()=>{});}});
+  if(e.target.id==="ttstest"){if(!synth)return;ttsUnlock();if(synth.speaking)synth.cancel();ttsSay("Willkommen bei Tiefgang. So klingt diese Stimme, wenn sie dir ein Häppchen vorliest.",()=>{});}});
 /* ================= Hörliste (Chatterbox über GitHub Actions, Podcast-Feed im Worker) ================= */
 const AUD={items:[],ids:new Set()};
 try{const c=JSON.parse(localStorage.getItem("tiefgang.aud")||"[]");AUD.items=c;AUD.ids=new Set(c.map(x=>x.id));}catch(_){}
