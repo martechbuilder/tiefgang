@@ -1,0 +1,98 @@
+name: Hörfolge erzeugen
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        description: "Titel-ID (leer = nächster aus der Warteschlange)"
+        required: false
+  schedule:
+    - cron: "41 * * * *"   # Reserve, falls ein Auslöser verloren geht
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: audio
+  cancel-in-progress: false
+env:
+  API: https://tiefgang-api.teamplaner.workers.dev
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      id: ${{ steps.p.outputs.id }}
+      chapters: ${{ steps.p.outputs.chapters }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        env:
+          ADMIN: ${{ secrets.TG_ADMIN }}
+          IN_ID: ${{ github.event.inputs.id }}
+        run: |
+          ID="$IN_ID"
+          if [ -z "$ID" ]; then ID=$(curl -s -H "X-Admin: $ADMIN" "$API/admin/audio-next" | python3 -c "import json,sys;print(json.load(sys.stdin).get('id') or '')"); fi
+          if [ -z "$ID" ]; then echo "id=" >> $GITHUB_OUTPUT; echo "chapters=[]" >> $GITHUB_OUTPUT; exit 0; fi
+          pip install -q num2words >/dev/null
+          N=$(python3 .github/tts/tts.py --id "$ID" --chapter 0 --out x --list)
+          echo "id=$ID" >> $GITHUB_OUTPUT
+          python3 -c "import json;print('chapters='+json.dumps(list(range(-1,$N))))" >> $GITHUB_OUTPUT
+          curl -s -X POST -H "X-Admin: $ADMIN" -H "Content-Type: application/json" -d "{\"id\":\"$ID\",\"state\":\"running\",\"n\":$N}" "$API/admin/audio-state"
+  speak:
+    needs: plan
+    if: needs.plan.outputs.id != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      max-parallel: 18
+      matrix:
+        ch: ${{ fromJson(needs.plan.outputs.chapters) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: .github/tts/requirements.txt
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-chatterbox-0.1.7
+      - run: pip install -q --extra-index-url https://download.pytorch.org/whl/cpu -r .github/tts/requirements.txt
+      - run: python .github/tts/tts.py --id "${{ needs.plan.outputs.id }}" --chapter ${{ matrix.ch }} --out part.wav
+      - run: ffmpeg -loglevel error -y -i part.wav -ac 1 -ar 24000 -c:a libmp3lame -b:a 64k "part_$(printf '%03d' $(( ${{ matrix.ch }} + 1 ))).mp3"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: part-${{ matrix.ch }}
+          path: part_*.mp3
+          retention-days: 2
+  assemble:
+    needs: [plan, speak]
+    if: needs.plan.outputs.id != '' && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: parts
+          merge-multiple: true
+      - env:
+          ADMIN: ${{ secrets.TG_ADMIN }}
+          GH_TOKEN: ${{ github.token }}
+          ID: ${{ needs.plan.outputs.id }}
+        run: |
+          ls parts | sort > /dev/null
+          if [ -z "$(ls parts 2>/dev/null)" ]; then
+            curl -s -X POST -H "X-Admin: $ADMIN" -H "Content-Type: application/json" -d "{\"id\":\"$ID\",\"state\":\"failed\"}" "$API/admin/audio-state"; exit 1; fi
+          for f in $(ls parts/*.mp3 | sort); do echo "file '$PWD/$f'"; done > list.txt
+          ffmpeg -loglevel error -y -f concat -safe 0 -i list.txt -c:a libmp3lame -b:a 64k -ac 1 "$ID.mp3"
+          DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$ID.mp3" | cut -d. -f1)
+          SIZE=$(stat -c %s "$ID.mp3")
+          gh release upload audio "$ID.mp3" --clobber -R "$GITHUB_REPOSITORY"
+          URL="https://github.com/$GITHUB_REPOSITORY/releases/download/audio/$ID.mp3"
+          curl -s -X POST -H "X-Admin: $ADMIN" -H "Content-Type: application/json" -d "{\"id\":\"$ID\",\"state\":\"done\",\"url\":\"$URL\",\"dur\":$DUR,\"size\":$SIZE}" "$API/admin/audio-state"
+      - name: Nächsten Titel anstoßen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ADMIN: ${{ secrets.TG_ADMIN }}
+        run: |
+          NEXT=$(curl -s -H "X-Admin: $ADMIN" "$API/admin/audio-next" | python3 -c "import json,sys;print(json.load(sys.stdin).get('id') or '')")
+          if [ -n "$NEXT" ]; then gh workflow run audio.yml -R "$GITHUB_REPOSITORY" -f id="$NEXT" || true; fi

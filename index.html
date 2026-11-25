@@ -423,7 +423,7 @@ async function checkUpdate(btn){
 function render(){
   renderTabs();setTimeout(showVer,0);
   const v=route.v;
-  const html=v==="home"?vHome():v==="discover"?vDiscover():v==="cat"?vCat():v==="book"?vBook():v==="library"?vLibrary():v==="search"?vSearch():v==="trainer"?vTrainer():v==="studien"?vStudien():v==="news"?vNews():v==="fragen"?vFragen():v==="settings"?vSettings():vHome();
+  const html=v==="home"?vHome():v==="discover"?vDiscover():v==="cat"?vCat():v==="book"?vBook():v==="library"?vLibrary():v==="search"?vSearch():v==="trainer"?vTrainer():v==="studien"?vStudien():v==="news"?vNews():v==="fragen"?vFragen():v==="hoeren"?vHoeren():v==="settings"?vSettings():vHome();
   $("#app").innerHTML=`<div class="view">${html}</div>`;
   if(v==="studien"){const i=$("#sq");i.value=route.sq||"";i.addEventListener("input",()=>{route.sq=i.value;route.sn=0;$("#stuhits").innerHTML=stuHits();});}
   if(v==="search"){const i=$("#q");i.value=route.q||"";i.addEventListener("input",()=>{route.q=i.value;$("#hits").innerHTML=hits(i.value);});if(!route.q)setTimeout(()=>i.focus(),50);}
@@ -451,6 +451,7 @@ document.addEventListener("click",e=>{
   else if(d.go==="studien")go({v:"studien",tab:"discover"});
   else if(d.go==="news")go({v:"news",tab:"home"});
   else if(d.go==="fragen")go({v:"fragen",tab:route.tab||tabOf()});
+  else if(d.go==="hoeren")go({v:"hoeren",tab:"library"});
   else if(d.go==="newssrc"){route.ns=d.k||null;render();}
   else if(d.go==="stug"){route.sg=d.k;route.sn=0;render();}
   else if(d.go==="stuc"){route.sc=d.k;route.sn=0;render();}
@@ -564,7 +565,7 @@ function vBook(){
     <div class="facts"><span>${b._min} Min</span><span>${n} Häppchen</span>${r?`<span class="done">${r}/${n} gelesen</span>`:""}</div>
     <button class="cta" data-go="read" data-id="${b.id}">${ic(I.play)} ${r===0?"Lesen":r===n?"Nochmal lesen":"Weiterlesen"}</button>
   </div>
-  <button class="flag" style="margin-top:12px" data-ask="${b.id}">💬 Frage zu diesem Titel</button>
+  <button class="flag" style="margin-top:12px" data-ask="${b.id}">💬 Frage zu diesem Titel</button> <button class="flag" data-audio="${b.id}">${AUD.ids.has(b.id)?"🎧 In der Hörliste":"🎧 Zur Hörliste"}</button>
   ${b.paper?paperBox(b.paper,b):""}${b.person?personBox(b.person):""}
   ${b.summary?`<div class="summary glass">${md(b.summary)}</div>`:""}
   <div class="h-sec"><h2>Häppchen</h2></div>
@@ -581,7 +582,7 @@ function vLibrary(){
   if(lt==="offen")bs=inProgress();
   if(lt==="merk")bs=S.saved.map(id=>BY_ID[id]).filter(Boolean);
   if(lt==="fertig")bs=BOOKS.filter(b=>readCount(b)===b.chapters.length).sort((a,b)=>lastTouch(b)-lastTouch(a));
-  return `<div class="topnav" style="margin-bottom:0"><div class="h-big" style="flex:1;margin:0">Bibliothek</div><button class="iconbtn" aria-label="Einstellungen" data-go="settings">${ic(I.gear)}</button></div>
+  return `<div class="topnav" style="margin-bottom:0"><div class="h-big" style="flex:1;margin:0">Bibliothek</div><button class="iconbtn" aria-label="Hörliste" data-go="hoeren"><svg class="ic" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0116 0v2M4 14h3v6H4zM17 14h3v6h-3z"/></svg></button><button class="iconbtn" aria-label="Einstellungen" data-go="settings">${ic(I.gear)}</button></div>
   <div class="chips" style="margin-top:18px">${[["offen","Angefangen"],["merk","Gemerkt"],["fertig","Gelesen"]].map(([k,l])=>`<button class="chip ${lt===k?"on":""}" data-go="libtab" data-k="${k}">${l}</button>`).join("")}</div>
   <div class="list">${bs.map(b=>row(b)).join("")||`<div class="empty">${lt==="merk"?"Mit dem Lesezeichen oben auf einer Titelseite merkst du dir Titel für später.":lt==="fertig"?"Noch nichts komplett gelesen.":"Noch nichts angefangen. Tipp auf Heute → Ein Häppchen lesen."}</div>`}</div>`;
 }
@@ -921,6 +922,31 @@ function drawReaderBar(){const b=$("#rtts");if(!b)return;b.classList.toggle("on"
 document.addEventListener("change",e=>{if(e.target.id==="ttsvoice"){S.settings.ttsVoice=e.target.value;save();}});
 document.addEventListener("click",e=>{const r=e.target.closest("#ttsrate [data-r]");if(r){S.settings.ttsRate=+r.dataset.r;save();render();return;}
   if(e.target.id==="ttstest"){if(!synth)return;synth.cancel();ttsSay("Willkommen bei Tiefgang. So klingt diese Stimme, wenn sie dir ein Häppchen vorliest.",()=>{});}});
+/* ================= Hörliste (Chatterbox über GitHub Actions, Podcast-Feed im Worker) ================= */
+const AUD={items:[],ids:new Set()};
+try{const c=JSON.parse(localStorage.getItem("tiefgang.aud")||"[]");AUD.items=c;AUD.ids=new Set(c.map(x=>x.id));}catch(_){}
+async function loadAud(){if(!API.startsWith("https"))return;try{const r=await tfetch(API+"/audio/list?k="+devKey());if(!r.ok)return;const d=await r.json();AUD.items=d.items||[];AUD.ids=new Set(AUD.items.map(x=>x.id));localStorage.setItem("tiefgang.aud",JSON.stringify(AUD.items));if(["hoeren","book"].includes(route.v)){const y=window.scrollY;render();window.scrollTo(0,y);}}catch(_){}}
+const feedUrl=()=>API+"/feed/"+devKey()+".xml";
+function audState(x){return x.state==="done"?"Fertig":x.state==="running"?"Wird gerade eingesprochen":x.state==="failed"?"Fehlgeschlagen, wird erneut versucht":"In der Warteschlange";}
+function fmtDur(s){s=+s||0;const m=Math.round(s/60);return m+" Min";}
+function vHoeren(){
+  const top=`<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button></div><div class="h-big" style="font-size:30px">Hörliste</div>`;
+  const done=AUD.items.filter(x=>x.state==="done");
+  return top+`<p class="small" style="margin:-6px 2px 14px">Titel, die du mit „🎧 Zur Hörliste“ markierst, spricht eine freie KI-Stimme (Chatterbox, Stimme Thorsten) automatisch ein. Das dauert etwa eine Stunde pro Titel. Fertige Folgen hörst du hier oder im Auto über Apple Podcasts, auch bei gesperrtem Bildschirm und neben Google Maps.</p>
+  <div class="glass set" style="margin-bottom:14px"><div class="setrow"><span>Als Podcast abonnieren</span><a class="chip" style="text-decoration:none" href="${"podcast://"+feedUrl().replace(/^https:\/\//,"")}">In Podcasts öffnen</a></div>
+   <div class="setrow"><span class="small" style="flex:1;word-break:break-all">${esc(feedUrl())}</span><button class="copy" data-copy="${esc(feedUrl())}">Kopieren</button></div>
+   <div class="hint" style="padding:10px 16px">Einmalig: auf „In Podcasts öffnen“ tippen. Falls das nicht klappt: Link kopieren, in Apple Podcasts unter Mediathek, oben rechts „…“, „Sendung per URL folgen“ einfügen. Der Link ist privat, nicht teilen.</div></div>
+  ${AUD.items.length?`<div class="glass" style="padding:2px 0">${AUD.items.map(x=>{const b=BY_ID[x.id];return `<div class="qa"><div class="m">${audState(x)}${x.dur?" · "+fmtDur(x.dur):""}</div><div class="q">${esc(b?b.title:x.title)}</div>
+    ${x.state==="done"?`<audio controls preload="none" src="${esc(x.url)}" data-aud="${esc(x.id)}" style="width:100%;margin-top:10px"></audio>`:""}</div>`;}).join("")}</div>`:`<div class="empty">Noch nichts in der Hörliste. Auf einer Titelseite „🎧 Zur Hörliste“ tippen.</div>`}`;
+}
+document.addEventListener("play",e=>{const a=e.target;if(!a||!a.dataset||!a.dataset.aud)return;document.querySelectorAll("audio[data-aud]").forEach(x=>{if(x!==a)x.pause();});
+  const b=BY_ID[a.dataset.aud];if("mediaSession" in navigator&&b){navigator.mediaSession.metadata=new MediaMetadata({title:b.title,artist:"Tiefgang",album:(CATS[b.cat]||{}).n||"",artwork:[{src:"icons/icon-nacht-512.png",sizes:"512x512",type:"image/png"}]});}},true);
+document.addEventListener("click",async e=>{const a=e.target.closest("[data-audio]");if(!a)return;const b=BY_ID[a.dataset.audio];if(!b)return;
+  if(AUD.ids.has(b.id)){go({v:"hoeren",tab:"library"});return;}
+  a.textContent="🎧 Wird angelegt …";
+  try{const r=await tfetch(API+"/audio/queue",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({k:devKey(),id:b.id,title:b.title,sub:b.subtitle||""})});if(!r.ok)throw 0;
+    AUD.ids.add(b.id);AUD.items.unshift({id:b.id,title:b.title,state:"queued",added:Date.now()});localStorage.setItem("tiefgang.aud",JSON.stringify(AUD.items));toast("In der Hörliste, wird eingesprochen");render();}
+  catch(_){toast("Keine Verbindung, bitte später nochmal");a.textContent="🎧 Zur Hörliste";}});
 function argCard(a){
   const m=String(a).match(/^\s*(?:Wenn jemand sagt:?)?\s*[„"]?(.+?)[“"]?\s*(?:→|->)\s*(?:Antwort:?)?\s*(.+)$/s);
   if(!m)return `<div class="ta glass">${md(a)}</div>`;
@@ -1013,7 +1039,7 @@ function suggestNext(b){
 render();
 try{if(S.cur&&BY_ID[S.cur.id]&&Date.now()-S.cur.t<36*3600e3){const c=S.cur;openReader(c.id,c.i,c.y);}}catch(_){}
 setTimeout(()=>{loadGloss();loadAll();},1200);
-loadNews(true);loadQA();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){loadNews();loadQA();}});
+loadNews(true);loadQA();loadAud();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){loadNews();loadQA();loadAud();}});
 if("serviceWorker" in navigator&&location.protocol!=="file:"){
   const hadCtl=!!navigator.serviceWorker.controller;
   navigator.serviceWorker.register("sw.js").then(r=>{document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")r.update().catch(()=>{});});}).catch(()=>{});
