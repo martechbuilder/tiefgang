@@ -839,9 +839,11 @@ function newsItem(x){
   const rel=(x.rel||[]).map(id=>BY_ID[id]).filter(Boolean);
   return `<div class="news"><div class="m">${esc(x.src)} · ${ago(x.t)}</div><a href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.title)}</a>${x.teaser?`<div class="s">${esc(x.teaser)}</div>`:""}${rel.map(b=>`<button class="nrel" data-go="book" data-id="${b.id}">→ Hintergrund: ${esc(b.title)}</button>`).join("")}</div>`;
 }
+function newsMix(n){const seen=new Set(),out=[];for(const x of NEWS.items){if(!seen.has(x.src)){seen.add(x.src);out.push(x);}if(out.length>=n)break;}
+  for(const x of NEWS.items){if(out.length>=n)break;if(!out.includes(x))out.push(x);}return out.sort((a,b)=>b.t-a.t);}
 function newsBlock(){
   if(!NEWS||!NEWS.items.length)return "";
-  return `<div class="h-sec"><h2>Nachrichten</h2><button data-go="news">Alle</button></div><div class="glass" style="padding:2px 0">${NEWS.items.slice(0,5).map(newsItem).join("")}</div>`;
+  return `<div class="h-sec"><h2>Nachrichten</h2><button data-go="news">Alle</button></div><div class="glass" style="padding:2px 0">${newsMix(5).map(newsItem).join("")}</div>`;
 }
 function vNews(){
   const top=`<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button></div><div class="h-big" style="font-size:30px">Nachrichten</div>`;
