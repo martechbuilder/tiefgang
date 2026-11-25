@@ -679,7 +679,7 @@ function openReader(id,i,y){
   $("#reader").classList.remove("hidden");document.body.style.overflow="hidden";
   drawReader();
 }
-function closeReader(){if(TTS.on)ttsStop();$("#reader").classList.add("hidden");document.body.style.overflow="";R=null;S.cur=null;save();render();}
+function closeReader(){if(TTS.on)ttsStop();const ra=$("#raud");if(ra){ra.pause();ra.remove();}$("#reader").classList.add("hidden");document.body.style.overflow="";R=null;S.cur=null;save();render();}
 function drawReader(){
   const {b,i}=R;const n=b.chapters.length;const atEnd=i>=n;
   const c=b.chapters[Math.min(i,n-1)];
@@ -710,7 +710,7 @@ function drawReader(){
   S.cur={id:b.id,i,y:(R.restoreY||0),t:Date.now()};save();if(R.restoreY){sc.scrollTop=R.restoreY;R.restoreY=0;}
   $("#rclose").onclick=closeReader;
   $("#rtts").onclick=()=>{const af=AUD.items.find(x=>x.id===b.id&&x.state==="done"&&x.url);
-    if(af){let el=$("#raud");if(!el){el=document.createElement("audio");el.id="raud";el.controls=true;el.src=af.url;el.dataset.aud=b.id;el.style.cssText="position:fixed;left:12px;right:12px;bottom:calc(var(--sb) + 84px);width:calc(100% - 24px);z-index:70";$("#reader").appendChild(el);}
+    if(af){let el=$("#raud");if(!el){el=document.createElement("audio");el.id="raud";el.controls=true;el.src=af.url;el.dataset.aud=b.id;el.style.cssText="position:fixed;left:12px;right:12px;bottom:calc(var(--sb) + 84px);width:calc(100% - 24px);z-index:90";document.body.appendChild(el);}
       if(el.paused)el.play().catch(()=>{});else el.pause();return;}
     if(!TTS.on&&!S.ttsHint){S.ttsHint=1;save();toast("Für die schöne Chatterbox-Stimme: Titelseite → 🎧 Zur Hörliste. Bis dahin liest die iPhone-Stimme.");}
     if(TTS.on){ttsStop();}else{ttsUnlock();ttsStart();}drawReaderBar();};
