@@ -710,7 +710,7 @@ function drawReader(){
   S.cur={id:b.id,i,y:(R.restoreY||0),t:Date.now()};save();if(R.restoreY){sc.scrollTop=R.restoreY;R.restoreY=0;}
   $("#rclose").onclick=closeReader;
   $("#rtts").onclick=()=>{const af=AUD.items.find(x=>x.id===b.id&&x.state==="done"&&x.url);
-    if(af){let el=$("#raud");if(!el){el=document.createElement("audio");el.id="raud";el.controls=true;el.src=af.url;el.dataset.aud=b.id;el.style.cssText="position:fixed;left:12px;right:12px;bottom:calc(var(--sb) + 84px);width:calc(100% - 24px);z-index:90";document.body.appendChild(el);}
+    if(af){let el=$("#raud");if(!el){el=document.createElement("audio");el.id="raud";el.controls=true;el.src=API+"/a/"+af.id+".mp3";el.dataset.aud=b.id;el.style.cssText="position:fixed;left:12px;right:12px;bottom:calc(var(--sb) + 84px);width:calc(100% - 24px);z-index:90";document.body.appendChild(el);}
       if(el.paused)el.play().catch(()=>{});else el.pause();return;}
     if(!TTS.on&&!S.ttsHint){S.ttsHint=1;save();toast("Für die schöne Chatterbox-Stimme: Titelseite → 🎧 Zur Hörliste. Bis dahin liest die iPhone-Stimme.");}
     if(TTS.on){ttsStop();}else{ttsUnlock();ttsStart();}drawReaderBar();};
@@ -950,7 +950,7 @@ function vHoeren(){
    <div class="setrow"><span class="small" style="flex:1;word-break:break-all">${esc(feedUrl())}</span><button class="copy" data-copy="${esc(feedUrl())}">Kopieren</button></div>
    <div class="hint" style="padding:10px 16px">Einmalig: auf „In Podcasts öffnen“ tippen. Falls das nicht klappt: Link kopieren, in Apple Podcasts unter Mediathek, oben rechts „…“, „Sendung per URL folgen“ einfügen. Der Link ist privat, nicht teilen.</div></div>
   ${AUD.items.length?`<div class="glass" style="padding:2px 0">${AUD.items.map(x=>{const b=BY_ID[x.id];return `<div class="qa"><div class="m">${audState(x)}${x.dur?" · "+fmtDur(x.dur):""}</div><div class="q">${esc(b?b.title:x.title)}</div>
-    ${x.state==="done"?`<audio controls preload="none" src="${esc(x.url)}" data-aud="${esc(x.id)}" style="width:100%;margin-top:10px"></audio>`:""}</div>`;}).join("")}</div>`:`<div class="empty">Noch nichts in der Hörliste. Auf einer Titelseite „🎧 Zur Hörliste“ tippen.</div>`}`;
+    ${x.state==="done"?`<audio controls preload="none" src="${esc(API+"/a/"+x.id+".mp3")}" data-aud="${esc(x.id)}" style="width:100%;margin-top:10px"></audio>`:""}</div>`;}).join("")}</div>`:`<div class="empty">Noch nichts in der Hörliste. Auf einer Titelseite „🎧 Zur Hörliste“ tippen.</div>`}`;
 }
 document.addEventListener("play",e=>{const a=e.target;if(!a||!a.dataset||!a.dataset.aud)return;document.querySelectorAll("audio[data-aud]").forEach(x=>{if(x!==a)x.pause();});
   const b=BY_ID[a.dataset.aud];if("mediaSession" in navigator&&b){navigator.mediaSession.metadata=new MediaMetadata({title:b.title,artist:"Tiefgang",album:(CATS[b.cat]||{}).n||"",artwork:[{src:"icons/icon-nacht-512.png",sizes:"512x512",type:"image/png"}]});}},true);
