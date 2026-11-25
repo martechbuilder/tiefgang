@@ -248,6 +248,8 @@ input{font:inherit;color:inherit}
 .qa .q{font-weight:650;font-size:15.5px;line-height:1.4;margin-top:4px}.qa .ctx{font-size:13px;color:var(--txt3);margin-top:4px;font-style:italic}
 .qa .a{font-size:15px;line-height:1.55;color:var(--txt2);margin-top:8px;white-space:pre-wrap}.qa .w{font-size:13px;color:var(--txt3);margin-top:8px}
 .qa.new{background:rgba(93,138,214,.10)}
+.gl{all:unset;display:inline;cursor:pointer;border-bottom:1.5px dotted rgba(160,190,235,.55);-webkit-tap-highlight-color:transparent}
+.gl:active{background:rgba(93,138,214,.2)}
 .sheet-bg{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
 .sheet{width:min(560px,100%);padding:20px 18px calc(var(--sb) + 18px);border-radius:22px 22px 0 0}
 .sheet h3{margin:0 0 4px;font-size:18px}.sheet .small{margin:0 0 12px}
@@ -301,6 +303,21 @@ BOOKS.forEach(b=>{if(b._w==null)b._w=b.chapters.reduce((a,c)=>a+words(c.body),0)
 /* ===== Texte je Kategorie nachladen ===== */
 const LOADED={},PEND={};
 const ALLCATS=[...new Set(BOOKS.map(b=>b.cat))];
+/* ===== Glossar ===== */
+let GL=[],GLRX=null,GLMAP={};const GLPEND={};
+window.TG_GLADD=function(arr){GL=arr||[];const forms=[];GL.forEach((g,i)=>{[g.t,...(g.v||[])].forEach(f=>{if(f&&f.length>2&&!GLMAP[f]){GLMAP[f]=i;forms.push(f);}});});
+  forms.sort((a,b)=>b.length-a.length);GLRX=forms.length?new RegExp("(?<![\\wäöüßÄÖÜ-])("+forms.map(f=>f.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")(?![\\wäöüßÄÖÜ])","g"):null;};
+function loadGloss(){const src=(window.TG_FILES||{})._gl;if(!src||GLRX||GLPEND.p)return GLPEND.p||Promise.resolve();
+  GLPEND.p=new Promise(res=>{const el=document.createElement("script");el.src=src;el.onload=()=>res();el.onerror=()=>{GLPEND.p=null;res();};document.head.appendChild(el);});return GLPEND.p;}
+function glossify(html){if(!GLRX||S.settings.gloss===false)return html;const used=new Set();let n=0;
+  return html.split(/(<[^>]+>)/).map(part=>{if(part.startsWith("<"))return part;
+    return part.replace(GLRX,m=>{const i=GLMAP[m];if(i==null||used.has(i)||n>=14)return m;used.add(i);n++;return `<button class="gl" data-gl="${i}">${m}</button>`;});}).join("");}
+function openGloss(i){const g=GL[i];if(!g)return;const see=g.see&&!(R&&R.b.id===g.see)&&BY_ID[g.see];
+  $("#sheet").innerHTML=`<div class="sheet-bg" id="shbg"><div class="sheet glass"><h3>${esc(g.t)}</h3><p class="small">${esc((CATS[g.c]||{}).n||"Begriff")}</p>
+   <p style="font-size:16px;line-height:1.55;margin:0 0 14px">${md(g.e)}</p>${see?`<button class="nrel" style="margin:0 0 14px" data-glsee="${see.id}">→ Mehr dazu: ${esc(see.title)}</button>`:""}
+   <div class="row2"><button class="chip" id="flcancel">Schließen</button></div></div></div>`;}
+document.addEventListener("click",e=>{const g=e.target.closest("[data-gl]");if(g){e.preventDefault();openGloss(+g.dataset.gl);return;}
+  const s2=e.target.closest("[data-glsee]");if(s2){const id=s2.dataset.glsee;closeSheet();if(R)closeReader();go({v:"book",id,tab:"discover"});}});
 if(!window.TG_FILES)ALLCATS.forEach(c=>LOADED[c]=true);
 window.TG_ADD=function(arr){for(const f of arr||[]){const b=BY_ID[f.id];if(!b)continue;const w=b._w,m=b._min;Object.assign(b,f);b._w=w;b._min=m;LOADED[b.cat]=true;}_STU=null;rebuildDeb();};
 function loadCat(c){if(LOADED[c])return Promise.resolve();if(PEND[c])return PEND[c];const src=(window.TG_FILES||{})[c];if(!src){LOADED[c]=true;return Promise.resolve();}
@@ -644,7 +661,8 @@ function snack(){
 }
 function openReader(id,i,y){
   const b=BY_ID[id];if(!b)return;
-  if(!LOADED[b.cat]){toast("Lädt …");loadCat(b.cat).then(()=>{if(LOADED[b.cat])openReader(id,i,y);else toast("Text nicht verfügbar, bitte online öffnen");});return;}
+  const needGl=!GLRX&&(window.TG_FILES||{})._gl&&!GLPEND.tried;
+  if(!LOADED[b.cat]||needGl){if(!LOADED[b.cat])toast("Lädt …");GLPEND.tried=true;Promise.all([loadCat(b.cat),loadGloss()]).then(()=>{if(LOADED[b.cat])openReader(id,i,y);else toast("Text nicht verfügbar, bitte online öffnen");});return;}
   if(i==null)i=nextChapter(b);
   R={b,i,restoreY:y||0};S.last=id;save();
   $("#reader").classList.remove("hidden");document.body.style.overflow="hidden";
@@ -658,7 +676,7 @@ function drawReader(){
   const segs=b.chapters.map((_,j)=>`<i class="${j<i||isRead(b.id,j)&&j!==i?"f":j===i?"c":""}"></i>`).join("");
   let inner;
   if(!atEnd){
-    inner=`<div class="k">Häppchen ${i+1} von ${n}</div><h2>${esc(c.h)}</h2><div class="body">${paras(c.body)}</div><button class="flag" data-flag="${b.id}" data-fi="${i}" data-fk="kapitel">⚑ Aussage prüfen lassen</button> <button class="flag" data-ask="${b.id}" data-fi="${i}">💬 Frage stellen</button><p class="small" style="margin:4px 2px 0">Tipp: Erst den zweifelhaften Satz markieren, dann tippen.</p>`;
+    inner=`<div class="k">Häppchen ${i+1} von ${n}</div><h2>${esc(c.h)}</h2><div class="body">${glossify(paras(c.body))}</div><button class="flag" data-flag="${b.id}" data-fi="${i}" data-fk="kapitel">⚑ Aussage prüfen lassen</button> <button class="flag" data-ask="${b.id}" data-fi="${i}">💬 Frage stellen</button><p class="small" style="margin:4px 2px 0">Tipp: Erst den zweifelhaften Satz markieren, dann tippen.</p>`;
   }else{
     const nb=suggestNext(b);
     inner=`<div class="k">Zum Mitnehmen</div><h2>${esc(b.title)}</h2>
@@ -951,7 +969,7 @@ function suggestNext(b){
 
 render();
 try{if(S.cur&&BY_ID[S.cur.id]&&Date.now()-S.cur.t<36*3600e3){const c=S.cur;openReader(c.id,c.i,c.y);}}catch(_){}
-setTimeout(()=>loadAll(),1200);
+setTimeout(()=>{loadGloss();loadAll();},1200);
 loadNews(true);loadQA();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){loadNews();loadQA();}});
 if("serviceWorker" in navigator&&location.protocol!=="file:"){
   const hadCtl=!!navigator.serviceWorker.controller;
