@@ -1,6 +1,6 @@
 {
-  "name": "Tiefgang",
-  "short_name": "Tiefgang",
+  "name": "Deep Dive",
+  "short_name": "Deep Dive",
   "description": "Lesen statt Scrollen. Wissen in Häppchen.",
   "start_url": "./index.html",
   "scope": "./",

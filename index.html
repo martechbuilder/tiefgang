@@ -9,8 +9,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Tiefgang">
-<title>Tiefgang</title>
+<meta name="apple-mobile-web-app-title" content="Deep Dive">
+<title>Deep Dive</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-nacht.svg" type="image/svg+xml">
 <link id="touchicon" rel="apple-touch-icon" href="icons/icon-nacht-180.png">
@@ -536,6 +536,11 @@ body:has(#reader:not(.hidden)) #deep .rays{opacity:.7}
 .rbot{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(0,6,12,.94)!important}
 body:has(#reader:not(.hidden)) #app *,body:has(#reader:not(.hidden)) #app *::before,body:has(#reader:not(.hidden)) #app *::after{animation-play-state:paused!important}
 .cat.off *,.cat.off *::after{animation-play-state:paused!important}
+#minihead .md{display:flex;align-items:flex-start;gap:8px}
+#minihead .anc{display:flex;flex-direction:column;align-items:center;width:16px;margin-top:-6px}
+#minihead .anc .rope{display:block;width:1px;height:3px;background:linear-gradient(180deg,rgba(76,210,236,0),rgba(76,210,236,.7));transition:height .25s ease-out}
+#minihead .anc svg{width:16px;height:16px;fill:none;stroke:var(--accent-hi);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px rgba(76,210,236,.6));transform-origin:50% 0;animation:ancSwing 3.2s ease-in-out infinite}
+@keyframes ancSwing{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
 .cats{grid-template-columns:repeat(3,1fr);gap:18px 10px}
 .cat{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 2px;min-height:0;align-items:center;justify-content:flex-start;text-align:center;overflow:visible}
 .cat .glyph,.cat .glyph.img{width:70px;height:70px;border-radius:20px;box-shadow:0 0 22px rgba(36,178,216,.16),0 8px 20px rgba(0,0,0,.5)}
@@ -551,8 +556,8 @@ body:has(#reader:not(.hidden)) #app *,body:has(#reader:not(.hidden)) #app *::bef
 <div id="reader" class="hidden"></div>
 <div id="sheet"></div>
 <div id="deep" aria-hidden="true"><div class="rays"></div><canvas id="depth"></canvas></div>
-<div id="minihead" aria-hidden="true"><span class="mt">Tiefgang</span><span class="md" id="mdepth">0 m</span></div>
-<div id="intro" class="hidden"><canvas id="introc"></canvas><div class="iwm">Tiefgang</div><div class="isub" id="isub">Tauche ab …</div><i class="fisch p1 ifisch"></i><div class="iskip">Tippen zum Überspringen</div></div>
+<div id="minihead" aria-hidden="true"><span class="mt">Deep Dive</span><span class="md"><span id="mdepth">0 m</span><span class="anc" aria-hidden="true"><i class="rope" id="mrope"></i><svg viewBox="0 0 24 24"><path d="M12 5a2 2 0 100-4 2 2 0 000 4zM12 5v15M7 9h10M4 13a8 8 0 0016 0M4 13l-2 2M20 13l2 2"/></svg></span></span></div>
+<div id="intro" class="hidden"><canvas id="introc"></canvas><div class="iwm">Deep Dive</div><div class="isub" id="isub">Tauche ab …</div><i class="fisch p1 ifisch"></i><div class="iskip">Tippen zum Überspringen</div></div>
 <div id="fpop" class="hidden" role="status"><i class="fisch p4"></i><div class="fb"><div class="ft" id="fpt"></div><button class="fa hidden" id="fpa"></button></div></div>
 <div id="player" class="glass hidden"><audio id="gplay" preload="none"></audio><button id="pplay" class="iconbtn" aria-label="Abspielen"></button><div class="pm"><div class="pt" id="ptitle"></div><div class="pbar"><i id="pprog"></i></div><div class="ptime" id="ptime"></div></div><button id="pback" class="iconbtn" aria-label="15 Sekunden zurück">−15</button><button id="pfwd" class="iconbtn" aria-label="30 Sekunden vor">+30</button><button id="prain" class="iconbtn" aria-label="Regen im Hintergrund"><svg class="ic" viewBox="0 0 24 24"><path d="M7 15a4 4 0 01-.6-7.95A6 6 0 0118 8a3.5 3.5 0 01-.5 7H7zM8 18l-1 2M12 18l-1 2M16 18l-1 2"/></svg></button><button id="pclose" class="iconbtn" aria-label="Schließen">✕</button><audio id="rain" src="art/regen.m4a" loop preload="none"></audio></div>
 <script src="content.js"></script>
@@ -785,7 +790,7 @@ function vHome(){
   const picks=[];while(picks.length<6&&pool.length){picks.push(pool.splice(Math.floor(rnd()*pool.length),1)[0]);}
   const cont=prog[0];
   return `
-  <div class="wm"><div class="wmt" id="wmt" data-t="Tiefgang">Tiefgang<span class="sparks"></span></div><div class="wms">${new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})} · ${greet()}${S.settings.name?", "+esc(S.settings.name):""}</div></div>
+  <div class="wm"><div class="wmt" id="wmt" data-t="Deep Dive">Deep Dive<span class="sparks"></span></div><div class="wms">${new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})} · ${greet()}${S.settings.name?", "+esc(S.settings.name):""}</div></div>
   ${cont?heroCont(cont):`<button class="snack glass" data-go="snack"><div class="lbl">${ic(I.spark)} Statt Scrollen</div><div class="ttl">Ein Häppchen lesen</div><div class="sub">Zwei Minuten, ein Gedanke. Zufällig aus allem, was du noch nicht kennst.</div><div class="go">${ic(I.shuffle)} Los</div></button>`}
   <div class="pills">
     ${cont?pill(I.shuffle,"Ein Häppchen lesen","Zwei Minuten, zufällig aus allem Neuen",'data-go="snack"'):""}
@@ -920,7 +925,7 @@ function vSettings(){
     <div class="setrow"><span>Tempo</span><div class="seg" id="ttsrate">${[["0.8","Ruhig"],["0.9","Gelassen"],["1","Normal"]].map(([r,l])=>`<button data-r="${r}" class="${String(st.ttsRate||0.9)===r?"on":""}">${l}</button>`).join("")}</div></div>
     <div class="setrow"><span>Probe hören</span><button class="chip" id="ttstest">▶ Abspielen</button></div>
     <div class="small" id="ttsdiag" style="padding:0 16px 10px"></div>
-    <div class="hint" style="padding:12px 16px">Im Leser oben auf den Lautsprecher tippen: liest Häppchen für Häppchen vor und blättert selbst weiter. Der Bildschirm bleibt dabei an, denn bei gesperrtem iPhone stoppt iOS das Vorlesen. Natürlichere Stimmen: iPhone-Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch, dort eine Stimme mit „Erweitert“ oder „Premium“ laden (ruhig und männlich klingen z. B. Viktor oder Markus). Danach Tiefgang neu öffnen und hier auswählen.</div>
+    <div class="hint" style="padding:12px 16px">Im Leser oben auf den Lautsprecher tippen: liest Häppchen für Häppchen vor und blättert selbst weiter. Der Bildschirm bleibt dabei an, denn bei gesperrtem iPhone stoppt iOS das Vorlesen. Natürlichere Stimmen: iPhone-Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch, dort eine Stimme mit „Erweitert“ oder „Premium“ laden (ruhig und männlich klingen z. B. Viktor oder Markus). Danach Deep Dive neu öffnen und hier auswählen.</div>
   </div>
   <div class="h-sec"><h2>Meine Fragen</h2><button data-go="fragen">Öffnen</button></div>
   <div class="glass set"><div class="hint" style="padding:14px 16px">Fragen, die du im Leser oder auf Titelseiten mit „💬“ stellst, landen in einem Postfach. Beim nächsten Update beantwortet Claude sie mit Quellen. Die Antworten erscheinen hier und auf der Startseite.</div></div>
@@ -1029,7 +1034,7 @@ function openFlagSheet(item){
 ["touchstart","mousedown"].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest("[data-flag]")){window._lastSel=window.getSelection?String(window.getSelection()).trim():"";}},{passive:true,capture:true}));
 function closeSheet(){$("#sheet").innerHTML="";}
 function flagsText(){
-  return "Tiefgang Prüfliste ("+new Date().toLocaleDateString("de-DE")+")\nBitte mit Quellen prüfen und in den Inhaltsdateien korrigieren:\n\n"+
+  return "Deep Dive Prüfliste ("+new Date().toLocaleDateString("de-DE")+")\nBitte mit Quellen prüfen und in den Inhaltsdateien korrigieren:\n\n"+
    (S.flags||[]).map((f,k)=>`${k+1}. [${f.id}${f.kind==="kapitel"?" · Kapitel "+(f.i+1):" · "+f.kind}] „${f.text}“${f.note?"\n   Notiz: "+f.note:""}`).join("\n\n");
 }
 document.addEventListener("click",async e=>{
@@ -1041,7 +1046,7 @@ document.addEventListener("click",async e=>{
   if(e.target.id==="flsave"){const it=window._flitem||{};const text=$("#fltext").value.trim();if(!text){toast("Bitte die Aussage eintragen");return;}
     S.flags=S.flags||[];S.flags.push({id:it.id,title:it.title,i:it.i,kind:it.kind,text:text.slice(0,1200),note:$("#flnote").value.trim().slice(0,500),t:Date.now()});save();closeSheet();toast("Auf der Prüfliste ("+S.flags.length+")");return;}
   const del=e.target.closest("[data-fldel]");if(del){S.flags.splice(+del.dataset.fldel,1);save();render();return;}
-  if(e.target.id==="flshare"){const t=flagsText();try{if(navigator.share){await navigator.share({title:"Tiefgang Prüfliste",text:t});return;}}catch(_){return;}try{await navigator.clipboard.writeText(t);toast("Prüfliste kopiert");}catch(_){prompt("Kopieren:",t);}return;}
+  if(e.target.id==="flshare"){const t=flagsText();try{if(navigator.share){await navigator.share({title:"Deep Dive Prüfliste",text:t});return;}}catch(_){return;}try{await navigator.clipboard.writeText(t);toast("Prüfliste kopiert");}catch(_){prompt("Kopieren:",t);}return;}
 });
 function stuCard(x,extra=""){
   const link=x.doi?`https://doi.org/${encodeURI(x.doi)}`:(x.url||"");
@@ -1138,7 +1143,7 @@ function vNews(){
   const top=`<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button></div><div class="h-big" style="font-size:30px">Nachrichten</div>`;
   if(!NEWS)return top+`<div class="empty">Noch keine Nachrichten geladen. Ohne Netz siehst du den letzten Stand.</div>`;
   const srcs=[...new Set(NEWS.items.map(x=>x.src))];const L=NEWS.items.filter(x=>!route.ns||x.src===route.ns);
-  return top+`<p class="small" style="margin:-6px 2px 14px">Die wichtigsten Schlagzeilen, beim Öffnen frisch geladen (höchstens 15 Minuten alt). Stand: ${new Date(NEWS.updated*1e3).toLocaleString("de-DE",{weekday:"short",hour:"2-digit",minute:"2-digit"})} Uhr. „Hintergrund“ verlinkt passende Titel aus Tiefgang (automatischer Wortabgleich).</p>
+  return top+`<p class="small" style="margin:-6px 2px 14px">Die wichtigsten Schlagzeilen, beim Öffnen frisch geladen (höchstens 15 Minuten alt). Stand: ${new Date(NEWS.updated*1e3).toLocaleString("de-DE",{weekday:"short",hour:"2-digit",minute:"2-digit"})} Uhr. „Hintergrund“ verlinkt passende Titel aus Deep Dive (automatischer Wortabgleich).</p>
   <div class="chips"><button class="chip ${!route.ns?"on":""}" data-go="newssrc" data-k="">Alle</button>${srcs.map(x=>`<button class="chip ${route.ns===x?"on":""}" data-go="newssrc" data-k="${esc(x)}">${esc(x)}</button>`).join("")}</div>
   <div class="glass" style="padding:2px 0">${L.map(newsItem).join("")||`<div class="empty">Nichts von dieser Quelle.</div>`}</div>`;
 }
@@ -1223,7 +1228,7 @@ function ttsStop(){TTS.on=false;TTS.gen++;if(synth)synth.cancel();ttsWake(false)
 function drawReaderBar(){const b=$("#rtts");if(!b)return;b.classList.toggle("on",TTS.on);b.querySelector("path").setAttribute("d",TTS.on?"M7 5h3v14H7zM14 5h3v14h-3z":"M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11");}
 document.addEventListener("change",e=>{if(e.target.id==="ttsvoice"){S.settings.ttsVoice=e.target.value;save();}});
 document.addEventListener("click",e=>{const r=e.target.closest("#ttsrate [data-r]");if(r){S.settings.ttsRate=+r.dataset.r;save();render();return;}
-  if(e.target.id==="ttstest"){if(!synth){toast("Kein Web Speech in diesem Browser");return;}TTS.err="";TTS.started=false;setTimeout(()=>{const el=$("#ttsdiag");if(el)el.textContent=(TTS.started?"Ton gestartet. ":"Kein Start. ")+ttsDiag();},3000);ttsUnlock();if(synth.speaking)synth.cancel();ttsSay("Willkommen bei Tiefgang. So klingt diese Stimme, wenn sie dir ein Häppchen vorliest.",()=>{});}});
+  if(e.target.id==="ttstest"){if(!synth){toast("Kein Web Speech in diesem Browser");return;}TTS.err="";TTS.started=false;setTimeout(()=>{const el=$("#ttsdiag");if(el)el.textContent=(TTS.started?"Ton gestartet. ":"Kein Start. ")+ttsDiag();},3000);ttsUnlock();if(synth.speaking)synth.cancel();ttsSay("Willkommen bei Deep Dive. So klingt diese Stimme, wenn sie dir ein Häppchen vorliest.",()=>{});}});
 /* ================= Hörliste (Chatterbox über GitHub Actions, Podcast-Feed im Worker) ================= */
 const AUD={items:[],ids:new Set()};
 try{const c=JSON.parse(localStorage.getItem("tiefgang.aud")||"[]");AUD.items=c;AUD.ids=new Set(c.map(x=>x.id));}catch(_){}
@@ -1256,7 +1261,7 @@ function newsReaderHTML(x,d,loading){
   return `<div class="rtop"><div class="rbar"><button class="iconbtn" aria-label="Schließen" id="nclose">${ic(I.close)}</button><div class="rt">${esc(it.src||host)}</div><span style="width:40px"></span></div></div>
   <div id="rscroll"><div class="rin"><div class="k">${esc(it.src||host)}${it.t?" · "+ago(it.t):""}</div><h2>${esc((d&&d.title)||it.title||"")}</h2>
   <div class="body">${lead&&!(d&&d.blocks&&d.blocks[0]&&d.blocks[0].p===lead)?`<p class="lead">${esc(lead)}</p>`:""}${body}</div>
-  <div class="end">${(it.rel||[]).map(id=>BY_ID[id]).filter(Boolean).map(b=>`<button class="nrel" data-nrel="${b.id}">→ Hintergrund in Tiefgang: ${esc(b.title)}</button>`).join("")}
+  <div class="end">${(it.rel||[]).map(id=>BY_ID[id]).filter(Boolean).map(b=>`<button class="nrel" data-nrel="${b.id}">→ Hintergrund in Deep Dive: ${esc(b.title)}</button>`).join("")}
   <a class="chip" style="text-decoration:none;align-self:flex-start" href="${esc(x)}" target="_blank" rel="noopener">Original bei ${esc(host)} öffnen ↗</a>
   <p class="small" style="opacity:.5">Text von ${esc(host)}, nur zum privaten Lesen abgerufen.</p></div></div></div>`;}
 async function openNews(x){const el=$("#reader");el.classList.remove("hidden");document.body.style.overflow="hidden";
@@ -1361,8 +1366,10 @@ function intro(){let seen=false;try{seen=sessionStorage.getItem("tg.intro");sess
     sub.textContent=p<.98?"Tauche ab … "+Math.round(p*p*3800).toLocaleString("de-DE")+" m":"Willkommen in der Tiefe";
     if(n-t0>D+700)end();else requestAnimationFrame(fr);};requestAnimationFrame(fr);}
 /* Scroll-Szene auf Heute: Cover dreht und sinkt mit, Mini-Kopf mit Tiefenmesser */
-function scene(){const y=scrollY;const v=route.v;const mh=document.getElementById("minihead");
-  if(mh){const on=v==="home"&&y>140;mh.classList.toggle("on",on);if(on)document.getElementById("mdepth").textContent=Math.round(y*1.6).toLocaleString("de-DE")+" m";}
+function scene(){const y=Math.max(window.scrollY||0,document.body.scrollTop||0);const v=route.v;const mh=document.getElementById("minihead");
+  // Tiefenmesser auf jeder Seite, Anker sinkt mit dem Fortschritt der Seite
+  if(mh){const on=y>140;mh.classList.toggle("on",on);if(on){document.getElementById("mdepth").textContent=Math.round(y*1.6).toLocaleString("de-DE")+" m";
+    const H=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight)-innerHeight;const p=H>0?Math.min(1,y/H):0;document.getElementById("mrope").style.height=(3+p*15).toFixed(1)+"px";}}
   if(RM||v!=="home")return;const hc=document.querySelector(".hcov");if(hc){const p=Math.min(1,y/420);hc.style.transform=`perspective(700px) rotateY(${p*-28}deg) rotateX(${p*8}deg) scale(${1-p*.18})`;hc.style.opacity=1-p*.6;}
   const rg=document.querySelector(".ring svg");if(rg){rg.style.rotate=(y*.25)+"deg";}
   fishSwim();}
@@ -1374,7 +1381,7 @@ function fishTick(){const f=document.getElementById("fhome");if(!f){FS.on=false;
   const dx=FS.tx-FS.x;FS.x+=dx*.09;FS.y+=(FS.ty-FS.y)*.09;FS.r+=((dx*.6)-FS.r)*.12;
   f.style.transform=`translate3d(${FS.x.toFixed(2)}px,${FS.y.toFixed(2)}px,0) rotate(${Math.max(-12,Math.min(12,FS.r)).toFixed(2)}deg)`;
   if(Math.abs(dx)>.05||Math.abs(FS.ty-FS.y)>.05||Math.abs(FS.r)>.05)requestAnimationFrame(fishTick);else FS.on=false;}
-addEventListener("scroll",scene,{passive:true});
+addEventListener("scroll",scene,{passive:true});document.body.addEventListener("scroll",scene,{passive:true});
 const FSAY=["Noch ein Häppchen?","Wissen ist mein Licht.","Ich lese mit.","Tief durchatmen.","Gut gemacht heute!","Hier unten ist es ruhig."];
 document.addEventListener("click",e=>{const f=e.target.closest("#fhome");if(!f)return;const i=f.querySelector(".fisch"),s=f.querySelector(".say");i.className="fisch p4 hop";s.textContent=FSAY[Math.floor(Math.random()*FSAY.length)];f.classList.add("talk");clearTimeout(f._t);f._t=setTimeout(()=>{i.className="fisch p2";f.classList.remove("talk");},2600);});
 setTimeout(()=>{depInit();},0);  // Abtauch-Intro auf Wunsch entfernt (26.11.)
@@ -1463,7 +1470,7 @@ function playAud(id){const a=G(),b=BY_ID[id];if(!a)return;
   a.addEventListener("loadedmetadata",()=>{if(st>5&&st<a.duration-10)a.currentTime=st;},{once:true});
   a.play().catch(()=>{});S.open=S.open||{};S.open[id]=Date.now();S.pid=id;save();
   $("#ptitle").textContent=b?b.title:id;$("#player").classList.remove("hidden");document.body.classList.add("hasplayer");
-  if("mediaSession" in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:b?b.title:id,artist:"Tiefgang",album:b?((CATS[b.cat]||{}).n||""):"",artwork:[{src:"icons/icon-nacht-512.png",sizes:"512x512",type:"image/png"}]});
+  if("mediaSession" in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:b?b.title:id,artist:"Deep Dive",album:b?((CATS[b.cat]||{}).n||""):"",artwork:[{src:"icons/icon-nacht-512.png",sizes:"512x512",type:"image/png"}]});
     const ms=navigator.mediaSession;try{ms.setActionHandler("play",()=>a.play());ms.setActionHandler("pause",()=>a.pause());ms.setActionHandler("seekbackward",()=>{a.currentTime=Math.max(0,a.currentTime-15);});ms.setActionHandler("seekforward",()=>{a.currentTime+=30;});ms.setActionHandler("seekto",d=>{a.currentTime=d.seekTime;});}catch(_){}}
   plUI();}
 function plUI(){const a=G();if(!a)return;$("#pplay").innerHTML=a.paused?"▶":"❚❚";const d=a.duration||0;$("#pprog").style.width=(d?a.currentTime/d*100:0)+"%";$("#ptime").textContent=fmtT(a.currentTime)+(d?" / "+fmtT(d):"");
