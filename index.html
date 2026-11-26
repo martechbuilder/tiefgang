@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#00040a">
 <meta name="color-scheme" content="dark">
 <meta name="robots" content="noindex,nofollow,noarchive">
@@ -263,7 +263,7 @@ body.hasplayer .view{padding-bottom:170px}
 .sheet-bg{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
 .sheet{width:min(560px,100%);padding:20px 18px calc(var(--sb) + 18px);border-radius:22px 22px 0 0}
 .sheet h3{margin:0 0 4px;font-size:18px}.sheet .small{margin:0 0 12px}
-.sheet textarea{width:100%;min-height:90px;background:var(--glass-lo);border:1px solid var(--line);border-radius:14px;color:var(--txt);padding:12px;font:inherit;font-size:15px;line-height:1.45;resize:vertical;outline:0;margin-bottom:10px}
+.sheet textarea{width:100%;min-height:90px;background:var(--glass-lo);border:1px solid var(--line);border-radius:14px;color:var(--txt);padding:12px;font:inherit;font-size:16px;line-height:1.45;resize:vertical;outline:0;margin-bottom:10px}
 .sheet .row2{display:flex;gap:10px}.sheet .row2 button{flex:1;padding:13px;border-radius:999px;font-weight:700}
 .fl-item{padding:12px 16px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.45}.fl-item:last-child{border-bottom:0}
 .fl-item .q{color:var(--txt)}.fl-item .m{color:var(--txt3);font-size:12px;margin-top:4px}.fl-item button{margin-top:6px}
@@ -587,6 +587,14 @@ body:has(#reader:not(.hidden)) #app *,body:has(#reader:not(.hidden)) #app *::bef
 .divefx .dfx-c::before{content:"";position:absolute;inset:-60px -90px;z-index:-1;background:radial-gradient(closest-side,rgba(0,8,18,.92),rgba(0,8,18,.6) 60%,transparent)}
 @keyframes dfxC{0%{opacity:0;transform:translate(-50%,-40%)}25%,70%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:0;transform:translate(-50%,-62%)}}
 .divefx.out{opacity:0;transition:opacity .4s}
+.vlab{font-size:14px;color:var(--txt2);margin-bottom:10px}
+.vseg{position:relative;display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:999px;background:rgba(0,10,18,.6);border:1px solid rgba(120,210,245,.16)}
+.vseg .vthumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:999px;background:linear-gradient(90deg,rgba(40,140,190,.55),rgba(18,90,130,.55));border:1px solid rgba(130,220,250,.35);box-shadow:0 0 14px rgba(76,210,236,.25);transition:transform .32s cubic-bezier(.3,.7,.3,1.2)}
+.vseg button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;padding:8px 6px;border-radius:999px;color:var(--txt3);transition:color .25s;min-width:0}
+.vseg button b{font-size:14.5px;font-weight:600}.vseg button small{font-size:11.5px;opacity:.8}
+.vseg button.on{color:var(--txt)}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+input,textarea,select{font-size:16px}
 .cats{grid-template-columns:repeat(3,1fr);gap:18px 10px}
 .cat{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 2px;min-height:0;align-items:center;justify-content:flex-start;text-align:center;overflow:visible}
 .cat .glyph,.cat .glyph.img{width:70px;height:70px;border-radius:20px;box-shadow:0 0 22px rgba(36,178,216,.16),0 8px 20px rgba(0,0,0,.5)}
@@ -957,7 +965,7 @@ function vSettings(){
   <div class="glass set" style="margin-bottom:14px"><div class="setrow"><span>App-Version<br><span class="small" id="verline"></span></span><button class="chip" data-go="update">Nach Updates suchen</button></div></div>
   <div class="glass set">
     <div class="setrow"><span>Schriftgröße</span><div class="seg" id="sz">${[17,19,21,23].map(s=>`<button data-s="${s}" class="${st.size===s?"on":""}">${s}</button>`).join("")}</div></div>
-    <div class="setrow"><span>Dein Name</span><input id="nm" value="${esc(st.name||"")}" placeholder="optional" style="background:var(--glass-lo);border:1px solid var(--line);border-radius:999px;padding:7px 12px;width:140px;font-size:14px;outline:0"></div>
+    <div class="setrow"><span>Dein Name</span><input id="nm" value="${esc(st.name||"")}" placeholder="optional" style="background:var(--glass-lo);border:1px solid var(--line);border-radius:999px;padding:7px 12px;width:140px;font-size:16px;outline:0"></div>
     <div class="setrow"><span>Leseschrift</span><div class="seg" id="ff">${[["serif","Serif"],["sans","Sans"]].map(([k,l])=>`<button data-f="${k}" class="${st.font===k?"on":""}">${l}</button>`).join("")}</div></div>
   </div>
   <div class="h-sec"><h2>App-Icon</h2></div>
@@ -1289,9 +1297,11 @@ function audBlock(){const d=AUD.items.filter(x=>x.state==="done").length,w=AUD.i
 function vHoeren(){
   const top=`<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button></div><div class="h-big" style="font-size:30px">Hörliste</div>`;
   const done=AUD.items.filter(x=>x.state==="done");
-  return top+`<p class="small" style="margin:-6px 2px 14px">Titel, die du mit „🎧 Zur Hörliste“ markierst, spricht eine freie KI-Stimme (Chatterbox, Stimme Thorsten) automatisch ein. Das dauert etwa eine Stunde pro Titel. Fertige Folgen hörst du hier oder im Auto über Apple Podcasts, auch bei gesperrtem Bildschirm und neben Google Maps.</p>
-  <div class="glass set" style="margin-bottom:14px"><div class="setrow"><span>Stimme für neue Folgen</span><span class="chips" style="margin:0">${["m","w"].map(v=>`<button class="chip ${VOICE()===v?"on":""}" data-voice="${v}">${v==="m"?"Thorsten (männlich)":"Kerstin (weiblich)"}</button>`).join("")}</span></div>
-   <div class="hint" style="padding:10px 16px">Beide Stimmen sind frei (CC0), ruhig eingelesen. Schon fertige Folgen behalten ihre Stimme; für die andere Stimme den Titel einfach nochmal zur Hörliste hinzufügen.</div></div>
+  return top+`<p class="small" style="margin:-6px 2px 14px">Titel, die du mit „🎧 Zur Hörliste“ markierst, spricht eine freie KI-Stimme (Chatterbox, Thorsten oder Kerstin) automatisch ein. Das dauert etwa eine Stunde pro Titel. Fertige Folgen hörst du hier oder im Auto über Apple Podcasts, auch bei gesperrtem Bildschirm und neben Google Maps.</p>
+  <div class="glass set" style="margin-bottom:14px;padding:14px 16px">
+   <div class="vlab">Stimme für neue Folgen</div>
+   <div class="vseg" role="radiogroup" aria-label="Stimme"><i class="vthumb" style="transform:translateX(${VOICE()==="w"?"100%":"0"})"></i>${["m","w"].map(v=>`<button role="radio" aria-checked="${VOICE()===v}" class="${VOICE()===v?"on":""}" data-voice="${v}"><b>${VNAME[v]}</b><small>${v==="m"?"männlich":"weiblich"}</small></button>`).join("")}</div>
+   <div class="hint" style="padding:10px 0 0">Beide Stimmen sind frei (CC0) und ruhig eingelesen. Fertige Folgen behalten ihre Stimme. Für die andere Stimme den Titel einfach nochmal zur Hörliste hinzufügen.</div></div>
   <div class="glass set" style="margin-bottom:14px"><div class="setrow"><span>Als Podcast abonnieren</span><a class="chip" style="text-decoration:none" href="${"podcast://"+feedUrl().replace(/^https:\/\//,"")}">In Podcasts öffnen</a></div>
    <div class="setrow"><span class="small" style="flex:1;word-break:break-all">${esc(feedUrl())}</span><button class="copy" data-copy="${esc(feedUrl())}">Kopieren</button></div>
    <div class="hint" style="padding:10px 16px">Einmalig: auf „In Podcasts öffnen“ tippen. Falls das nicht klappt: Link kopieren, in Apple Podcasts unter Mediathek, oben rechts „…“, „Sendung per URL folgen“ einfügen. Der Link ist privat, nicht teilen.</div></div>
@@ -1565,6 +1575,9 @@ function diveNext(){if(!R)return;const {b,i}=R;const n=b.chapters.length;
   setTimeout(()=>{R.dived=true;advance();const to=S.dm||0,t0=performance.now();const el=document.getElementById("dfxn");
     const tick=t=>{const p=Math.min(1,(t-t0)/450);if(el)el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-p,3))).toLocaleString("de-DE")+" m";if(p<1)requestAnimationFrame(tick);};requestAnimationFrame(tick);},380);
   setTimeout(()=>{fx.classList.add("out");},950);setTimeout(()=>fx.remove(),1350);}
+/* Kein Zoomen wie in einer echten App (Pinch und Doppeltipp) */
+["gesturestart","gesturechange","gestureend"].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+document.addEventListener("touchmove",e=>{if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});
 /* Globaler Player: lebt außerhalb von #app, überlebt Ansichtswechsel, Neuzeichnen und Hintergrund */
 const PL={id:null};const G=()=>document.getElementById("gplay");
 function fmtT(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
@@ -1592,7 +1605,9 @@ function plUI(){const a=G();if(!a)return;$("#pplay").innerHTML=a.paused?"▶":"�
   if(S.pid&&BY_ID[audBase(S.pid)]){PL.id=S.pid;a.src=API+"/a/"+S.pid+".mp3";const st=(S.apos||{})[S.pid]||0;a.addEventListener("loadedmetadata",()=>{if(st>5)a.currentTime=st;},{once:true});$("#ptitle").textContent=BY_ID[audBase(S.pid)].title;$("#player").classList.remove("hidden");document.body.classList.add("hasplayer");plUI();}
 })();
 document.addEventListener("click",e=>{const b=e.target.closest("[data-play]");if(b)playAud(b.dataset.play);});
-document.addEventListener("click",e=>{const v=e.target.closest("[data-voice]");if(v){S.voice=v.dataset.voice;save();render();toast("Stimme: "+VNAME[VOICE()]);}});
+document.addEventListener("click",e=>{const v=e.target.closest("[data-voice]");if(!v)return;S.voice=v.dataset.voice;save();
+  // ohne Neuzeichnen umschalten: nichts springt
+  const seg=v.closest(".vseg");if(seg){seg.querySelectorAll("[data-voice]").forEach(x=>{const on=x.dataset.voice===VOICE();x.classList.toggle("on",on);x.setAttribute("aria-checked",on);});const th=seg.querySelector(".vthumb");if(th)th.style.transform=`translateX(${VOICE()==="w"?"100%":"0"})`;}});
 document.addEventListener("click",async e=>{const a=e.target.closest("[data-audio]");if(!a)return;const b=BY_ID[a.dataset.audio];if(!b)return;
   const aid=audId(b.id);if(AUD.ids.has(aid)){go({v:"hoeren",tab:"library"});return;}
   a.textContent="🎧 Wird angelegt …";
