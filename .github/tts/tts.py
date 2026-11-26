@@ -44,7 +44,14 @@ def zahl(m):
         return num2words(int(i), lang="de") + " Komma " + " ".join(num2words(int(c), lang="de") for c in d)
     if len(s) == 4: return jahr(s)
     return num2words(int(s), lang="de")
-LEX = {"The New Yorker": "Se Nju Jorker", "New York": "Nju Jork", "Washington": "Woschington", "Buenos Aires": "Buenos Eires",
+LEX = {"The New Yorker": "Se Nju Jorker", "New York": "Nju Jork", "Washington": "Woschington", "Buenos Aires": "Bwenos Aires", "The Origins of Totalitarianism": "Se Orridschins of Totälitärianism", "On Violence": "On Weiolenz",
+       "Christopher Browning": "Kristoffer Brauning", "Browning": "Brauning", "Cesarani": "Tschesarani", "Little Rock": "Littel Rock", "New School": "Nju Skuhl",
+       "Jean-Paul": "Schang Pohl", "Frantz Fanon": "Frantz Fanong", "Fanons": "Fanongs", "Fanon": "Fanong", "Gessen": "Gessen",
+       "Los Angeles": "Loss Ändschelis", "San Francisco": "Sän Fränsisko", "Rio de Janeiro": "Rio de Schaneiro", "São Paulo": "Saung Paulo", "Mexiko-Stadt": "Mechiko-Stadt",
+       "Shanghai": "Schanghai", "Beijing": "Beidsching", "Xi Jinping": "Schi Dschinping", "Deng Xiaoping": "Deng Schiaoping", "Mao Zedong": "Mao Dsedong",
+       "Keynes": "Keins", "Friedman": "Friedmän", "Hayek": "Haijek", "Thomas Piketty": "Tomah Pikettie", "Piketty": "Pikettie", "Tocqueville": "Tockwil", "Rousseau": "Russo",
+       "Descartes": "Dekart", "Montesquieu": "Mongteskjö", "Voltaire": "Wolltähr", "Foucault": "Fuko", "Bourdieu": "Burdjö", "Simone de Beauvoir": "Simonn de Bowoar",
+       "Churchill": "Tschörtschill", "Roosevelt": "Rosewelt", "Kennedy": "Kennedi", "Clinton": "Klinten", "Bush": "Busch", "Putin": "Putin", "Macron": "Makrong",
        "Ha'am": "Haam", "Trump": "Trammp", "Biden": "Beiden", "Obama": "Obama", "Reagan": "Rehgen", "Thatcher": "Thätscher",
        "Facebook": "Fäisbuck", "YouTube": "Jutjub", "Google": "Guhgel", "Twitter": "Twitter", "TikTok": "Tick Tock", "iPhone": "Ei Fohn",
        "Harvard": "Harwerd", "Stanford": "Stänferd", "Chicago": "Schikahgo", "Science": "Sei-ens", "Nature": "Neitscher",
@@ -93,7 +100,7 @@ if a.chapter < 0:
     paras = [text]
 else:
     c = b["chapters"][a.chapter]
-    paras = [f"Häppchen {num2words(a.chapter + 1, lang='de')}. " + c["h"].rstrip(".") + "."] + [p for p in c["body"].split("\n\n") if p.strip()]
+    paras = [c["h"].rstrip(".") + "."] + [p for p in c["body"].split("\n\n") if p.strip()]
     if a.max_paras: paras = paras[:a.max_paras + 1]
 
 # ---------- Sprechen ----------
@@ -108,8 +115,9 @@ m = ChatterboxMultilingualTTS.from_pretrained(device=dev)
 REF = str(pathlib.Path(__file__).with_name("thorsten_ref.wav"))
 SR = m.sr
 def clean(w):
-    """Gibt (audio, sprache_gefunden) zurück. Schneidet nie innerhalb eines Wortes:
-    entfernt nur eigenständige Geräusch-Inseln ohne Stimme vor der ersten und nach der letzten Sprech-Insel."""
+    """Gibt (audio, sprache_gefunden, geraeusch) zurück. Entfernt nur Stille an den Rändern (sehr niedrige Schwelle,
+    großzügige Ränder), schneidet nie in Sprache. geraeusch=True, wenn vor oder nach der Sprache eine eigenständige
+    stimmlose Insel hinter einer klaren Pause liegt (dann besser neu erzeugen); sie wird nur in der Mitte der Pause abgetrennt."""
     y = w.squeeze().detach().cpu().numpy().astype(np.float32)
     raw = len(y)
     import os
@@ -117,19 +125,18 @@ def clean(w):
         global _rawn
         _rawn = globals().get("_rawn", 0) + 1
         sf.write(f"{os.environ['TTS_RAWDIR']}/raw{_rawn:02d}.wav", y, SR)
-    y, _ = librosa.effects.trim(y, top_db=42, frame_length=1024, hop_length=256)
     hop = int(SR * 0.01)
     fr = librosa.feature.rms(y=y, frame_length=hop * 3, hop_length=hop)[0]
-    found = False
+    found, geraeusch, cut = False, False, (0, len(y))
     if len(fr) > 20:
-        thr = 0.03 * np.percentile(fr, 95)
-        act = fr > thr
-        # Inseln: aktive Bereiche, Lücken unter 180 ms zählen nicht als Trennung
+        p = np.percentile(fr, 95) + 1e-9
+        act = fr > 0.01 * p  # nur Stille und leises Grundrauschen gelten als inaktiv (ca. -40 dB)
+        # Inseln: Lücken unter 250 ms verbinden
         isl, i, n = [], 0, len(act)
         while i < n:
             if act[i]:
                 j = i
-                while j < n and (act[j] or (j + 18 < n and act[j:j + 18].any())): j += 1
+                while j < n and (act[j] or (j + 25 < n and act[j:j + 25].any())): j += 1
                 isl.append([i, j]); i = j
             else: i += 1
         f0, vf, _ = librosa.pyin(y, fmin=60, fmax=320, sr=SR, frame_length=2048, hop_length=hop)
@@ -137,16 +144,23 @@ def clean(w):
         sp = [k for k, (a0, a1) in enumerate(isl) if vf[a0:min(a1, len(vf))].sum() >= 6]
         if sp:
             found = True
-            a0 = max(0, isl[sp[0]][0] * hop - int(SR * 0.05))
-            a1 = min(len(y), isl[sp[-1]][1] * hop + int(SR * 0.08))
-            y = y[a0:a1]
-    import os
-    if os.environ.get("TTS_DEBUG"): print(f"  Abschnitt: roh {raw/SR:.2f}s, behalten {len(y)/SR:.2f}s, Sprache {found}", flush=True)
+            geraeusch = sp[0] > 0 or sp[-1] < len(isl) - 1
+            s0, s1 = isl[sp[0]][0], isl[sp[-1]][1]
+            # vorhandene Nachbarinseln (Geräusch) bleiben vorerst drin; Ränder: 150 ms vorn, 300 ms hinten
+            lo = isl[0][0] if not geraeusch else s0
+            hi = isl[-1][1] if not geraeusch else s1
+            a0 = max(0, lo * hop - int(SR * 0.15)); a1 = min(len(y), hi * hop + int(SR * 0.30))
+            # bei Geräusch: Grenze in die Mitte der Pause legen, aber nie näher als 120 ms an die Sprache
+            if sp[0] > 0: a0 = max(a0, min(s0 * hop - int(SR * 0.12), (isl[sp[0] - 1][1] * hop + s0 * hop) // 2))
+            if sp[-1] < len(isl) - 1: a1 = min(a1, max(s1 * hop + int(SR * 0.12), (s1 * hop + isl[sp[-1] + 1][0] * hop) // 2))
+            cut = (a0, a1)
+    y = y[cut[0]:cut[1]]
+    if os.environ.get("TTS_DEBUG"): print(f"  Abschnitt: roh {raw/SR:.2f}s, behalten {len(y)/SR:.2f}s, Sprache {found}, Geräusch {geraeusch}", flush=True)
     f = int(SR * 0.012)
     if len(y) > 4 * f:
         y[:f] *= np.linspace(0, 1, f); y[-f:] *= np.linspace(1, 0, f)
     rms = np.sqrt(np.mean(y ** 2)) + 1e-9
-    return y * min(0.08 / rms, 4.0), found
+    return y * min(0.08 / rms, 4.0), found, geraeusch
 
 def abgebrochen(w):
     """True, wenn das Modell mitten im Laut aufhört: letzter aktiver Frame noch hörbar, direkt danach digitale Stille."""
@@ -165,16 +179,17 @@ out = []
 for pi, p in enumerate(paras):
     chunks = abschnitte(norm(p))
     for ci, c in enumerate(chunks):
-        bester = None
-        for versuch in range(3):  # Neuversuch bei fehlender Sprache, zu kurzem Audio oder abgebrochenem Satzende
+        bester, bestnote = None, -1
+        for versuch in range(4):  # Neuversuch bei fehlender Sprache, zu kurzem Audio, Abbruch am Ende oder Geräusch
             w = m.generate(c, language_id="de", audio_prompt_path=REF, exaggeration=0.52, cfg_weight=0.35, temperature=0.68)
-            yc, ok = clean(w)
+            yc, ok, ger = clean(w)
             erwartet = len(c) / 16.0  # grob 16 Zeichen pro Sekunde
             ok = ok and len(yc) / SR >= 0.45 * erwartet
             ab = ok and abgebrochen(w)
-            if ok and not ab: bester = yc; break
-            if ok and bester is None: bester = yc  # notfalls lieber abgebrochen als ohne Sprache
-            print("Neuversuch wegen", "abgebrochenem Ende:" if ab else "fehlender Sprache:", c[:60], flush=True)
+            note = 0 if not ok else (3 if not (ab or ger) else (2 if not ab else 1))
+            if note > bestnote: bester, bestnote = yc, note
+            if note == 3: break
+            print("Neuversuch wegen", "Abbruch am Ende:" if ab else ("Geräusch:" if ger else "fehlender Sprache:"), c[:60], flush=True)
         out.append(bester if bester is not None else yc)
         if ci < len(chunks) - 1: out.append(stille(0.32))
     out.append(stille(1.05 if pi == 0 else 0.75))
