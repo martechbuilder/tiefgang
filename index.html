@@ -609,9 +609,9 @@ function openGloss(i){const g=GL[i];if(!g)return;const see=g.see&&!(R&&R.b.id===
 document.addEventListener("click",e=>{const g=e.target.closest("[data-gl]");if(g){e.preventDefault();openGloss(+g.dataset.gl);return;}
   const s2=e.target.closest("[data-glsee]");if(s2){const id=s2.dataset.glsee;closeSheet();if(R)closeReader();go({v:"book",id,tab:"discover"});}});
 if(!window.TG_FILES)ALLCATS.forEach(c=>LOADED[c]=true);
-window.TG_ADD=function(arr){for(const f of arr||[]){const b=BY_ID[f.id];if(!b)continue;const w=b._w,m=b._min;Object.assign(b,f);b._w=w;b._min=m;LOADED[b.cat]=true;}_STU=null;rebuildDeb();};
+window.TG_ADD=function(arr){for(const f of arr||[]){const b=BY_ID[f.id];if(!b)continue;const w=b._w,m=b._min;Object.assign(b,f);b._w=w;b._min=m;LOADED[b.cat]=true;}_STU=null;clearTimeout(window._debT);window._debT=setTimeout(rebuildDeb,0);};
 function loadCat(c){if(LOADED[c])return Promise.resolve();if(PEND[c])return PEND[c];const src=(window.TG_FILES||{})[c];if(!src){LOADED[c]=true;return Promise.resolve();}
-  PEND[c]=new Promise(res=>{const el=document.createElement("script");el.src=src;el.onload=()=>{LOADED[c]=true;delete PEND[c];res();};el.onerror=()=>{delete PEND[c];res();};document.head.appendChild(el);});return PEND[c];}
+  PEND[c]=new Promise(res=>{const el=document.createElement("script");el.src=src;el.onload=()=>{LOADED[c]=true;delete PEND[c];res();};el.onerror=()=>{delete PEND[c];res();try{if(navigator.onLine&&!sessionStorage.getItem("tg.rl")){sessionStorage.setItem("tg.rl","1");location.reload();}}catch(_){}};document.head.appendChild(el);});return PEND[c];}
 const allLoaded=()=>ALLCATS.every(c=>LOADED[c]);
 let _ALL=null;
 function loadAll(){if(allLoaded())return Promise.resolve();if(!_ALL)_ALL=ALLCATS.reduce((p,c)=>p.then(()=>loadCat(c)),Promise.resolve()).then(()=>{_ALL=null;});return _ALL;}
@@ -1578,7 +1578,7 @@ function suggestNext(b){
 
 render();
 try{if(S.cur&&BY_ID[S.cur.id]&&Date.now()-S.cur.t<36*3600e3){const c=S.cur;openReader(c.id,c.i,c.y);}}catch(_){}
-setTimeout(()=>{loadGloss();loadAll();},1200);
+setTimeout(()=>{loadGloss();},1200);  // Texte nur noch bei Bedarf laden (Titel, Leser, Suche, Trainer, Studien laden selbst)
 loadNews(true);loadQA();loadAud();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){loadNews();loadQA();loadAud();}});
 if("serviceWorker" in navigator&&location.protocol!=="file:"){
   const hadCtl=!!navigator.serviceWorker.controller;
