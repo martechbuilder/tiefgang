@@ -148,7 +148,7 @@ input{font:inherit;color:inherit}
 .srcs li{margin-bottom:6px}
 
 /* ---------- Reader ---------- */
-#reader{position:fixed;inset:0;z-index:40;background:var(--bg0);display:flex;flex-direction:column;
+#reader{position:fixed;inset:0;z-index:40;overflow:hidden;display:flex;flex-direction:column;
   background:radial-gradient(110% 50% at 50% -10%,rgba(8,82,120,.28),transparent 60%),var(--bg0)}
 #reader .rtop{padding:calc(var(--st) + 10px) 16px 8px;display:flex;flex-direction:column;gap:10px;flex:none}
 .segs{display:flex;gap:4px}
@@ -460,6 +460,13 @@ body.diving{overflow:hidden}
 html,body{overflow-x:hidden;overscroll-behavior-x:none;max-width:100%}
 #app{overflow-x:clip;max-width:100vw}
 .view{overflow-x:clip}
+html{scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar,body::-webkit-scrollbar,#rscroll::-webkit-scrollbar{display:none;width:0;height:0}
+#rscroll{scrollbar-width:none}
+#reader{background:radial-gradient(120% 55% at 15% -10%,rgba(8,82,120,.40),transparent 60%),radial-gradient(90% 55% at 100% 0%,rgba(1,26,42,.9),transparent 70%),linear-gradient(180deg,var(--bg1),var(--bg0) 65%)!important}
+#reader::before{content:"";position:absolute;left:-30%;right:-30%;top:-10%;height:70%;pointer-events:none;opacity:.45;z-index:0;
+  background:repeating-linear-gradient(100deg,transparent 0 6%,rgba(110,210,250,.05) 7% 9%,transparent 10% 15%,rgba(110,210,250,.035) 16% 17%,transparent 18% 24%);
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 85%);mask-image:linear-gradient(180deg,#000,transparent 85%);animation:rays 26s ease-in-out infinite alternate}
+#reader>*{position:relative;z-index:1}
 .cats{grid-template-columns:repeat(3,1fr);gap:18px 10px}
 .cat{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 2px;min-height:0;align-items:center;justify-content:flex-start;text-align:center;overflow:visible}
 .cat .glyph,.cat .glyph.img{width:70px;height:70px;border-radius:20px;box-shadow:0 0 22px rgba(36,178,216,.16),0 8px 20px rgba(0,0,0,.5)}
@@ -692,7 +699,7 @@ function row(b,extra=""){
 function pill(icon,t,sub,attrs){return `<button class="pill" ${attrs}><span class="pi"><svg class="ic" viewBox="0 0 24 24"><path d="${icon}"/></svg></span><span class="pt"><b>${t}</b><small>${sub}</small></span><span class="chev">›</span></button>`;}
 function heroCont(b){const n=b.chapters.length,r=readCount(b),pct=Math.round(r/n*100),C=2*Math.PI*44,nx=nextChapter(b);
   return `<div class="hero"><button class="hcov" data-go="book" data-id="${b.id}">${cover(b)}</button>
-  <div class="ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9ff0ff"/><stop offset="1" stop-color="#1592b8"/></linearGradient></defs><circle cx="50" cy="50" r="44" class="rt"/><circle cx="50" cy="50" r="44" class="rv" stroke="url(#rg)" stroke-dasharray="${C}" stroke-dashoffset="${C}" data-off="${C*(1-Math.max(pct,2)/100)}"/></svg><div class="rp" data-count="${pct}">0%</div><div class="rl">${r} von ${n} Häppchen</div></div></div>
+  <div class="ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9ff0ff"/><stop offset="1" stop-color="#1592b8"/></linearGradient></defs><circle cx="50" cy="50" r="44" class="rt"/><circle cx="50" cy="50" r="44" class="rv" stroke="url(#rg)" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-Math.max(pct,2)/100)}"/></svg><div class="rp">${pct}%</div><div class="rl">${r} von ${n} Häppchen</div></div></div>
   <div class="htitle">${esc(b.title)}</div><div class="hsub">Weiter mit Häppchen ${nx+1}: ${esc(b.chapters[nx].h)}</div>
   <button class="pill pri" data-go="read" data-id="${b.id}"><span class="pt"><b>Weiterlesen</b></span><span class="chev">›</span></button>`;}
 function vHome(){
@@ -803,7 +810,7 @@ function vSearch(){
 function hits(q){
   q=q.trim().toLowerCase();
   if(q.length>=2&&!allLoaded()){loadAll().then(()=>{if(route.v==="search"&&$("#hits"))$("#hits").innerHTML=hits(route.q||"");});}
-  if(q.length<2)return `<div class="empty">Durchsucht Titel, alle Häppchen, Kernaussagen, Diskussionsfälle und Studien. Mehrere Wörter werden alle gesucht.</div>`;
+  if(q.length<2)return `<div class="empty">Durchsucht Titel, alle Häppchen, Kernaussagen, Diskussionsfälle und Studien. Mehrere Wörter möglich: Alle werden gesucht.</div>`;
   const terms=q.split(/\s+/).filter(t=>t.length>1);const out=[];
   const mk=(txt,t)=>{const i=txt.toLowerCase().indexOf(t);if(i<0)return "";const s0=Math.max(0,i-60);return (s0?"…":"")+esc(txt.slice(s0,i))+"<mark>"+esc(txt.slice(i,i+t.length))+"</mark>"+esc(txt.slice(i+t.length,i+t.length+80))+"…";};
   for(const b of BOOKS){
@@ -1196,8 +1203,7 @@ function fx(){if(RM)return;const els=[...document.querySelectorAll("#app .view "
   if(!FXIO)FXIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");FXIO.unobserve(e.target);}});},{rootMargin:"0px 0px -6% 0px",threshold:.05});
   let k=0;els.forEach(el=>{if(el.classList.contains("fx"))return;const r=el.getBoundingClientRect();const vis=r.top<innerHeight;
     if(same&&vis){return;}el.classList.add("fx");if(vis)el.style.transitionDelay=Math.min(k++,10)*45+"ms";FXIO.observe(el);});
-  const rv=document.querySelector(".ring .rv");if(rv&&same){rv.style.transition="none";rv.style.strokeDashoffset=rv.dataset.off;const p=document.querySelector(".ring .rp");if(p)p.textContent=p.dataset.count+"%";return;}if(rv)setTimeout(()=>{rv.style.strokeDashoffset=rv.dataset.off;},250);
-  const rp=document.querySelector(".ring .rp");if(rp){const to=+rp.dataset.count,t0=performance.now();const st=n=>{const p=Math.min(1,(n-t0)/1100),e=1-Math.pow(1-p,3);rp.textContent=Math.round(to*e)+"%";if(p<1)requestAnimationFrame(st);};setTimeout(()=>requestAnimationFrame(st),250);}}
+}
 // Parallax: Schriftzug und Hero gleiten beim Scrollen langsamer
 addEventListener("scroll",()=>{if(RM)return;const y=scrollY;const w=document.querySelector(".wm");if(w&&y<500){w.style.transform=`translateY(${y*.35}px)`;w.style.opacity=Math.max(0,1-y/260);}
   const h=document.querySelector(".hero");if(h&&y<700)h.style.transform=`translateY(${y*.12}px)`;},{passive:true});
@@ -1235,13 +1241,13 @@ function depDraw(now){if(!DEP.run)return;if(!RM)requestAnimationFrame(depDraw);i
   for(const p of DEP.parts){const yy=((p.y*h*1.2-sy*PAR[p.l]-t*p.sp*60)%(h*1.2)+h*1.2)%(h*1.2)-h*.1;const xx=p.x*w+Math.sin(t*.5+p.ph)*(4+p.l*6);
     const tw=.6+.4*Math.sin(t*1.7+p.ph*3);x.beginPath();x.fillStyle=`rgba(150,225,255,${p.a*tw})`;if(p.l===2){x.shadowBlur=14;x.shadowColor="rgba(120,210,250,.5)";}else x.shadowBlur=0;x.arc(xx,yy,p.r,0,6.283);x.fill();}
   x.shadowBlur=0;for(const j of DEP.jel)drawJelly(x,j,t,sy,w,h);}
-function drawJelly(x,j,t,sy,w,h){const ph=t*.55+j.ph,pulse=Math.sin(ph),squash=.5+.5*pulse;const s=j.s;
-  const rise=(t*(1.8+pulse*.9)+j.ph*40)%(h*1.6);
-  const cx=j.x*w+Math.sin(t*.14+j.ph)*16,cy=((j.y*h-sy*PAR[j.l]-rise)%(h*1.6)+h*1.6)%(h*1.6)-h*.3;
+function drawJelly(x,j,t,sy,w,h){const ph=t*.85+j.ph,pulse=Math.sin(ph),squash=.5+.5*pulse;const s=j.s;
+  const rise=(t*(3.2+pulse*1.5)+j.ph*40)%(h*1.6);
+  const cx=j.x*w+Math.sin(t*.22+j.ph)*18,cy=((j.y*h-sy*PAR[j.l]-rise)%(h*1.6)+h*1.6)%(h*1.6)-h*.3;
   const bw=s*(1+.10*pulse),bh=s*(1.05-.16*pulse),H=j.hue;
   // weicher Schein
   const g=x.createRadialGradient(cx,cy-bh*.3,0,cx,cy-bh*.3,s*2.6);g.addColorStop(0,`hsla(${H},95%,70%,.13)`);g.addColorStop(1,`hsla(${H},90%,60%,0)`);x.fillStyle=g;x.beginPath();x.arc(cx,cy-bh*.3,s*2.6,0,6.283);x.fill();
-  x.save();x.translate(cx,cy);x.rotate(Math.sin(t*.14+j.ph)*.06);
+  x.save();x.translate(cx,cy);x.rotate(Math.sin(t*.22+j.ph)*.07);
   // lange, feine Tentakel hinter dem Schirm
   x.lineCap="round";for(let k=0;k<7;k++){const ox=-bw*.78+k*bw*.26,len=s*(2.6+.5*Math.sin(k*1.7));x.beginPath();x.moveTo(ox,0);
     for(let q=1;q<=14;q++){const f=q/14;x.lineTo(ox+Math.sin(ph*1.4-q*.45+k)*(2+f*7)*(1-squash*.3),f*len*(1-.12*squash));}
@@ -1317,6 +1323,21 @@ document.addEventListener("click",e=>{if(e.target.closest("[data-go],[data-tab],
 // Rückkehr in die App nach längerer Pause
 let HID=0;document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"){HID=Date.now();return;}
   if(HID&&Date.now()-HID>2*3600e3&&Math.random()<.5)setTimeout(()=>fishPop(pick(["Schön, dass du hier bist und nicht im Feed.","Wieder da! Lust auf ein Häppchen statt Scrollen?","Gute Wahl: lesen statt doomscrollen."]),"p1",{label:"Ein Häppchen",fn:()=>snack()}),900);});
+/* ================= Zurück per Wisch vom linken Rand (wie iOS) ================= */
+(function(){let sx=0,sy=0,on=false,el=null,dx=0;
+  const target=()=>{const r=$("#reader");return r&&!r.classList.contains("hidden")?r:document.querySelector("#app .view");};
+  const canBack=()=>{const r=$("#reader");return (r&&!r.classList.contains("hidden"))||hist.length>0||!["home","discover","trainer","library","search"].includes(route.v);};
+  addEventListener("touchstart",e=>{const t=e.touches[0];if(e.touches.length!==1||t.clientX>28||!canBack())return;sx=t.clientX;sy=t.clientY;on=true;dx=0;el=target();if(el){el.style.transition="none";}},{passive:true});
+  addEventListener("touchmove",e=>{if(!on)return;const t=e.touches[0];dx=t.clientX-sx;const dy=t.clientY-sy;
+    if(Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>14){on=false;if(el){el.style.transform="";}return;}
+    if(dx>0&&el){el.style.transform=`translateX(${dx}px)`;el.style.boxShadow="-20px 0 40px rgba(0,0,0,.5)";}},{passive:true});
+  addEventListener("touchend",()=>{if(!on)return;on=false;if(!el)return;const w=innerWidth;
+    if(dx>Math.min(110,w*.3)){el.style.transition="transform .22s ease-out";el.style.transform=`translateX(${w}px)`;
+      setTimeout(()=>{el.style.transition="none";el.style.transform="";el.style.boxShadow="";goBack();},210);}
+    else{el.style.transition="transform .25s cubic-bezier(.2,.7,.2,1)";el.style.transform="";setTimeout(()=>{el.style.boxShadow="";},260);}},{passive:true});
+  function goBack(){const r=$("#reader");if(r&&!r.classList.contains("hidden")){if($("#nclose"))closeNews();else closeReader();return;}
+    if(hist.length)back();else go({v:"home"},false);}
+})();
 /* Globaler Player: lebt außerhalb von #app, überlebt Ansichtswechsel, Neuzeichnen und Hintergrund */
 const PL={id:null};const G=()=>document.getElementById("gplay");
 function fmtT(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
