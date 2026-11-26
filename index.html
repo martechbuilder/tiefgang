@@ -372,11 +372,6 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
   background:repeating-linear-gradient(100deg,transparent 0 6%,rgba(110,210,250,.05) 7% 9%,transparent 10% 15%,rgba(110,210,250,.035) 16% 17%,transparent 18% 24%);
   -webkit-mask-image:linear-gradient(180deg,#000,transparent 85%);mask-image:linear-gradient(180deg,#000,transparent 85%);transform-origin:50% 0;animation:rays 26s ease-in-out infinite alternate}
 @keyframes rays{0%{transform:skewX(-6deg) translateX(-3%);opacity:.35}100%{transform:skewX(6deg) translateX(3%);opacity:.6}}
-#deep .bub{position:absolute;left:var(--x);bottom:-30px;width:var(--s);height:var(--s);border-radius:50%;
-  background:radial-gradient(circle at 32% 30%,rgba(230,250,255,.75),rgba(120,210,245,.18) 45%,rgba(120,210,245,.05) 70%);box-shadow:0 0 6px rgba(120,210,245,.25);
-  animation:bubUp var(--d) linear var(--dl) infinite,bubWob 3.2s ease-in-out infinite alternate}
-@keyframes bubUp{0%{transform:translateY(0);opacity:0}8%{opacity:.8}85%{opacity:.6}100%{transform:translateY(-112vh);opacity:0}}
-@keyframes bubWob{from{margin-left:calc(var(--w) * -1)}to{margin-left:var(--w)}}
 .wmt{position:relative;display:inline-block;background:linear-gradient(100deg,#f0fbff 0%,#8fdcf2 30%,#3fa6cf 50%,#8fdcf2 70%,#f0fbff 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;animation:gradRun 9s linear infinite}
 @keyframes gradRun{from{background-position:0 0}to{background-position:-220% 0}}
 .wmt::after{content:attr(data-t);position:absolute;left:0;top:0;right:0;background:linear-gradient(100deg,transparent 42%,rgba(255,255,255,.95) 50%,transparent 58%) no-repeat;background-size:260% 100%;background-position:160% 0;-webkit-background-clip:text;background-clip:text;color:transparent;pointer-events:none}
@@ -417,7 +412,6 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 .h-big,.htitle,.rin h2,.snack .ttl,.hero h1{font-family:"Fraunces",ui-serif,Georgia,serif;font-variation-settings:"SOFT" 100,"opsz" 72}
 .htitle{font-weight:450;font-size:23px}.h-big{font-weight:330}
 #deep canvas{position:absolute;inset:0}
-#deep .bub{display:none}
 .fisch{display:block;width:100%;height:100%;background:url(art/fisch.webp) no-repeat;background-size:200% 200%}
 .fisch.p1{background-position:0 0}.fisch.p2{background-position:100% 0}.fisch.p3{background-position:0 100%}.fisch.p4{background-position:100% 100%}
 .fisch-home{display:flex;align-items:center;gap:6px;margin:16px auto -8px;padding:0;position:relative;width:120px;height:110px;will-change:transform}
@@ -513,20 +507,16 @@ body:has(#reader:not(.hidden)) #deep .rays{opacity:.7}
 #prain svg path{stroke-dasharray:none}
 #player .iconbtn{min-width:34px}
 .fxl{background:none!important}
-.fxl .gl{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat}
+.fxl .gly{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat}
 @keyframes gScanS{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-4%,-3%) rotate(-6deg)}50%{transform:translate(-6%,1%) rotate(0)}75%{transform:translate(-2%,3%) rotate(5deg)}}
 @keyframes gRock{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
 @keyframes gGrow{0%{clip-path:inset(0 100% 0 0);opacity:1}28%{clip-path:inset(0 0 0 0)}90%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 0 0 0);opacity:0}}
-.fxg{background:none!important}
-.fxg .gb{position:absolute;inset:-25%;background:var(--img) center/cover;filter:blur(18px) saturate(.9) brightness(.95)}
-.fxg .gp{position:absolute;inset:0;background:var(--img) center/100% 100%;will-change:transform}
 @keyframes gTilt{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
 @keyframes gSplitL{0%,30%,100%{transform:none}55%,70%{transform:translate(-5%,1.5%) rotate(-4deg)}}
 @keyframes gSplitR{0%,30%,100%{transform:none}55%,70%{transform:translate(5%,-1.5%) rotate(4deg)}}
 @keyframes gSpin{to{transform:rotate(360deg)}}
 @keyframes gLift{0%,40%,100%{transform:none}60%,75%{transform:translate(-1%,-4%) rotate(-3deg)}}
 @keyframes gBobA{0%,100%{transform:translateY(0)}50%{transform:translateY(-5%)}}
-@keyframes gBobB{0%,100%{transform:translateY(-4%)}50%{transform:translateY(2%)}}
 @keyframes gGlow{0%,100%{filter:brightness(1) drop-shadow(0 0 0 rgba(255,200,140,0))}50%{filter:brightness(1.25) drop-shadow(0 0 8px rgba(255,200,140,.6))}}
 @keyframes gUnlock{0%,35%,100%{transform:none}55%,70%{transform:translateY(-7%)}}
 @keyframes gTwist{0%,100%{transform:scaleX(1) rotate(0)}50%{transform:scaleX(.82) rotate(-4deg)}}
@@ -534,16 +524,10 @@ body:has(#reader:not(.hidden)) #deep .rays{opacity:.7}
 @keyframes gNod{0%,100%{transform:rotate(0)}30%{transform:rotate(-3deg)}60%{transform:rotate(2deg)}}
 @keyframes gBreak{0%,35%,100%{transform:none}55%,72%{transform:translate(-6%,-5%) rotate(-6deg)}}
 @keyframes gFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3%)}}
-@keyframes gScan{0%,100%{transform:translate(0,0)}25%{transform:translate(-14%,-10%)}50%{transform:translate(-22%,-26%)}75%{transform:translate(-6%,-18%)}}
 @keyframes gClashL{0%,100%{transform:translateX(-4%)}45%{transform:translateX(4%)}55%{transform:translateX(3%);filter:brightness(1.4)}}
 @keyframes gClashR{0%,100%{transform:translateX(4%)}45%{transform:translateX(-4%)}55%{transform:translateX(-3%);filter:brightness(1.4)}}
 @keyframes gWobble{0%,100%{transform:rotate(0)}20%{transform:rotate(-9deg)}40%{transform:rotate(7deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(2deg)}}
 @keyframes gOrbit{0%,100%{transform:translate(0,0)}25%{transform:translate(10%,-5%)}50%{transform:translate(22%,4%)}75%{transform:translate(8%,8%)}}
-@keyframes gTiltS{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
-@keyframes gWrench{0%,100%{transform:rotate(0)}50%{transform:rotate(-12deg)}}
-@keyframes gFeather{0%,100%{transform:rotate(0)}50%{transform:rotate(8deg) translateY(-2%)}}
-@keyframes gRise{0%,100%{transform:translate(0,0)}50%{transform:translate(4%,-6%)}}
-@keyframes gCoins{0%,70%,100%{transform:none}80%{transform:translateY(-8%)}90%{transform:translateY(2%)}}
 .cats{grid-template-columns:repeat(3,1fr);gap:18px 10px}
 .cat{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 2px;min-height:0;align-items:center;justify-content:flex-start;text-align:center;overflow:visible}
 .cat .glyph,.cat .glyph.img{width:70px;height:70px;border-radius:20px;box-shadow:0 0 22px rgba(36,178,216,.16),0 8px 20px rgba(0,0,0,.5)}
@@ -632,7 +616,7 @@ let S=defState();
 try{const raw=localStorage.getItem(KEY);if(raw){S=Object.assign(defState(),JSON.parse(raw));S.settings=Object.assign(defState().settings,S.settings||{});}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 const hkey=h=>String(h).toLowerCase().replace(/[^a-z0-9äöüß]+/g,"-").slice(0,48);
-const ck=(id,i)=>{const b=BY_ID[id];const c=b&&b.chapters[i];return id+"#"+(c?hkey(c.h):i);};
+const ck=(id,i)=>{const b=BY_ID[id];if(!b)return id+"#"+i;const k=b._ck||(b._ck=b.chapters.map(c=>id+"#"+hkey(c.h)));return k[i]||(id+"#"+i);};
 // alte Index-Schlüssel (id#3) auf Überschrift umstellen
 (function(){let ch=false;for(const k of Object.keys(S.read)){const m=k.match(/^(.*)#(\d+)$/);if(m&&BY_ID[m[1]]){const nk=ck(m[1],+m[2]);if(nk!==k){S.read[nk]=S.read[nk]||S.read[k];delete S.read[k];ch=true;}}}if(ch)save();})();
 const isRead=(id,i)=>!!S.read[ck(id,i)];
@@ -726,7 +710,7 @@ function render(){
   const html=v==="home"?vHome():v==="discover"?vDiscover():v==="cat"?vCat():v==="book"?vBook():v==="library"?vLibrary():v==="search"?vSearch():v==="trainer"?vTrainer():v==="studien"?vStudien():v==="news"?vNews():v==="fragen"?vFragen():v==="hoeren"?vHoeren():v==="settings"?vSettings():vHome();
   $("#app").innerHTML=`<div class="view">${html}</div>`;fx();splitWords();scene();if(route.v==="home")setTimeout(wmGlint,700);
   if(v==="studien"){const i=$("#sq");i.value=route.sq||"";i.addEventListener("input",()=>{route.sq=i.value;route.sn=0;$("#stuhits").innerHTML=stuHits();});}
-  if(v==="search"){const i=$("#q");i.value=route.q||"";i.addEventListener("input",()=>{route.q=i.value;$("#hits").innerHTML=hits(i.value);});if(!route.q)setTimeout(()=>i.focus(),50);}
+  if(v==="search"){const i=$("#q");i.value=route.q||"";let qt=0;i.addEventListener("input",()=>{route.q=i.value;clearTimeout(qt);qt=setTimeout(()=>{$("#hits").innerHTML=hits(i.value);},160);});if(!route.q)setTimeout(()=>i.focus(),50);}
 }
 document.addEventListener("click",e=>{
   const a=e.target.closest("[data-go]");if(!a)return;
@@ -1455,7 +1439,7 @@ const GFX={
 };
 function glyphFx(c){const p=GFX[c];
   if(!p||RM)return `<div class="glyph img" style="background:url(art/${c}.jpg) center/cover"></div>`;
-  return `<div class="glyph img fxl"><i class="gl" style="background-image:url(art/fx/${c}-bg.webp)"></i>${p.map(([an,o],k)=>`<i class="gl" style="background-image:url(art/fx/${c}-${k}.webp);${an?`animation:${an};`:""}transform-origin:${o||"50% 50%"}"></i>`).join("")}</div>`;}
+  return `<div class="glyph img fxl"><i class="gly" style="background-image:url(art/fx/${c}-bg.webp)"></i>${p.map(([an,o],k)=>`<i class="gly" style="background-image:url(art/fx/${c}-${k}.webp);${an?`animation:${an};`:""}transform-origin:${o||"50% 50%"}"></i>`).join("")}</div>`;}
 /* Globaler Player: lebt außerhalb von #app, überlebt Ansichtswechsel, Neuzeichnen und Hintergrund */
 const PL={id:null};const G=()=>document.getElementById("gplay");
 function fmtT(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}

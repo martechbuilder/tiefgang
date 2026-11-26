@@ -1,4 +1,4 @@
-const CACHE = "tiefgang-202611262003";
+const CACHE = "tiefgang-202611262006";
 const CORE = ["./", "./index.html", "./content.js", "./manifest.json",
   "./icons/icon-nacht-180.png", "./icons/icon-glas-180.png", "./icons/icon-hell-180.png", "./icons/icon-getoent-180.png",
   "./icons/preview-nacht.svg", "./icons/preview-glas.svg", "./icons/preview-hell.svg", "./icons/preview-getoent.svg",
@@ -33,6 +33,8 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
   // Audio (Regen) direkt aus dem Netz: Safari braucht Range-Antworten
   if (req.headers.has("range") || /\.(m4a|mp3)$/.test(new URL(req.url).pathname)) return;
+  // sw.js selbst nie aus dem Cache (sonst meldet "Nach Updates suchen" fälschlich "aktuell")
+  if (new URL(req.url).pathname.endsWith("/sw.js")) return;
   // Seite: Netz mit 3 s Timeout, sonst Cache (neue Version kommt beim nächsten Start)
   if (req.mode === "navigate") {
     e.respondWith(new Promise(resolve => {
@@ -50,8 +52,6 @@ self.addEventListener("fetch", e => {
     return;
   }
   // Inhalte, Bilder, Icons: sofort aus dem Cache, im Hintergrund aktualisieren
-  e.respondWith(caches.match(req, { ignoreSearch: true }).then(hit => {
-    const net = fetch(req).then(res => putCache(req, res)).catch(() => hit);
-    return hit || net;
-  }));
+  // Treffer direkt ausliefern: jede neue Version bringt einen neuen Cache mit (kein Nachladen bei jedem Start)
+  e.respondWith(caches.match(req, { ignoreSearch: true }).then(hit => hit || fetch(req).then(res => putCache(req, res))));
 });
