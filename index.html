@@ -1280,7 +1280,7 @@ const FXSEL=".pill,.cont,.card,.cat,.row,.news,.h-sec,.statline,.hhero,.htitle,.
 let FXIO=null;
 function fx(){if(RM)return;const els=[...document.querySelectorAll("#app .view "+FXSEL.split(",").join(",#app .view "))];
   const key=route.v+"|"+(route.id||"")+"|"+(route.cat||"")+"|"+(route.lt||"");const same=key===fx.last;fx.last=key;if(same){const v=document.querySelector("#app .view");if(v)v.style.animation="none";}
-  if(!FXIO)FXIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");FXIO.unobserve(e.target);}});},{rootMargin:"0px 0px -6% 0px",threshold:.05});
+  if(!FXIO)FXIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");FXIO.unobserve(e.target);}});},{rootMargin:"0px 0px 12% 0px",threshold:0});
   let k=0;els.forEach(el=>{if(el.classList.contains("fx"))return;const r=el.getBoundingClientRect();const vis=r.top<innerHeight;
     if(same&&vis){return;}el.classList.add("fx");if(vis)el.style.transitionDelay=Math.min(k++,10)*45+"ms";FXIO.observe(el);});
 }
