@@ -476,6 +476,37 @@ body:has(#reader:not(.hidden)) #deep .rays{opacity:.7}
 .wmt{line-height:1.25!important;padding:0 .06em .16em;margin-bottom:-.16em}
 .wmt::after{padding:0 .06em .16em}
 #minihead .mt{line-height:1.3;padding-bottom:.14em}
+/* ---------- Symbole selbst in Bewegung ---------- */
+/* Kategorie- und Cover-Bilder: langsames Gleiten im Rahmen, Lichtstreif über das Motiv */
+.cat .glyph.img,.cont .cover,.row .cover{background-size:118% auto!important;animation:catFloat 6s ease-in-out infinite,kb 14s ease-in-out infinite alternate}
+.cat:nth-child(3n+2) .glyph.img{animation-delay:-2s,-5s}.cat:nth-child(3n) .glyph.img{animation-delay:-4s,-9s}
+@keyframes kb{0%{background-position:40% 45%}50%{background-position:60% 55%}100%{background-position:48% 38%}}
+.cat .glyph{position:relative;overflow:hidden}
+.cat .glyph::after,.cont .cover::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 35%,rgba(200,245,255,.35) 50%,transparent 65%);transform:translateX(-140%);animation:glyphShine 7s ease-in-out infinite}
+.cat:nth-child(2n) .glyph::after{animation-delay:-2.3s}.cat:nth-child(3n) .glyph::after{animation-delay:-4.6s}
+@keyframes glyphShine{0%,78%{transform:translateX(-140%)}92%,100%{transform:translateX(140%)}}
+.cat.fx.in .glyph{animation:catPop .6s cubic-bezier(.3,.7,.3,1.5) both,catFloat 6s ease-in-out .6s infinite,kb 14s ease-in-out infinite alternate}
+/* Tab-Symbole: Linien zeichnen sich beim Aktivieren nach, jedes Symbol hat eine eigene kleine Geste */
+#tabbar button.on svg path{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .7s cubic-bezier(.3,.7,.2,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+#tabbar button svg{transform-origin:50% 60%}
+#tabbar .t-home svg{animation:gHome 7s ease-in-out infinite}
+#tabbar .t-discover svg{animation:gDisc 8s ease-in-out infinite 1s}
+#tabbar .t-trainer svg{animation:gTrain 6s ease-in-out infinite 2s}
+#tabbar .t-library svg{animation:gLib 9s ease-in-out infinite 3s}
+#tabbar .t-search svg{animation:gSearch 7.5s ease-in-out infinite 4s}
+@keyframes gHome{0%,88%,100%{transform:none}92%{transform:translateY(-3px)}96%{transform:translateY(0) scaleY(.92)}}
+@keyframes gDisc{0%,86%,100%{transform:none}93%{transform:rotate(90deg) scale(.9)}}
+@keyframes gTrain{0%,84%,100%{transform:none}90%{transform:scale(1.18)}95%{transform:scale(.94)}}
+@keyframes gLib{0%,86%,100%{transform:none}91%{transform:rotate(-10deg)}96%{transform:rotate(6deg)}}
+@keyframes gSearch{0%,84%,100%{transform:none}89%{transform:translate(-2px,-2px) rotate(-12deg)}94%{transform:translate(2px,1px) rotate(8deg)}}
+#tabbar button.on svg{animation:tabPop .45s cubic-bezier(.3,.7,.3,1.6),tabFloat 3.5s ease-in-out .5s infinite!important}
+/* Pillen-Symbole: eigene Gesten statt nur Schweben */
+.pill .pi svg{animation:piBob 4.5s ease-in-out infinite,piSpin 9s ease-in-out infinite}
+@keyframes piSpin{0%,85%,100%{rotate:0deg}92%{rotate:180deg}}
+.pill .pi svg path{stroke-dasharray:1.2;animation:piDraw 9s ease-in-out infinite}
+@keyframes piDraw{0%,70%,100%{stroke-dashoffset:0}78%{stroke-dashoffset:1.2}86%{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.cat .glyph.img,.cont .cover,.row .cover,.cat .glyph::after,.cont .cover::before,#tabbar button svg,#tabbar button svg path,.pill .pi svg,.pill .pi svg path{animation:none!important}}
 .cats{grid-template-columns:repeat(3,1fr);gap:18px 10px}
 .cat{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 2px;min-height:0;align-items:center;justify-content:flex-start;text-align:center;overflow:visible}
 .cat .glyph,.cat .glyph.img{width:70px;height:70px;border-radius:20px;box-shadow:0 0 22px rgba(36,178,216,.16),0 8px 20px rgba(0,0,0,.5)}
@@ -629,7 +660,7 @@ function back(){route=hist.pop()||{v:"home"};render();if(typeof scene==="functio
 const TABS=[["home","Heute",I.home],["discover","Entdecken",I.grid],["trainer","Trainer",I.target],["library","Bibliothek",I.lib],["search","Suche",I.search]];
 function renderTabs(){
   const top=["home","discover","trainer","library","search"].includes(route.v)?route.v:(route.tab||"discover");
-  $("#tabbar").innerHTML=TABS.map(([k,l,p])=>`<button data-tab="${k}" class="${top===k?"on":""}">${ic(p)}<span>${l}</span></button>`).join("");
+  $("#tabbar").innerHTML=TABS.map(([k,l,p])=>`<button data-tab="${k}" class="t-${k} ${top===k?"on":""}">${ic(p).replace(/<path /g,'<path pathLength="1" ')}<span>${l}</span></button>`).join("");
 }
 $("#tabbar").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;hist.length=0;go({v:b.dataset.tab},false);});
 
@@ -705,7 +736,7 @@ function row(b,extra=""){
   const r=readCount(b),n=b.chapters.length;
   return `<button class="row glass" data-go="book" data-id="${b.id}">${cover(b)}<div class="meta"><div class="t">${esc(b.title)}</div><div class="s">${extra||esc(b.subtitle)}</div><div class="m">${CATS[b.cat].n} · ${b._min} Min${r?` · <span class="${r===n?"done":""}">${r===n?"gelesen":r+"/"+n}</span>`:""}</div></div></button>`;
 }
-function pill(icon,t,sub,attrs){return `<button class="pill" ${attrs}><span class="pi"><svg class="ic" viewBox="0 0 24 24"><path d="${icon}"/></svg></span><span class="pt"><b>${t}</b><small>${sub}</small></span><span class="chev">›</span></button>`;}
+function pill(icon,t,sub,attrs){return `<button class="pill" ${attrs}><span class="pi"><svg class="ic" viewBox="0 0 24 24"><path pathLength="1" d="${icon}"/></svg></span><span class="pt"><b>${t}</b><small>${sub}</small></span><span class="chev">›</span></button>`;}
 function heroCont(b){const n=b.chapters.length,r=readCount(b),pct=Math.round(r/n*100),C=2*Math.PI*44,nx=nextChapter(b);
   return `<div class="hhero"><button class="hcov" data-go="book" data-id="${b.id}">${cover(b)}</button>
   <div class="ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9ff0ff"/><stop offset="1" stop-color="#1592b8"/></linearGradient></defs><circle cx="50" cy="50" r="44" class="rt"/><circle cx="50" cy="50" r="44" class="rv" stroke="url(#rg)" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-Math.max(pct,2)/100)}"/></svg><div class="rp">${pct}%</div><div class="rl">${r} von ${n} Häppchen</div></div></div>
