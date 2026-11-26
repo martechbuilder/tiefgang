@@ -541,6 +541,24 @@ body:has(#reader:not(.hidden)) #app *,body:has(#reader:not(.hidden)) #app *::bef
 #minihead .anc .rope{display:block;width:1px;height:3px;background:linear-gradient(180deg,rgba(76,210,236,0),rgba(76,210,236,.7));transition:height .25s ease-out}
 #minihead .anc svg{width:16px;height:16px;fill:none;stroke:var(--accent-hi);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px rgba(76,210,236,.6));transform-origin:50% 0;animation:ancSwing 3.2s ease-in-out infinite}
 @keyframes ancSwing{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+/* ---------- Deep Dive: Abzweige und Zonen ---------- */
+.dives{margin:26px 0 18px;display:flex;flex-direction:column;gap:9px}
+.dk{display:flex;align-items:center;gap:10px;font-size:11.5px;font-weight:650;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-hi);margin-bottom:2px}
+.dk i{flex:1;height:1px;background:linear-gradient(90deg,rgba(76,210,236,.45),transparent)}
+.dive{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 14px 10px 10px;border-radius:16px;background:linear-gradient(90deg,rgba(16,58,86,.75),rgba(4,24,38,.7));border:1px solid rgba(120,210,245,.18);font-family:var(--ui)}
+.dive .di{flex:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(76,210,236,.12)}
+.dive .di svg{width:18px;height:18px;fill:none;stroke:var(--accent-hi);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dive .dt{flex:1;min-width:0;display:flex;flex-direction:column}.dive .dt b{font-size:14.5px;font-weight:600;color:var(--txt)}.dive .dt small{font-size:12.5px;color:var(--txt3);line-height:1.3;margin-top:2px}
+.dive .dm{flex:none;font-size:11.5px;font-weight:700;color:var(--accent-hi);font-variant-numeric:tabular-nums}
+.dive.done{opacity:.7}.dive.done .dm{color:var(--txt3)}
+.dive-sheet{max-height:82vh;overflow-y:auto}
+.zline{margin:10px 6px 0;text-align:center}
+.zline .zt{font-size:13px;color:var(--txt2)}.zline .zt b{color:var(--accent-hi);font-weight:650}
+.zline .zbar{height:3px;border-radius:2px;background:rgba(140,215,245,.12);margin:7px auto 5px;max-width:240px;overflow:hidden}
+.zline .zbar i{display:block;height:100%;background:linear-gradient(90deg,#1592b8,#4cd2ec);box-shadow:0 0 8px rgba(76,210,236,.6)}
+.zline .zn{font-size:11.5px;color:var(--txt3)}
+#deep .zone{position:absolute;inset:0;background:rgba(0,2,8,var(--zd,0));pointer-events:none;transition:background 2s}
+#deep .rays{opacity:calc(.5 * var(--zr,1))}
 .cats{grid-template-columns:repeat(3,1fr);gap:18px 10px}
 .cat{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 2px;min-height:0;align-items:center;justify-content:flex-start;text-align:center;overflow:visible}
 .cat .glyph,.cat .glyph.img{width:70px;height:70px;border-radius:20px;box-shadow:0 0 22px rgba(36,178,216,.16),0 8px 20px rgba(0,0,0,.5)}
@@ -555,7 +573,7 @@ body:has(#reader:not(.hidden)) #app *,body:has(#reader:not(.hidden)) #app *::bef
 <nav id="tabbar" class="glass"></nav>
 <div id="reader" class="hidden"></div>
 <div id="sheet"></div>
-<div id="deep" aria-hidden="true"><div class="rays"></div><canvas id="depth"></canvas></div>
+<div id="deep" aria-hidden="true"><div class="rays"></div><div class="zone"></div><canvas id="depth"></canvas></div>
 <div id="minihead" aria-hidden="true"><span class="mt">Deep Dive</span><span class="md"><span id="mdepth">0 m</span><span class="anc" aria-hidden="true"><i class="rope" id="mrope"></i><svg viewBox="0 0 24 24"><path d="M12 5a2 2 0 100-4 2 2 0 000 4zM12 5v15M7 9h10M4 13a8 8 0 0016 0M4 13l-2 2M20 13l2 2"/></svg></span></span></div>
 <div id="intro" class="hidden"><canvas id="introc"></canvas><div class="iwm">Deep Dive</div><div class="isub" id="isub">Tauche ab …</div><i class="fisch p1 ifisch"></i><div class="iskip">Tippen zum Überspringen</div></div>
 <div id="fpop" class="hidden" role="status"><i class="fisch p4"></i><div class="fb"><div class="ft" id="fpt"></div><button class="fa hidden" id="fpa"></button></div></div>
@@ -639,7 +657,7 @@ function markRead(id,i){
   if(isRead(id,i))return;
   S.read[ck(id,i)]=Date.now();
   const t=today();S.days[t]=(S.days[t]||0)+1;save();
-  try{fishMilestone(id,i);}catch(_){}
+  try{depthAdd(50);fishMilestone(id,i);}catch(_){}
 }
 function streak(){let n=0;const d=new Date();for(;;){const k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");if(S.days[k]){n++;d.setDate(d.getDate()-1);}else{if(n===0&&k===today()){d.setDate(d.getDate()-1);continue;}break;}}return n;}
 function applySettings(){
@@ -796,7 +814,7 @@ function vHome(){
     ${cont?pill(I.shuffle,"Ein Häppchen lesen","Zwei Minuten, zufällig aus allem Neuen",'data-go="snack"'):""}
     ${pill(I.target,"Erkenne die Taktik",DEBN()+" Fälle aus echten Debatten",'data-tab="trainer" onclick="hist.length=0;go({v:\'trainer\'},false)"')}
   </div>
-  <button class="fisch-home" id="fhome" aria-label="Fisch"><i class="fisch p2"></i><span class="say" id="fsay"></span></button><div class="statline"><span><b>${streak()}</b> Tage in Folge</span><span><b>${S.days[today()]||0}</b> heute</span><span><b>${Math.round(readN/Math.max(1,totalCh)*100)} %</b> von ${totalCh}</span></div>
+  <button class="fisch-home" id="fhome" aria-label="Fisch"><i class="fisch p2"></i><span class="say" id="fsay"></span></button><div class="statline"><span><b>${streak()}</b> Tage in Folge</span><span><b>${S.days[today()]||0}</b> heute</span><span><b>${Math.round(readN/Math.max(1,totalCh)*100)} %</b> von ${totalCh}</span></div>${zoneLine()}
   ${qaBlock()}${audBlock()}${newsBlock()}
   <div class="h-sec"><h2>Für heute</h2><button data-tab="discover" onclick="hist.length=0;go({v:'discover'},false)">Alle</button></div>
   <div class="hscroll">${picks.map(bookCard).join("")}</div>
@@ -946,10 +964,10 @@ document.addEventListener("click",async e=>{
   const sz=e.target.closest("#sz [data-s]");if(sz){S.settings.size=+sz.dataset.s;save();applySettings();render();return;}
   const ff=e.target.closest("#ff [data-f]");if(ff){S.settings.font=ff.dataset.f;save();applySettings();render();return;}
   const isel=e.target.closest("#icsel [data-i]");if(isel){S.settings.icon=isel.dataset.i;save();applySettings();render();toast("Icon gewählt");return;}
-  if(e.target.closest("#exp")){const t=JSON.stringify({v:2,read:S.read,saved:S.saved,days:S.days,pos:S.pos,trainer:S.trainer||null,settings:S.settings,flags:S.flags||[]});try{await navigator.clipboard.writeText(t);toast("In die Zwischenablage kopiert");}catch(_){prompt("Kopieren:",t);}return;}
+  if(e.target.closest("#exp")){const t=JSON.stringify({v:2,read:S.read,saved:S.saved,days:S.days,pos:S.pos,trainer:S.trainer||null,settings:S.settings,flags:S.flags||[],dm:S.dm||0,br:S.br||{},open:S.open||{},apos:S.apos||{}});try{await navigator.clipboard.writeText(t);toast("In die Zwischenablage kopiert");}catch(_){prompt("Kopieren:",t);}return;}
   if(e.target.closest("#imp")){const t=prompt("Gesicherten Text einfügen:");if(!t)return;try{const o=JSON.parse(t);const obj=x=>x&&typeof x==="object"&&!Array.isArray(x);
     if(!obj(o)||!obj(o.read))throw 0;
-    S.read=o.read;S.saved=Array.isArray(o.saved)?o.saved.filter(x=>typeof x==="string"&&BY_ID[x]):[];S.days=obj(o.days)?o.days:{};S.pos=obj(o.pos)?o.pos:{};
+    S.read=o.read;S.saved=Array.isArray(o.saved)?o.saved.filter(x=>typeof x==="string"&&BY_ID[x]):[];S.days=obj(o.days)?o.days:{};S.pos=obj(o.pos)?o.pos:{};if(typeof o.dm==="number")S.dm=o.dm;if(obj(o.br))S.br=o.br;if(obj(o.open))S.open=o.open;if(obj(o.apos))S.apos=o.apos;
     if(obj(o.trainer))S.trainer=o.trainer;if(Array.isArray(o.flags))S.flags=o.flags.filter(f=>f&&typeof f.text==="string");if(obj(o.settings))S.settings=Object.assign(defState().settings,o.settings);
     save();applySettings();render();toast("Wiederhergestellt");}catch(_){toast("Das ist kein gültiger Sicherungstext");}return;}
   if(e.target.closest("#rst")){if(confirm("Wirklich den gesamten Lesefortschritt löschen?")){const st=S.settings;S=defState();S.settings=st;save();render();toast("Zurückgesetzt");}return;}
@@ -982,7 +1000,7 @@ function drawReader(){
   const segs=b.chapters.map((_,j)=>`<i class="${j<i||isRead(b.id,j)&&j!==i?"f":j===i?"c":""}"></i>`).join("");
   let inner;
   if(!atEnd){
-    inner=`<div class="k">Häppchen ${i+1} von ${n}</div><h2>${esc(c.h)}</h2><div class="body">${glossify(paras(c.body))}</div><button class="flag" data-flag="${b.id}" data-fi="${i}" data-fk="kapitel">⚑ Aussage prüfen lassen</button> <button class="flag" data-ask="${b.id}" data-fi="${i}">💬 Frage stellen</button><p class="small" style="margin:4px 2px 0">Tipp: Erst den zweifelhaften Satz markieren, dann tippen.</p>`;
+    inner=`<div class="k">Häppchen ${i+1} von ${n}</div><h2>${esc(c.h)}</h2><div class="body">${glossify(paras(c.body))}</div>${dives(b,i)}<button class="flag" data-flag="${b.id}" data-fi="${i}" data-fk="kapitel">⚑ Aussage prüfen lassen</button> <button class="flag" data-ask="${b.id}" data-fi="${i}">💬 Frage stellen</button><p class="small" style="margin:4px 2px 0">Tipp: Erst den zweifelhaften Satz markieren, dann tippen.</p>`;
   }else{
     const nb=suggestNext(b);
     inner=`<div class="fisch-end"><i class="fisch p4"></i><div class="small">Geschafft. Alle Häppchen gelesen.</div></div><div class="k">Zum Mitnehmen</div><h2>${esc(b.title)}</h2>
@@ -1461,6 +1479,40 @@ function catPause(){if(!("IntersectionObserver" in window))return;if(!CATIO)CATI
 function glyphFx(c){const p=GFX[c];
   if(!p||RM)return `<div class="glyph img" style="background:url(art/${c}.jpg) center/cover"></div>`;
   return `<div class="glyph img fxl"><i class="gly" style="background-image:url(art/fx/${c}-bg.webp)"></i>${p.map(([an,o],k)=>`<i class="gly" style="background-image:url(art/fx/${c}-${k}.webp);${an?`animation:${an};`:""}transform-origin:${o||"50% 50%"}"></i>`).join("")}</div>`;}
+/* ================= Deep Dive: Abzweige in die Tiefe + Tiefenzonen ================= */
+const ZONES=[[0,"Sonnenlichtzone","Hier oben ist noch alles hell."],[200,"Dämmerzone","Das Licht wird blau und schwächer. Ab hier wird es spannend."],[1000,"Mitternachtszone","Hier unten leuchtet nur noch, was selbst leuchtet. Wie ich."],[4000,"Tiefseezone","Kaum jemand kommt so tief. Respekt."],[6000,"Hadalzone","Die tiefsten Gräben der Welt. Du bist ganz unten angekommen."]];
+if(S.dm==null){S.dm=Object.keys(S.read||{}).length*50;S.br=S.br||{};save();}
+const zoneOf=m=>{let k=0;ZONES.forEach((z,i)=>{if(m>=z[0])k=i;});return k;};
+function zoneApply(){const k=zoneOf(S.dm||0);document.documentElement.style.setProperty("--zd",[0,.1,.2,.3,.4][k]);document.documentElement.style.setProperty("--zr",[1,.8,.55,.35,.2][k]);}
+function depthAdd(n){const before=zoneOf(S.dm||0);S.dm=(S.dm||0)+n;save();const after=zoneOf(S.dm);zoneApply();
+  if(after>before)setTimeout(()=>{try{fishPop(ZONES[after][1]+" erreicht. "+ZONES[after][2],"p4",null,true);}catch(_){}},400);}
+function zoneLine(){const m=S.dm||0,k=zoneOf(m),z=ZONES[k],nx=ZONES[k+1];const p=nx?Math.min(1,(m-z[0])/(nx[0]-z[0])):1;
+  return `<div class="zline"><div class="zt"><b>${m.toLocaleString("de-DE")} m</b> getaucht · ${z[1]}</div><div class="zbar"><i style="width:${Math.round(p*100)}%"></i></div><div class="zn">${nx?"Noch "+(nx[0]-m).toLocaleString("de-DE")+" m bis zur "+nx[1]:"Tiefer geht es nicht."}</div></div>`;}
+function dives(b,i){try{return divesInner(b,i);}catch(_){return "";}}
+function divesInner(b,i){const c=b.chapters[i];if(!c||!c.body)return "";const out=[];
+  const st=(b.studien||[]).filter(x=>x&&x.zitat);if(st.length){const x=st[i%st.length];out.push(["studie","Die Studie dahinter",x.zitat,i%st.length]);}
+  const db=(b.debatte||[]).filter(d=>d&&d.claim&&d.kontra);if(db.length){const d=db[i%db.length];out.push(["gegen","Die stärkste Gegenposition",d.claim,i%db.length]);}
+  let kp=null;try{kp=BOOKS.find(k=>{if(k.cat!=="koepfe"||k.id===b.id||!k.person||!k.person.name)return false;const n=k.person.name.replace(/\s*\(.*?\)\s*/g," ").trim(),last=n.split(" ").pop().replace(/[^\wäöüÄÖÜß-]/g,"");
+    return n.includes(" ")&&c.body.includes(n);});}catch(_){kp=null;}
+  if(kp)out.push(["kopf","Wer war "+kp.person.name.replace(/\s*\(.*?\)\s*/g," ").trim()+"?",kp.person.rolle||kp.subtitle||"",kp.id]);
+  if(GLRX&&out.length<3){const re=new RegExp(GLRX.source,"g");let m,n=0;while((m=re.exec(c.body))&&n++<60){const gi=GLMAP[m[0]];const g=gi!=null&&GL[gi];if(g&&g.c===b.cat){out.push(["begriff","Begriff: "+g.t,g.e.replace(/\*\*/g,"").slice(0,90),gi]);break;}}}
+  if(!out.length)return "";
+  const ic={studie:"M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3",gegen:"M7 7h10M7 7l3-3M7 7l3 3M17 17H7M17 17l-3-3M17 17l-3 3",kopf:"M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0",begriff:"M4 19V5a2 2 0 012-2h12v18H6a2 2 0 01-2-2zM8 7h6"};
+  return `<div class="dives"><div class="dk"><span>Tiefer tauchen</span><i></i></div>${out.slice(0,3).map(([k,t,sub,ref])=>{const key=b.id+"|"+i+"|"+k;const done=(S.br||{})[key];
+    return `<button class="dive ${done?"done":""}" data-dive="${k}" data-b="${b.id}" data-i="${i}" data-ref="${esc(String(ref))}"><span class="di"><svg viewBox="0 0 24 24"><path d="${ic[k]}"/></svg></span><span class="dt"><b>${esc(t)}</b><small>${esc(String(sub).slice(0,80))}${String(sub).length>80?"…":""}</small></span><span class="dm">${done?"✓":"+30 m"}</span></button>`;}).join("")}</div>`;}
+function openDive(k,b,i,ref){let h="";
+  if(k==="studie"){const x=(b.studien||[]).filter(x=>x&&x.zitat)[+ref];if(!x)return;const link=x.doi?"https://doi.org/"+x.doi:"";
+    h=`<h3>Die Studie dahinter</h3><p class="small">${esc(x.typ||"")}${x.geprueft?" · ✓ DOI geprüft":""}</p><p style="font-weight:650;margin:0 0 8px">${esc(x.zitat)}</p><p style="font-size:16px;line-height:1.55;margin:0 0 10px">${md(x.befund||"")}</p>${x.grenzen?`<p class="small" style="margin:0 0 12px"><b>Grenzen:</b> ${esc(x.grenzen)}</p>`:""}${link?`<a class="chip" style="text-decoration:none;display:inline-block;margin-bottom:12px" href="${esc(link)}" target="_blank" rel="noopener">Original ↗</a>`:""}`;}
+  if(k==="gegen"){const d=(b.debatte||[]).filter(d=>d&&d.claim&&d.kontra)[+ref];if(!d)return;
+    h=`<h3>Die stärkste Gegenposition</h3><p class="small">Typisches Argument: „${esc(d.claim)}“</p><p style="font-size:16px;line-height:1.55;margin:0 0 10px"><b>Darauf antworten:</b> ${md(d.kontra)}</p>${d.zugeben?`<p style="font-size:15px;line-height:1.5;margin:0 0 10px;color:var(--txt2)"><b>Was man zugeben sollte:</b> ${md(d.zugeben)}</p>`:""}${d.satz?`<p class="small" style="font-style:italic;margin:0 0 12px">„${esc(d.satz)}“</p>`:""}`;}
+  if(k==="kopf"){const kb=BY_ID[ref];if(!kb)return;const p=kb.person||{};
+    h=`<h3>${esc(p.name||kb.title)}</h3><p class="small">${[p.lebensdaten,p.rolle,p.land].filter(Boolean).map(esc).join(" · ")}</p><p style="font-size:16px;line-height:1.55;margin:0 0 12px">${kb.summary?md(kb.summary):esc(kb.subtitle||"")}</p><button class="nrel" style="margin:0 0 12px" data-dread="${kb.id}">→ Ganz eintauchen: ${esc(kb.title)}</button>`;}
+  if(k==="begriff"){const g=GL[+ref];if(!g)return;h=`<h3>${esc(g.t)}</h3><p style="font-size:16px;line-height:1.55;margin:0 0 12px">${md(g.e)}</p>`;}
+  $("#sheet").innerHTML=`<div class="sheet-bg" id="shbg"><div class="sheet glass dive-sheet"><div class="dk"><span>Abzweig · ${esc(b.title)}</span><i></i></div>${h}<div class="row2"><button class="chip" id="flcancel">Zurück zum Häppchen</button></div></div></div>`;
+  const key=b.id+"|"+i+"|"+k;S.br=S.br||{};if(!S.br[key]){S.br[key]=Date.now();save();depthAdd(30);const btn=document.querySelector(`.dive[data-dive="${k}"][data-b="${b.id}"][data-i="${i}"]`);if(btn){btn.classList.add("done");btn.querySelector(".dm").textContent="✓";}}}
+document.addEventListener("click",e=>{const d=e.target.closest("[data-dive]");if(d){const b=BY_ID[d.dataset.b];if(b)openDive(d.dataset.dive,b,+d.dataset.i,d.dataset.ref);return;}
+  const r=e.target.closest("[data-dread]");if(r){closeSheet();const id=r.dataset.dread;if(typeof closeReader==="function"&&R)closeReader();setTimeout(()=>openReader(id,0),50);}});
+zoneApply();
 /* Globaler Player: lebt außerhalb von #app, überlebt Ansichtswechsel, Neuzeichnen und Hintergrund */
 const PL={id:null};const G=()=>document.getElementById("gplay");
 function fmtT(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
