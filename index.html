@@ -568,6 +568,25 @@ body:has(#reader:not(.hidden)) #app *,body:has(#reader:not(.hidden)) #app *::bef
 @keyframes rdBump{40%{transform:scale(1.25);text-shadow:0 0 10px rgba(76,210,236,.8)}}
 .rdplus{position:absolute;left:14px;top:-15px;font-style:normal;font-size:11px;font-weight:700;color:var(--accent-hi);animation:rdUp 1.4s ease-out forwards;pointer-events:none}
 @keyframes rdUp{0%{opacity:0;transform:translateY(4px)}20%{opacity:1}100%{opacity:0;transform:translateY(-16px)}}
+/* ---------- Etappe tiefer ---------- */
+#reader::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background:rgba(0,2,8,var(--rd,0));transition:background 1.2s ease}
+.rin.rin-out{animation:rinOut .38s cubic-bezier(.5,0,.8,.4) forwards}
+@keyframes rinOut{to{opacity:0;transform:translateY(-60px)}}
+.rin.rin-in{animation:rinIn .6s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rinIn{from{opacity:0;transform:translateY(70px)}to{opacity:1;transform:none}}
+.divefx{position:fixed;inset:0;z-index:95;pointer-events:none;overflow:hidden}
+.divefx .dfx-sweep{position:absolute;left:0;right:0;top:-100%;height:200%;background:linear-gradient(180deg,rgba(0,4,10,0) 0%,rgba(0,8,18,.82) 40%,rgba(0,4,10,.9) 60%,rgba(0,4,10,0) 100%);animation:dfxSweep 1.2s cubic-bezier(.45,0,.25,1) forwards}
+@keyframes dfxSweep{to{transform:translateY(100%)}}
+.divefx .dfx-b{position:absolute;bottom:-20px;aspect-ratio:1;border-radius:50%;border:1px solid rgba(200,240,255,.6);background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.5),rgba(120,210,245,.08) 60%);animation-name:dfxBub;animation-timing-function:cubic-bezier(.3,.6,.4,1);animation-fill-mode:forwards}
+@keyframes dfxBub{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-110vh) translateX(10px);opacity:0}}
+.divefx .dfx-c{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;animation:dfxC 1.1s ease forwards}
+.divefx .dfx-c svg{width:30px;height:30px;fill:none;stroke:var(--accent-hi);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 10px rgba(76,210,236,.8));animation:dfxAnc 1.1s cubic-bezier(.3,.6,.3,1) forwards}
+@keyframes dfxAnc{0%{transform:translateY(-30px);opacity:0}40%{opacity:1}100%{transform:translateY(18px)}}
+.divefx .dfx-c b{font-family:"Fraunces",ui-serif,Georgia,serif;font-weight:300;font-size:40px;color:#e6f7ff;text-shadow:0 0 24px rgba(76,210,236,.6);font-variant-numeric:tabular-nums}
+.divefx .dfx-c small{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-hi);white-space:nowrap}
+.divefx .dfx-c::before{content:"";position:absolute;inset:-60px -90px;z-index:-1;background:radial-gradient(closest-side,rgba(0,8,18,.92),rgba(0,8,18,.6) 60%,transparent)}
+@keyframes dfxC{0%{opacity:0;transform:translate(-50%,-40%)}25%,70%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:0;transform:translate(-50%,-62%)}}
+.divefx.out{opacity:0;transition:opacity .4s}
 .cats{grid-template-columns:repeat(3,1fr);gap:18px 10px}
 .cat{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 2px;min-height:0;align-items:center;justify-content:flex-start;text-align:center;overflow:visible}
 .cat .glyph,.cat .glyph.img{width:70px;height:70px;border-radius:20px;box-shadow:0 0 22px rgba(36,178,216,.16),0 8px 20px rgba(0,0,0,.5)}
@@ -1027,7 +1046,7 @@ function drawReader(){
       ${atEnd?`<button class="next" id="rdone">Fertig</button>`:`<button class="next" id="rnext">${i===n-1?"Abschließen":"Weiter"}</button>`}</div>`;
   const sc=$("#rscroll");sc.scrollTop=0;
   const cur=$("#reader .segs i.c");
-  const upd=()=>{const max=sc.scrollHeight-sc.clientHeight;const p=max<=4?100:Math.min(100,sc.scrollTop/max*100);if(cur)cur.style.setProperty("--p",p+"%");if(!atEnd&&p>=98)markRead(b.id,i);};
+  const upd=()=>{const max=sc.scrollHeight-sc.clientHeight;const p=max<=4?100:Math.min(100,sc.scrollTop/max*100);if(cur)cur.style.setProperty("--p",p+"%");if(!atEnd&&p>=98)markRead(b.id,i);rdmShow(!atEnd&&!isRead(b.id,i)?(S.dm||0)+Math.round(p/100*50):(S.dm||0));};
   let st0=0;sc.addEventListener("scroll",()=>{upd();const now=Date.now();if(now-st0>800){st0=now;S.cur={id:b.id,i,y:sc.scrollTop,t:now};save();}},{passive:true});upd();
   S.cur={id:b.id,i,y:(R.restoreY||0),t:Date.now()};save();if(R.restoreY){sc.scrollTop=R.restoreY;R.restoreY=0;}
   $("#rclose").onclick=closeReader;
@@ -1038,7 +1057,9 @@ function drawReader(){
   if(TTS.on)setTimeout(ttsStart,250);
   $("#rinfo").onclick=()=>{const id=b.id;closeReader();go({v:"book",id,tab:tabOf()});};
   $("#rprev").onclick=()=>{if(R.i>0){R.i--;drawReader();}};
-  const nx=$("#rnext");if(nx)nx.onclick=advance;
+  const nx=$("#rnext");if(nx)nx.onclick=diveNext;
+  // je tiefer im Titel, desto düsterer
+  $("#reader").style.setProperty("--rd",Math.min(.4,(i/Math.max(1,n))*.4).toFixed(3));if(R.dived){R.dived=false;const ri=$("#reader .rin");if(ri)ri.classList.add("rin-in");}
   const dn=$("#rdone");if(dn)dn.onclick=closeReader;
 }
 function advance(){
@@ -1532,6 +1553,18 @@ const audId=(id,v)=>id+((v||VOICE())==="w"?"--w":"");
 const audBase=id=>String(id).replace(/--w$/,"");
 const audVoice=id=>/--w$/.test(id)?"w":"m";
 const VNAME={m:"Thorsten",w:"Kerstin"};
+/* ================= Etappe tiefer: Abtauch-Animation bei „Weiter“ ================= */
+function rdmShow(v){const el=document.getElementById("rdm");if(el){const b=el.querySelector("b");if(b)b.textContent=Math.round(v).toLocaleString("de-DE")+" m";}}
+function diveNext(){if(!R)return;const {b,i}=R;const n=b.chapters.length;
+  if(RM||i>=n-1&&!((b.takeaways||[]).length||(b.argue||[]).length||(b.debatte||[]).length||(b.studien||[]).length)){advance();return;}
+  const from=(S.dm||0)+(isRead(b.id,i)?0:0);const ri=$("#reader .rin");if(ri)ri.classList.add("rin-out");
+  const fx=document.createElement("div");fx.className="divefx";
+  fx.innerHTML=`<div class="dfx-sweep"></div>${Array.from({length:16},(_,k)=>`<i class="dfx-b" style="left:${Math.round(Math.random()*96)}%;width:${3+Math.round(Math.random()*7)}px;height:auto;animation-delay:${Math.round(Math.random()*350)}ms;animation-duration:${700+Math.round(Math.random()*500)}ms"></i>`).join("")}
+    <div class="dfx-c"><svg viewBox="0 0 24 24"><path d="M12 5a2 2 0 100-4 2 2 0 000 4zM12 5v15M7 9h10M4 13a8 8 0 0016 0M4 13l-2 2M20 13l2 2"/></svg><b id="dfxn">${from.toLocaleString("de-DE")} m</b><small>Etappe ${Math.min(i+2,n)} von ${n} · tiefer</small></div>`;
+  document.body.appendChild(fx);
+  setTimeout(()=>{R.dived=true;advance();const to=S.dm||0,t0=performance.now();const el=document.getElementById("dfxn");
+    const tick=t=>{const p=Math.min(1,(t-t0)/450);if(el)el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-p,3))).toLocaleString("de-DE")+" m";if(p<1)requestAnimationFrame(tick);};requestAnimationFrame(tick);},380);
+  setTimeout(()=>{fx.classList.add("out");},950);setTimeout(()=>fx.remove(),1350);}
 /* Globaler Player: lebt außerhalb von #app, überlebt Ansichtswechsel, Neuzeichnen und Hintergrund */
 const PL={id:null};const G=()=>document.getElementById("gplay");
 function fmtT(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
