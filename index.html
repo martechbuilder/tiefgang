@@ -397,7 +397,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 .cat .glyph{animation:catFloat 6s ease-in-out infinite}
 .cat:nth-child(3n+2) .glyph{animation-delay:-2s}.cat:nth-child(3n) .glyph{animation-delay:-4s}
 @keyframes catFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.cat.fx .glyph{opacity:0}.cat.fx.in .glyph{animation:catPop .6s cubic-bezier(.3,.7,.3,1.5) both,catFloat 6s ease-in-out .6s infinite}
+
 @keyframes catPop{0%{transform:scale(.4) rotate(-12deg);opacity:0}100%{transform:none;opacity:1}}
 .hcov .cover{animation:covFloat 7s ease-in-out infinite}
 @keyframes covFloat{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-7px) rotate(1deg)}}
@@ -487,7 +487,7 @@ body:has(#reader:not(.hidden)) #deep .rays{opacity:.7}
 .cat .glyph::after,.cont .cover::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 35%,rgba(200,245,255,.35) 50%,transparent 65%);transform:translateX(-140%);animation:glyphShine 7s ease-in-out infinite}
 .cat:nth-child(2n) .glyph::after{animation-delay:-2.3s}.cat:nth-child(3n) .glyph::after{animation-delay:-4.6s}
 @keyframes glyphShine{0%,78%{transform:translateX(-140%)}92%,100%{transform:translateX(140%)}}
-.cat.fx.in .glyph{animation:catPop .6s cubic-bezier(.3,.7,.3,1.5) both,catFloat 6s ease-in-out .6s infinite,kb 14s ease-in-out infinite alternate}
+
 /* Tab-Symbole: Linien zeichnen sich beim Aktivieren nach, jedes Symbol hat eine eigene kleine Geste */
 #tabbar button.on svg path{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .7s cubic-bezier(.3,.7,.2,1) forwards}
 @keyframes draw{to{stroke-dashoffset:0}}
@@ -1277,14 +1277,16 @@ document.addEventListener("click",e=>{const a=e.target.closest("[data-news]");if
   const r=e.target.closest("[data-nrel]");if(r){closeNews();go({v:"book",id:r.dataset.nrel,tab:"home"});}});
 /* ================= Bewegung: Einblenden beim Scrollen, Tipp-Feedback, Parallax ================= */
 const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
-const FXSEL=".pill,.cont,.card,.cat,.row,.news,.h-sec,.statline,.hhero,.htitle,.hsub,.snack,.qa,.list>*,.set,.box,.paper,.stu";
+const FXSEL=".pill,.cont,.card,.cats,.row,.news,.h-sec,.statline,.hhero,.htitle,.hsub,.snack,.qa,.list>*,.set,.box,.paper,.stu";
 let FXIO=null;
 function fx(){if(RM)return;const els=[...document.querySelectorAll("#app .view "+FXSEL.split(",").join(",#app .view "))];
   const key=route.v+"|"+(route.id||"")+"|"+(route.cat||"")+"|"+(route.lt||"");const same=key===fx.last;fx.last=key;if(same){const v=document.querySelector("#app .view");if(v)v.style.animation="none";}
-  if(!FXIO)FXIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");FXIO.unobserve(e.target);}});},{rootMargin:"0px 0px -6% 0px",threshold:.05});
+  if(!FXIO)FXIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");FXIO.unobserve(e.target);}});},{root:SCR(),rootMargin:"0px 0px 12% 0px",threshold:0});
   let k=0;els.forEach(el=>{if(el.classList.contains("fx"))return;const r=el.getBoundingClientRect();const vis=r.top<innerHeight;
     if(same&&vis){return;}el.classList.add("fx");if(vis)el.style.transitionDelay=Math.min(k++,10)*45+"ms";FXIO.observe(el);});
 }
+// Sicherheitsnetz: beim Scrollen alles aufdecken, was schon (fast) sichtbar ist, damit nie Lücken stehen bleiben
+let FXR=0;SCR().addEventListener("scroll",()=>{if(FXR)return;FXR=requestAnimationFrame(()=>{FXR=0;const lim=innerHeight*1.15;document.querySelectorAll("#app .fx:not(.in)").forEach(el=>{if(el.getBoundingClientRect().top<lim){el.classList.add("in");el.style.transitionDelay="0ms";}});});},{passive:true});
 // Parallax: Schriftzug und Hero gleiten beim Scrollen langsamer
 SCR().addEventListener("scroll",()=>{if(RM)return;const y=SCR().scrollTop;const w=document.querySelector(".wm");if(w&&y<500){w.style.transform=`translateY(${y*.35}px)`;w.style.opacity=Math.max(0,1-y/260);}
   const h=document.querySelector(".hhero");if(h&&y<700)h.style.transform=`translateY(${y*.12}px)`;},{passive:true});
