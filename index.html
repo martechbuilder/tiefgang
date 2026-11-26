@@ -512,6 +512,11 @@ body:has(#reader:not(.hidden)) #deep .rays{opacity:.7}
 @keyframes rainFall{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-6}}
 #prain svg path{stroke-dasharray:none}
 #player .iconbtn{min-width:34px}
+.fxl{background:none!important}
+.fxl .gl{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat}
+@keyframes gScanS{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-4%,-3%) rotate(-6deg)}50%{transform:translate(-6%,1%) rotate(0)}75%{transform:translate(-2%,3%) rotate(5deg)}}
+@keyframes gRock{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes gGrow{0%{clip-path:inset(0 100% 0 0);opacity:1}28%{clip-path:inset(0 0 0 0)}90%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 0 0 0);opacity:0}}
 .fxg{background:none!important}
 .fxg .gb{position:absolute;inset:-25%;background:var(--img) center/cover;filter:blur(18px) saturate(.9) brightness(.95)}
 .fxg .gp{position:absolute;inset:0;background:var(--img) center/100% 100%;will-change:transform}
@@ -1420,33 +1425,34 @@ let HID=0;document.addEventListener("visibilitychange",()=>{if(document.visibili
   ["play","playing","pause","ended"].forEach(ev=>a.addEventListener(ev,sync));ui();})();
 /* ================= Lebendige Kategorie-Symbole: Bildteile bewegen sich einzeln ================= */
 // Jedes Teil ist dieselbe Grafik, per clip-path auf einen Bereich beschnitten; darunter liegt die stark weichgezeichnete Grafik als Hintergrund.
+// Saubere Ebenen je Symbol (art/fx/<kat>-bg.webp + Teile <kat>-<n>.webp, aus tools/_design/layers.py): [Animation, Drehpunkt] je Teil
 const GFX={
-  sozialismus:[["polygon(0 0,100% 0,100% 64%,0 64%)","gTilt 5s ease-in-out infinite","50% 23%"],["polygon(0 64%,100% 64%,100% 100%,0 100%)",""]],
-  populismus:[["polygon(0 0,74% 0,71% 22%,62% 36%,54% 47%,47% 60%,40% 76%,35% 100%,0 100%)","gSplitL 4.5s ease-in-out infinite","40% 60%"],["polygon(74% 0,100% 0,100% 100%,35% 100%,40% 76%,47% 60%,54% 47%,62% 36%,71% 22%)","gSplitR 4.5s ease-in-out infinite","60% 40%"]],
-  eu:[["circle(46% at 50% 50%)","gSpin 40s linear infinite","50% 50%"]],
-  geschichte:[["polygon(0 0,100% 0,100% 47%,80% 52%,66% 60%,52% 66%,0 70%)","gLift 5.5s ease-in-out infinite","100% 60%"],["polygon(0 70%,52% 66%,66% 60%,80% 52%,100% 47%,100% 100%,0 100%)",""]],
-  debatten:[["polygon(0 0,62% 0,62% 72%,0 72%)","gBobA 4s ease-in-out infinite","30% 40%"],["polygon(62% 0,100% 0,100% 100%,0 100%,0 72%,62% 72%)","gBobB 4s ease-in-out infinite","70% 60%"]],
-  denken:[["inset(0)","gGlow 3.6s ease-in-out infinite","50% 45%"]],
-  digital:[["polygon(0 0,100% 0,100% 44%,0 44%)","gUnlock 5s ease-in-out infinite","50% 44%"],["polygon(0 44%,100% 44%,100% 100%,0 100%)",""]],
-  biologie:[["inset(0)","gTwist 6s ease-in-out infinite","50% 50%"]],
-  klima:[["polygon(58% 10%,100% 10%,100% 62%,58% 62%)","gLeaf 4.8s ease-in-out infinite","62% 58%"],["polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,58% 10%,100% 10%,100% 62%,58% 62%,58% 10%)",""]],
-  koepfe:[["inset(0)","gNod 6s ease-in-out infinite","50% 85%"]],
-  patriarchat:[["polygon(0 0,58% 0,58% 52%,0 52%)","gBreak 4.6s ease-in-out infinite","58% 52%"],["polygon(58% 0,100% 0,100% 100%,0 100%,0 52%,58% 52%)",""]],
-  philosophie:[["inset(0)","gNod 7s ease-in-out infinite","50% 95%"]],
-  physik:[["circle(48% at 50% 50%)","gSpin 30s linear infinite","50% 50%"]],
-  politik:[["polygon(0 0,100% 0,100% 46%,0 46%)","gFloat 5s ease-in-out infinite","50% 46%"],["polygon(0 46%,100% 46%,100% 100%,0 100%)",""]],
-  psychologie:[["circle(19% at 46% 41%)","gSpin 18s linear infinite","46% 41%"],["polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,65.0% 41.0%,64.4% 45.9%,62.5% 50.5%,59.4% 54.4%,55.5% 57.5%,50.9% 59.4%,46.0% 60.0%,41.1% 59.4%,36.5% 57.5%,32.6% 54.4%,29.5% 50.5%,27.6% 45.9%,27.0% 41.0%,27.6% 36.1%,29.5% 31.5%,32.6% 27.6%,36.5% 24.5%,41.1% 22.6%,46.0% 22.0%,50.9% 22.6%,55.5% 24.5%,59.4% 27.6%,62.5% 31.5%,64.4% 36.1%,65.0% 41.0%)",""]],
-  schluesselpaper:[["polygon(52% 48%,100% 48%,100% 100%,52% 100%)","gScan 6s ease-in-out infinite","74% 70%"],["polygon(0 0,100% 0,100% 48%,52% 48%,52% 100%,0 100%)",""]],
-  streitfragen:[["polygon(0 0,50% 0,50% 100%,0 100%)","gClashL 3.2s ease-in-out infinite","50% 50%"],["polygon(50% 0,100% 0,100% 100%,50% 100%)","gClashR 3.2s ease-in-out infinite","50% 50%"]],
-  technologie:[["inset(0)","gGlow 3s ease-in-out infinite","50% 50%"]],
-  waswaerewenn:[["polygon(30% 28%,70% 28%,70% 92%,30% 92%)","gWobble 3.8s ease-in-out infinite","50% 85%"],["polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,30% 28%,70% 28%,70% 92%,30% 92%,30% 28%)",""]],
-  weltall:[["circle(9% at 12% 18%)","gOrbit 7s ease-in-out infinite","50% 50%"],["polygon(20% 0,100% 0,100% 100%,0 100%,0 32%,20% 32%)","gTiltS 8s ease-in-out infinite","55% 60%"]],
-  werkzeugkasten:[["polygon(0 0,52% 0,52% 100%,0 100%)","gWrench 4.4s ease-in-out infinite","25% 25%"],["polygon(52% 0,100% 0,100% 100%,52% 100%)","gFeather 4.4s ease-in-out infinite","70% 80%"]],
-  wirtschaft:[["polygon(45% 0,100% 0,100% 42%,45% 42%)","gRise 3.6s ease-in-out infinite","70% 30%"],["polygon(56% 66%,100% 66%,100% 100%,56% 100%)","gCoins 3.6s ease-in-out infinite","78% 90%"],["polygon(0 0,45% 0,45% 42%,100% 42%,100% 66%,56% 66%,56% 100%,0 100%)",""]]
+  sozialismus:[["gTilt 5s ease-in-out infinite","50% 23%"],["",""]],
+  populismus:[["gSplitL 4.5s ease-in-out infinite","40% 60%"],["gSplitR 4.5s ease-in-out infinite","60% 40%"]],
+  eu:[["gSpin 40s linear infinite","50% 50%"],["",""]],
+  geschichte:[["gLift 5.5s ease-in-out infinite","100% 60%"],["",""]],
+  debatten:[["gBobA 4s ease-in-out infinite","30% 40%"],["",""]],
+  denken:[["gGlow 3.6s ease-in-out infinite","50% 45%"]],
+  digital:[["gUnlock 5s ease-in-out infinite","50% 44%"],["",""]],
+  biologie:[["gTwist 6s ease-in-out infinite","50% 50%"]],
+  klima:[["gLeaf 4.8s ease-in-out infinite","62% 58%"],["",""]],
+  koepfe:[["gNod 6s ease-in-out infinite","50% 85%"]],
+  patriarchat:[["gBreak 4.6s ease-in-out infinite","58% 52%"],["",""]],
+  philosophie:[["gNod 7s ease-in-out infinite","50% 95%"]],
+  physik:[["gSpin 30s linear infinite","50% 50%"],["",""]],
+  politik:[["gFloat 5s ease-in-out infinite","50% 46%"],["",""]],
+  psychologie:[["gSpin 18s linear infinite","46% 41%"],["",""]],
+  schluesselpaper:[["gScanS 5s ease-in-out infinite","72% 66%"],["",""]],
+  streitfragen:[["gClashL 3.2s ease-in-out infinite","50% 50%"],["gClashR 3.2s ease-in-out infinite","50% 50%"]],
+  technologie:[["gGlow 3s ease-in-out infinite","50% 50%"]],
+  waswaerewenn:[["gWobble 3.8s ease-in-out infinite","50% 85%"],["",""]],
+  weltall:[["gOrbit 7s ease-in-out infinite","50% 50%"],["",""]],
+  werkzeugkasten:[["gRock 4.4s ease-in-out infinite","50% 50%"]],
+  wirtschaft:[["gGrow 7s cubic-bezier(.4,0,.2,1) infinite","0 100%"]]
 };
-function glyphFx(c){const p=GFX[c];const img=`url(art/${c}.jpg)`;
-  if(!p||RM)return `<div class="glyph img" style="background:${img} center/cover"></div>`;
-  return `<div class="glyph img fxg" style="--img:${img}"><i class="gb"></i>${p.map(([cl,an,o])=>`<i class="gp" style="clip-path:${cl};-webkit-clip-path:${cl};${an?`animation:${an};`:""}transform-origin:${o||"50% 50%"}"></i>`).join("")}</div>`;}
+function glyphFx(c){const p=GFX[c];
+  if(!p||RM)return `<div class="glyph img" style="background:url(art/${c}.jpg) center/cover"></div>`;
+  return `<div class="glyph img fxl"><i class="gl" style="background-image:url(art/fx/${c}-bg.webp)"></i>${p.map(([an,o],k)=>`<i class="gl" style="background-image:url(art/fx/${c}-${k}.webp);${an?`animation:${an};`:""}transform-origin:${o||"50% 50%"}"></i>`).join("")}</div>`;}
 /* Globaler Player: lebt außerhalb von #app, überlebt Ansichtswechsel, Neuzeichnen und Hintergrund */
 const PL={id:null};const G=()=>document.getElementById("gplay");
 function fmtT(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
