@@ -348,7 +348,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 #tabbar button.on{color:var(--accent-hi)}
 #tabbar button.on::after{content:"";position:absolute;bottom:4px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--accent-hi);box-shadow:0 0 10px var(--accent-hi)}
 #player{bottom:calc(var(--sb) + 70px)}
-#tabbar,#player{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
+
 .fx{opacity:0;transform:translateY(18px) scale(.985);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
 .fx.in{opacity:1;transform:none}
 .pill,.cont,.card,.cat,.row,.chip,.snack,.iconbtn,#tabbar button,.next{transition:transform .18s cubic-bezier(.3,.7,.3,1.4),box-shadow .25s,background .25s}
@@ -458,9 +458,8 @@ body.diving{overflow:hidden}
 @keyframes fpIn{from{transform:translate(-120%,20px) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
 @keyframes fbIn{from{transform:scale(.6);transform-origin:0 100%;opacity:0}to{transform:none;opacity:1}}
 @keyframes fpOut{to{transform:translate(-110%,10px);opacity:0}}
-html{overscroll-behavior-x:none}
-html,body{height:100%;overflow:hidden}
-#app{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;min-height:0}
+html,body{overflow-x:hidden;overscroll-behavior-x:none;max-width:100%}
+#app{overflow-x:clip;max-width:100vw}
 .view{overflow-x:clip}
 html{scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar,body::-webkit-scrollbar,#rscroll::-webkit-scrollbar{display:none;width:0;height:0}
 #rscroll{scrollbar-width:none}
@@ -627,7 +626,7 @@ let _ALL=null;
 function loadAll(){if(allLoaded())return Promise.resolve();if(!_ALL)_ALL=ALLCATS.reduce((p,c)=>p.then(()=>loadCat(c)),Promise.resolve()).then(()=>{_ALL=null;});return _ALL;}
 const DEBN=()=>BOOKS.reduce((a,b)=>a+(b.nd!=null?b.nd:(b.debatte||[]).length),0);
 
-const SCR=()=>document.getElementById("app");  // eigener Scroll-Container (iOS hält feste Leisten so stabil)
+const SCR=()=>document.body;  // body ist der Scroll-Container (html,body: height 100% + overflow-x hidden) – so bleiben feste Leisten am iPhone stabil
 /* ================= Zustand ================= */
 const KEY="tiefgang.v1";
 const defState=()=>({read:{},pos:{},last:null,saved:[],days:{},settings:{size:19,font:"serif",icon:"nacht",name:""}});
