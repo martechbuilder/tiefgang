@@ -559,6 +559,15 @@ body:has(#reader:not(.hidden)) #app *,body:has(#reader:not(.hidden)) #app *::bef
 .zline .zn{font-size:11.5px;color:var(--txt3)}
 #deep .zone{position:absolute;inset:0;background:rgba(0,2,8,var(--zd,0));pointer-events:none;transition:background 2s}
 #deep .rays{opacity:calc(.5 * var(--zr,1))}
+.rbar .rt{display:flex;flex-direction:column;align-items:center;gap:2px}
+.rbar .rtt{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rdm{position:relative;display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--txt3);letter-spacing:.02em}
+.rdm b{color:var(--accent-hi);font-weight:650;font-variant-numeric:tabular-nums}
+.rdm svg{width:12px;height:12px;fill:none;stroke:var(--accent-hi);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rdm.bump b{animation:rdBump .6s cubic-bezier(.3,.7,.3,1.5)}
+@keyframes rdBump{40%{transform:scale(1.25);text-shadow:0 0 10px rgba(76,210,236,.8)}}
+.rdplus{position:absolute;left:14px;top:-15px;font-style:normal;font-size:11px;font-weight:700;color:var(--accent-hi);animation:rdUp 1.4s ease-out forwards;pointer-events:none}
+@keyframes rdUp{0%{opacity:0;transform:translateY(4px)}20%{opacity:1}100%{opacity:0;transform:translateY(-16px)}}
 .cats{grid-template-columns:repeat(3,1fr);gap:18px 10px}
 .cat{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 2px;min-height:0;align-items:center;justify-content:flex-start;text-align:center;overflow:visible}
 .cat .glyph,.cat .glyph.img{width:70px;height:70px;border-radius:20px;box-shadow:0 0 22px rgba(36,178,216,.16),0 8px 20px rgba(0,0,0,.5)}
@@ -1012,7 +1021,7 @@ function drawReader(){
   }
   $("#reader").innerHTML=`
     <div class="rtop"><div class="segs">${segs}${(b.takeaways||[]).length?`<i class="${atEnd?"c":""}" style="flex:.5"></i>`:""}</div>
-      <div class="rbar"><button class="iconbtn" aria-label="Schließen" id="rclose">${ic(I.close)}</button><div class="rt">${esc(b.title)}</div><button class="iconbtn ${TTS.on?"on":""}" aria-label="Vorlesen" id="rtts"><svg class="ic" viewBox="0 0 24 24"><path d="${TTS.on?"M7 5h3v14H7zM14 5h3v14h-3z":"M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"}"/></svg></button><button class="iconbtn" aria-label="Zur Titelseite" id="rinfo">${ic(I.lib)}</button></div></div>
+      <div class="rbar"><button class="iconbtn" aria-label="Schließen" id="rclose">${ic(I.close)}</button><div class="rt"><span class="rtt">${esc(b.title)}</span><span class="rdm" id="rdm"><svg viewBox="0 0 24 24"><path d="M12 5a2 2 0 100-4 2 2 0 000 4zM12 5v15M7 9h10M4 13a8 8 0 0016 0"/></svg><b>${(S.dm||0).toLocaleString("de-DE")} m</b> · ${ZONES[zoneOf(S.dm||0)][1]}</span></div><button class="iconbtn ${TTS.on?"on":""}" aria-label="Vorlesen" id="rtts"><svg class="ic" viewBox="0 0 24 24"><path d="${TTS.on?"M7 5h3v14H7zM14 5h3v14h-3z":"M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"}"/></svg></button><button class="iconbtn" aria-label="Zur Titelseite" id="rinfo">${ic(I.lib)}</button></div></div>
     <div id="rscroll"><div class="rin">${inner}</div></div>
     <div class="rbot"><button class="prev" id="rprev" ${i===0?"disabled style='opacity:.35'":""}>${ic(I.back)}</button>
       ${atEnd?`<button class="next" id="rdone">Fertig</button>`:`<button class="next" id="rnext">${i===n-1?"Abschließen":"Weiter"}</button>`}</div>`;
@@ -1485,6 +1494,8 @@ if(S.dm==null){S.dm=Object.keys(S.read||{}).length*50;S.br=S.br||{};save();}
 const zoneOf=m=>{let k=0;ZONES.forEach((z,i)=>{if(m>=z[0])k=i;});return k;};
 function zoneApply(){const k=zoneOf(S.dm||0);document.documentElement.style.setProperty("--zd",[0,.1,.2,.3,.4][k]);document.documentElement.style.setProperty("--zr",[1,.8,.55,.35,.2][k]);}
 function depthAdd(n){const before=zoneOf(S.dm||0);S.dm=(S.dm||0)+n;save();const after=zoneOf(S.dm);zoneApply();
+  const el=document.getElementById("rdm");if(el){el.querySelector("b").textContent=S.dm.toLocaleString("de-DE")+" m";el.lastChild.textContent=" · "+ZONES[after][1];
+    const f=document.createElement("i");f.className="rdplus";f.textContent="+"+n+" m";el.appendChild(f);setTimeout(()=>f.remove(),1400);el.classList.remove("bump");void el.offsetWidth;el.classList.add("bump");}
   if(after>before)setTimeout(()=>{try{fishPop(ZONES[after][1]+" erreicht. "+ZONES[after][2],"p4",null,true);}catch(_){}},400);}
 function zoneLine(){const m=S.dm||0,k=zoneOf(m),z=ZONES[k],nx=ZONES[k+1];const p=nx?Math.min(1,(m-z[0])/(nx[0]-z[0])):1;
   return `<div class="zline"><div class="zt"><b>${m.toLocaleString("de-DE")} m</b> getaucht · ${z[1]}</div><div class="zbar"><i style="width:${Math.round(p*100)}%"></i></div><div class="zn">${nx?"Noch "+(nx[0]-m).toLocaleString("de-DE")+" m bis zur "+nx[1]:"Tiefer geht es nicht."}</div></div>`;}
