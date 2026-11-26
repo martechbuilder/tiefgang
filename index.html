@@ -296,6 +296,83 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 .view{animation:tsIn .45s cubic-bezier(.2,.7,.2,1)}
 @keyframes tsIn{from{opacity:0;transform:translateY(10px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
 @media (prefers-reduced-motion:reduce){body::before,body::after,.card::after,.cont::after,.view{animation:none!important}}
+
+/* ---------- Aufbau nach Gemini-Vorlage (Tiefsee) ---------- */
+.wm{text-align:center;margin:6px 0 26px}
+.wmt{font-size:44px;font-weight:250;letter-spacing:.01em;line-height:1.05;background:linear-gradient(180deg,#f0fbff,#8fdcf2 60%,#3fa6cf);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px rgba(72,208,236,.35))}
+.wms{font-size:13px;color:var(--txt3);margin-top:8px;letter-spacing:.02em}
+.hero{display:flex;align-items:center;gap:22px;margin:4px 0 16px}
+.hcov{flex:none;padding:0}
+.hcov .cover{width:132px;height:184px;border-radius:12px;box-shadow:0 0 34px rgba(36,178,216,.28),0 14px 30px rgba(0,0,0,.55)}
+.hcov .cover svg:not(.art){width:44px;height:44px}
+.ring{flex:1;position:relative;display:flex;flex-direction:column;align-items:center}
+.ring svg{width:120px;height:120px;transform:rotate(-90deg);filter:drop-shadow(0 0 10px rgba(72,208,236,.45))}
+.ring circle{fill:none;stroke-width:5;stroke-linecap:round}.ring .rt{stroke:rgba(140,215,245,.12)}.ring .rv{transition:stroke-dashoffset 1s ease}
+.ring .rp{position:absolute;top:0;height:120px;display:flex;align-items:center;font-size:26px;font-weight:300;letter-spacing:-.01em}
+.ring .rl{font-size:12px;color:var(--txt3);margin-top:8px;text-align:center}
+.htitle{font-size:21px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+.hsub{font-size:14px;color:var(--txt3);margin:4px 0 14px;line-height:1.35}
+.pills{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.pill{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:9px 16px 9px 9px;border-radius:999px;
+  background:linear-gradient(90deg,rgba(20,60,86,.55),rgba(6,26,40,.55));border:1px solid rgba(120,210,245,.16);
+  box-shadow:inset 0 1px 0 rgba(170,236,255,.07),0 6px 18px rgba(0,0,0,.35);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.pill .pi{flex:none;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(72,208,236,.12);color:var(--accent-hi)}
+.pill .pi .ic{width:19px;height:19px}
+.pill .pt{flex:1;min-width:0;display:flex;flex-direction:column}.pill .pt b{font-weight:600;font-size:15px}.pill .pt small{font-size:12.5px;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill .chev{font-size:22px;color:var(--txt3);line-height:1}
+.pill.pri{padding:13px 22px;justify-content:space-between;background:linear-gradient(90deg,rgba(40,140,190,.45),rgba(12,60,90,.5));border-color:rgba(130,220,250,.3)}
+.pill.pri .chev{color:var(--accent-hi)}
+.statline{display:flex;justify-content:center;gap:18px;margin:20px 0 4px;font-size:12.5px;color:var(--txt3)}
+.statline b{color:var(--txt);font-weight:600}
+/* Kacheln zu Pillen, weniger Kasten */
+.cont{border-radius:999px;padding:8px 18px 8px 8px;gap:12px;background:linear-gradient(90deg,rgba(20,60,86,.5),rgba(6,26,40,.5));border-color:rgba(120,210,245,.15)}
+.cont .cover{width:46px;height:46px;border-radius:50%}
+.cont .cover svg:not(.art){width:20px;height:20px}
+.cont .h-eyebrow{display:none}
+.cont .t{font-size:15px;font-weight:600}
+.cont .s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;margin-top:1px}
+.cont .meta::after{content:"";}
+.cont::before{content:"›";order:3;font-size:22px;color:var(--txt3);margin-left:4px}
+.glass{border-radius:16px}
+.card .cover{border-radius:10px}
+.h-big{font-weight:250;font-size:36px;letter-spacing:0}
+.h-sec{margin:34px 2px 14px;align-items:center;gap:12px}
+.h-sec h2{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--txt3);white-space:nowrap}
+.h-sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(120,210,245,.22),transparent);order:1}
+.h-sec button{order:2;font-size:13px}
+/* Tableiste: unten angedockt, nur Symbole, leuchtender Punkt */
+#tabbar{left:0;right:0;transform:none;bottom:0;width:auto;max-width:none;border-radius:22px 22px 0 0;padding:6px 14px calc(var(--sb) + 6px);gap:0;border-bottom:0;
+  background:linear-gradient(180deg,rgba(6,30,46,.82),rgba(1,10,18,.92))}
+#tabbar button{padding:12px 0 12px;position:relative;background:none!important;box-shadow:none!important}
+#tabbar button span{display:none}
+#tabbar button.on{color:var(--accent-hi)}
+#tabbar button.on::after{content:"";position:absolute;bottom:4px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--accent-hi);box-shadow:0 0 10px var(--accent-hi)}
+#player{bottom:calc(var(--sb) + 70px)}
+.fx{opacity:0;transform:translateY(18px) scale(.985);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
+.fx.in{opacity:1;transform:none}
+.pill,.cont,.card,.cat,.row,.chip,.snack,.iconbtn,#tabbar button,.next{transition:transform .18s cubic-bezier(.3,.7,.3,1.4),box-shadow .25s,background .25s}
+.pill:active,.cont:active,.card:active,.row:active,.snack:active{transform:scale(.965)!important}
+.cat:active .glyph{transform:scale(.92)}.cat .glyph{transition:transform .2s cubic-bezier(.3,.7,.3,1.4)}
+.chip:active,.iconbtn:active,.next:active{transform:scale(.92)!important}
+.ripple{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(150,230,255,.28),rgba(72,208,236,.08) 45%,transparent 70%);transform:scale(.2);opacity:1;animation:rip .65s ease-out forwards;z-index:0}
+@keyframes rip{to{transform:scale(1);opacity:0}}
+#tabbar button.on svg{animation:tabPop .45s cubic-bezier(.3,.7,.3,1.6)}
+@keyframes tabPop{0%{transform:scale(.8) translateY(2px)}60%{transform:scale(1.12) translateY(-2px)}100%{transform:none}}
+#tabbar button.on::after{animation:dotIn .4s ease-out}
+@keyframes dotIn{from{transform:scale(0);opacity:0}to{transform:none;opacity:1}}
+.ring .rv{transition:stroke-dashoffset 1.2s cubic-bezier(.2,.7,.2,1)}
+.wm,.hero{will-change:transform}
+#reader:not(.hidden){animation:rdIn .38s cubic-bezier(.2,.7,.2,1)}
+@keyframes rdIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.hscroll .card{transition:transform .35s}
+@media (prefers-reduced-motion:reduce){.fx{opacity:1!important;transform:none!important}}
+.cats{grid-template-columns:repeat(3,1fr);gap:18px 10px}
+.cat{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 2px;min-height:0;align-items:center;justify-content:flex-start;text-align:center;overflow:visible}
+.cat .glyph,.cat .glyph.img{width:70px;height:70px;border-radius:20px;box-shadow:0 0 22px rgba(36,178,216,.16),0 8px 20px rgba(0,0,0,.5)}
+.cat .n{font-size:13px;font-weight:600;margin-top:10px;line-height:1.2}
+.cat .c{font-size:11px}
+.cat .pr{left:50%;transform:translateX(-50%);bottom:auto;top:73px;border-radius:2px;max-width:56px}
+.toast{bottom:calc(var(--sb) + 84px)}
 </style>
 </head>
 <body>
@@ -461,7 +538,7 @@ function render(){
   renderTabs();setTimeout(showVer,0);
   const v=route.v;
   const html=v==="home"?vHome():v==="discover"?vDiscover():v==="cat"?vCat():v==="book"?vBook():v==="library"?vLibrary():v==="search"?vSearch():v==="trainer"?vTrainer():v==="studien"?vStudien():v==="news"?vNews():v==="fragen"?vFragen():v==="hoeren"?vHoeren():v==="settings"?vSettings():vHome();
-  $("#app").innerHTML=`<div class="view">${html}</div>`;
+  $("#app").innerHTML=`<div class="view">${html}</div>`;fx();
   if(v==="studien"){const i=$("#sq");i.value=route.sq||"";i.addEventListener("input",()=>{route.sq=i.value;route.sn=0;$("#stuhits").innerHTML=stuHits();});}
   if(v==="search"){const i=$("#q");i.value=route.q||"";i.addEventListener("input",()=>{route.q=i.value;$("#hits").innerHTML=hits(i.value);});if(!route.q)setTimeout(()=>i.focus(),50);}
 }
@@ -513,6 +590,12 @@ function row(b,extra=""){
   const r=readCount(b),n=b.chapters.length;
   return `<button class="row glass" data-go="book" data-id="${b.id}">${cover(b)}<div class="meta"><div class="t">${esc(b.title)}</div><div class="s">${extra||esc(b.subtitle)}</div><div class="m">${CATS[b.cat].n} · ${b._min} Min${r?` · <span class="${r===n?"done":""}">${r===n?"gelesen":r+"/"+n}</span>`:""}</div></div></button>`;
 }
+function pill(icon,t,sub,attrs){return `<button class="pill" ${attrs}><span class="pi"><svg class="ic" viewBox="0 0 24 24"><path d="${icon}"/></svg></span><span class="pt"><b>${t}</b><small>${sub}</small></span><span class="chev">›</span></button>`;}
+function heroCont(b){const n=b.chapters.length,r=readCount(b),pct=Math.round(r/n*100),C=2*Math.PI*44,nx=nextChapter(b);
+  return `<div class="hero"><button class="hcov" data-go="book" data-id="${b.id}">${cover(b)}</button>
+  <div class="ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9ff0ff"/><stop offset="1" stop-color="#1592b8"/></linearGradient></defs><circle cx="50" cy="50" r="44" class="rt"/><circle cx="50" cy="50" r="44" class="rv" stroke="url(#rg)" stroke-dasharray="${C}" stroke-dashoffset="${C}" data-off="${C*(1-Math.max(pct,2)/100)}"/></svg><div class="rp" data-count="${pct}">0%</div><div class="rl">${r} von ${n} Häppchen</div></div></div>
+  <div class="htitle">${esc(b.title)}</div><div class="hsub">Weiter mit Häppchen ${nx+1}: ${esc(b.chapters[nx].h)}</div>
+  <button class="pill pri" data-go="read" data-id="${b.id}"><span class="pt"><b>Weiterlesen</b></span><span class="chev">›</span></button>`;}
 function vHome(){
   if(!BOOKS.length)return `<div class="empty">Noch keine Inhalte geladen.<br>content.js fehlt oder ist leer.</div>`;
   const totalCh=BOOKS.reduce((a,b)=>a+b.chapters.length,0);
@@ -524,21 +607,13 @@ function vHome(){
   const picks=[];while(picks.length<6&&pool.length){picks.push(pool.splice(Math.floor(rnd()*pool.length),1)[0]);}
   const cont=prog[0];
   return `
-  <div class="h-eyebrow">${new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})}</div>
-  <div class="h-big">${greet()}${S.settings.name?`, <span class="sil">${esc(S.settings.name)}</span>`:""}</div>
-  <button class="snack glass" data-go="snack">
-    <div class="lbl">${ic(I.spark)} Statt Scrollen</div>
-    <div class="ttl">Ein Häppchen lesen</div>
-    <div class="sub">Zwei Minuten, ein Gedanke. Zufällig aus allem, was du noch nicht kennst.</div>
-    <div class="go">${ic(I.shuffle)} Los</div>
-  </button>
-  <button class="cont glass" data-tab="trainer" onclick="hist.length=0;go({v:'trainer'},false)"><div class="cover" style="background:linear-gradient(150deg,#b07a3a,#011420 85%)"><svg viewBox="0 0 24 24"><path d="${I.target}"/></svg></div><div class="meta"><div class="h-eyebrow" style="font-size:11px">Diskussionstraining</div><div class="t">Erkenne die Taktik</div><div class="s">${DEBN()} Fälle aus echten Debatten. Taktik erraten, Konter lernen.</div></div></button>
-  ${cont?`<button class="cont glass" data-go="read" data-id="${cont.id}">${cover(cont)}<div class="meta"><div class="h-eyebrow" style="font-size:11px">Weiterlesen</div><div class="t">${esc(cont.title)}</div><div class="s">Häppchen ${nextChapter(cont)+1}: ${esc(cont.chapters[nextChapter(cont)].h)}</div><div class="bar"><i style="width:${Math.round(readCount(cont)/cont.chapters.length*100)}%"></i></div></div></button>`:""}
-  <div class="stats">
-    <div class="stat glass"><b>${streak()}</b><span>Tage in Folge</span></div>
-    <div class="stat glass"><b>${S.days[today()]||0}</b><span>Häppchen heute</span></div>
-    <div class="stat glass"><b>${Math.round(readN/Math.max(1,totalCh)*100)}%</b><span>von ${totalCh}</span></div>
+  <div class="wm"><div class="wmt">Tiefgang</div><div class="wms">${new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})} · ${greet()}${S.settings.name?", "+esc(S.settings.name):""}</div></div>
+  ${cont?heroCont(cont):`<button class="snack glass" data-go="snack"><div class="lbl">${ic(I.spark)} Statt Scrollen</div><div class="ttl">Ein Häppchen lesen</div><div class="sub">Zwei Minuten, ein Gedanke. Zufällig aus allem, was du noch nicht kennst.</div><div class="go">${ic(I.shuffle)} Los</div></button>`}
+  <div class="pills">
+    ${cont?pill(I.shuffle,"Ein Häppchen lesen","Zwei Minuten, zufällig aus allem Neuen",'data-go="snack"'):""}
+    ${pill(I.target,"Erkenne die Taktik",DEBN()+" Fälle aus echten Debatten",'data-tab="trainer" onclick="hist.length=0;go({v:\'trainer\'},false)"')}
   </div>
+  <div class="statline"><span><b>${streak()}</b> Tage in Folge</span><span><b>${S.days[today()]||0}</b> heute</span><span><b>${Math.round(readN/Math.max(1,totalCh)*100)} %</b> von ${totalCh}</span></div>
   ${qaBlock()}${audBlock()}${newsBlock()}
   <div class="h-sec"><h2>Für heute</h2><button data-tab="discover" onclick="hist.length=0;go({v:'discover'},false)">Alle</button></div>
   <div class="hscroll">${picks.map(bookCard).join("")}</div>
@@ -1013,6 +1088,25 @@ async function openNews(x){const el=$("#reader");el.classList.remove("hidden");d
 function closeNews(){$("#reader").classList.add("hidden");$("#reader").innerHTML="";document.body.style.overflow="";}
 document.addEventListener("click",e=>{const a=e.target.closest("[data-news]");if(a){e.preventDefault();openNews(a.dataset.news);return;}
   const r=e.target.closest("[data-nrel]");if(r){closeNews();go({v:"book",id:r.dataset.nrel,tab:"home"});}});
+/* ================= Bewegung: Einblenden beim Scrollen, Tipp-Feedback, Parallax ================= */
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const FXSEL=".pill,.cont,.card,.cat,.row,.news,.h-sec,.statline,.hero,.htitle,.hsub,.snack,.qa,.list>*,.set,.box,.paper,.stu";
+let FXIO=null;
+function fx(){if(RM)return;const els=[...document.querySelectorAll("#app .view "+FXSEL.split(",").join(",#app .view "))];
+  const key=route.v+"|"+(route.id||"")+"|"+(route.cat||"")+"|"+(route.lt||"");const same=key===fx.last;fx.last=key;if(same){const v=document.querySelector("#app .view");if(v)v.style.animation="none";}
+  if(!FXIO)FXIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");FXIO.unobserve(e.target);}});},{rootMargin:"0px 0px -6% 0px",threshold:.05});
+  let k=0;els.forEach(el=>{if(el.classList.contains("fx"))return;const r=el.getBoundingClientRect();const vis=r.top<innerHeight;
+    if(same&&vis){return;}el.classList.add("fx");if(vis)el.style.transitionDelay=Math.min(k++,10)*45+"ms";FXIO.observe(el);});
+  const rv=document.querySelector(".ring .rv");if(rv&&same){rv.style.transition="none";rv.style.strokeDashoffset=rv.dataset.off;const p=document.querySelector(".ring .rp");if(p)p.textContent=p.dataset.count+"%";return;}if(rv)setTimeout(()=>{rv.style.strokeDashoffset=rv.dataset.off;},250);
+  const rp=document.querySelector(".ring .rp");if(rp){const to=+rp.dataset.count,t0=performance.now();const st=n=>{const p=Math.min(1,(n-t0)/1100),e=1-Math.pow(1-p,3);rp.textContent=Math.round(to*e)+"%";if(p<1)requestAnimationFrame(st);};setTimeout(()=>requestAnimationFrame(st),250);}}
+// Parallax: Schriftzug und Hero gleiten beim Scrollen langsamer
+addEventListener("scroll",()=>{if(RM)return;const y=scrollY;const w=document.querySelector(".wm");if(w&&y<500){w.style.transform=`translateY(${y*.35}px)`;w.style.opacity=Math.max(0,1-y/260);}
+  const h=document.querySelector(".hero");if(h&&y<700)h.style.transform=`translateY(${y*.12}px)`;},{passive:true});
+// Tipp-Welle an der Fingerposition
+document.addEventListener("pointerdown",e=>{if(RM)return;const t=e.target.closest(".pill,.cont,.card,.cat,.row,.chip,.snack,#tabbar button,.iconbtn,.next,.nrel");if(!t)return;
+  const r=t.getBoundingClientRect(),d=Math.max(r.width,r.height)*1.2,w=document.createElement("span");w.className="ripple";
+  w.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px`;
+  if(getComputedStyle(t).position==="static")t.style.position="relative";t.style.overflow=t.style.overflow||"hidden";t.appendChild(w);setTimeout(()=>w.remove(),650);},{passive:true});
 /* Globaler Player: lebt außerhalb von #app, überlebt Ansichtswechsel, Neuzeichnen und Hintergrund */
 const PL={id:null};const G=()=>document.getElementById("gplay");
 function fmtT(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
