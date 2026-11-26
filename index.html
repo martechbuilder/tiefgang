@@ -366,6 +366,51 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 @keyframes rdIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 .hscroll .card{transition:transform .35s}
 @media (prefers-reduced-motion:reduce){.fx{opacity:1!important;transform:none!important}}
+/* ---------- Frischer: Tiefsee-Deko, Icon-Bewegung ---------- */
+#deep{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+#deep .rays{position:absolute;left:-30%;right:-30%;top:-10%;height:75%;opacity:.5;
+  background:repeating-linear-gradient(100deg,transparent 0 6%,rgba(110,210,250,.05) 7% 9%,transparent 10% 15%,rgba(110,210,250,.035) 16% 17%,transparent 18% 24%);
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 85%);mask-image:linear-gradient(180deg,#000,transparent 85%);transform-origin:50% 0;animation:rays 26s ease-in-out infinite alternate}
+@keyframes rays{0%{transform:skewX(-6deg) translateX(-3%);opacity:.35}100%{transform:skewX(6deg) translateX(3%);opacity:.6}}
+#deep .bub{position:absolute;left:var(--x);bottom:-30px;width:var(--s);height:var(--s);border-radius:50%;
+  background:radial-gradient(circle at 32% 30%,rgba(230,250,255,.75),rgba(120,210,245,.18) 45%,rgba(120,210,245,.05) 70%);box-shadow:0 0 6px rgba(120,210,245,.25);
+  animation:bubUp var(--d) linear var(--dl) infinite,bubWob 3.2s ease-in-out infinite alternate}
+@keyframes bubUp{0%{transform:translateY(0);opacity:0}8%{opacity:.8}85%{opacity:.6}100%{transform:translateY(-112vh);opacity:0}}
+@keyframes bubWob{from{margin-left:calc(var(--w) * -1)}to{margin-left:var(--w)}}
+.wmt{position:relative;display:inline-block;background:linear-gradient(100deg,#f0fbff 0%,#8fdcf2 30%,#3fa6cf 50%,#8fdcf2 70%,#f0fbff 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;animation:gradRun 9s linear infinite}
+@keyframes gradRun{from{background-position:0 0}to{background-position:-220% 0}}
+.wmt::after{content:attr(data-t);position:absolute;left:0;top:0;right:0;background:linear-gradient(100deg,transparent 42%,rgba(255,255,255,.95) 50%,transparent 58%) no-repeat;background-size:260% 100%;background-position:160% 0;-webkit-background-clip:text;background-clip:text;color:transparent;pointer-events:none}
+.wmt.is-glint::after{animation:glint 1s cubic-bezier(.2,.7,.2,1) both}
+@keyframes glint{from{background-position:160% 0}to{background-position:-60% 0}}
+.wmt .sparks{position:absolute;inset:0;pointer-events:none}
+.wmt .sparks i{position:absolute;width:4px;height:4px;border-radius:50%;background:#dff8ff;box-shadow:0 0 8px #8fe6ff,0 0 2px #fff;opacity:0}
+.wmt.is-glint .sparks i{animation:spark .7s cubic-bezier(.2,.7,.2,1) var(--sd) both}
+@keyframes spark{0%{opacity:1;transform:none}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2)}}
+.hop{animation:hop .55s cubic-bezier(.3,.7,.3,1.5)!important}
+@keyframes hop{0%,100%{transform:none}35%{transform:translateY(-22%) rotate(-10deg) scale(1.08)}65%{transform:translateY(5%) rotate(4deg) scale(.97)}}
+.pill .pi svg{animation:piBob 4.5s ease-in-out infinite}
+.pills .pill:nth-child(2) .pi svg{animation-delay:-1.6s}
+@keyframes piBob{0%,100%{transform:none}50%{transform:translateY(-2px) rotate(-6deg)}}
+.pill .pi{position:relative}.pill .pi::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:1px solid rgba(110,215,250,.35);animation:piRing 3.6s ease-out infinite;opacity:0}
+@keyframes piRing{0%{transform:scale(.85);opacity:.7}70%,100%{transform:scale(1.35);opacity:0}}
+.cat .glyph{animation:catFloat 6s ease-in-out infinite}
+.cat:nth-child(3n+2) .glyph{animation-delay:-2s}.cat:nth-child(3n) .glyph{animation-delay:-4s}
+@keyframes catFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.cat.fx .glyph{opacity:0}.cat.fx.in .glyph{animation:catPop .6s cubic-bezier(.3,.7,.3,1.5) both,catFloat 6s ease-in-out .6s infinite}
+@keyframes catPop{0%{transform:scale(.4) rotate(-12deg);opacity:0}100%{transform:none;opacity:1}}
+.hcov .cover{animation:covFloat 7s ease-in-out infinite}
+@keyframes covFloat{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-7px) rotate(1deg)}}
+.hcov .cover::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0 70%,rgba(140,230,255,.22) 80%,transparent 90%);animation:spin 8s linear infinite;z-index:1;pointer-events:none}
+@keyframes spin{to{transform:rotate(1turn)}}
+.ring svg{animation:ringGlow 4s ease-in-out infinite}
+@keyframes ringGlow{0%,100%{filter:drop-shadow(0 0 8px rgba(72,208,236,.35))}50%{filter:drop-shadow(0 0 16px rgba(72,208,236,.7))}}
+#tabbar button.on svg{animation:tabPop .45s cubic-bezier(.3,.7,.3,1.6),tabFloat 3.5s ease-in-out .5s infinite}
+@keyframes tabFloat{0%,100%{transform:none}50%{transform:translateY(-2px)}}
+.w{display:inline-block;animation:wIn .6s cubic-bezier(.2,.7,.2,1) both}
+@keyframes wIn{from{opacity:0;transform:translateY(.45em);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+.h-sec::after{background-size:200% 100%;background-image:linear-gradient(90deg,rgba(120,210,245,.35),rgba(120,210,245,.05),rgba(120,210,245,.35));animation:lineRun 6s linear infinite}
+@keyframes lineRun{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){#deep,.wmt,.pill .pi svg,.pill .pi::after,.cat .glyph,.hcov .cover,.hcov .cover::before,.ring svg,.w,.h-sec::after{animation:none!important}.cat.fx .glyph{opacity:1}}
 .cats{grid-template-columns:repeat(3,1fr);gap:18px 10px}
 .cat{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 2px;min-height:0;align-items:center;justify-content:flex-start;text-align:center;overflow:visible}
 .cat .glyph,.cat .glyph.img{width:70px;height:70px;border-radius:20px;box-shadow:0 0 22px rgba(36,178,216,.16),0 8px 20px rgba(0,0,0,.5)}
@@ -380,6 +425,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 <nav id="tabbar" class="glass"></nav>
 <div id="reader" class="hidden"></div>
 <div id="sheet"></div>
+<div id="deep" aria-hidden="true"><div class="rays"></div><i class="bub" style="--x:8%;--s:6px;--d:19s;--dl:-3s;--w:14px"></i><i class="bub" style="--x:18%;--s:3px;--d:24s;--dl:-11s;--w:8px"></i><i class="bub" style="--x:31%;--s:9px;--d:28s;--dl:-6s;--w:18px"></i><i class="bub" style="--x:44%;--s:4px;--d:21s;--dl:-15s;--w:10px"></i><i class="bub" style="--x:57%;--s:7px;--d:26s;--dl:-2s;--w:16px"></i><i class="bub" style="--x:66%;--s:3px;--d:18s;--dl:-9s;--w:8px"></i><i class="bub" style="--x:78%;--s:10px;--d:31s;--dl:-20s;--w:20px"></i><i class="bub" style="--x:88%;--s:5px;--d:23s;--dl:-13s;--w:12px"></i><i class="bub" style="--x:94%;--s:3px;--d:20s;--dl:-5s;--w:7px"></i><i class="bub" style="--x:25%;--s:4px;--d:27s;--dl:-18s;--w:9px"></i></div>
 <div id="player" class="glass hidden"><audio id="gplay" preload="none"></audio><button id="pplay" class="iconbtn" aria-label="Abspielen"></button><div class="pm"><div class="pt" id="ptitle"></div><div class="pbar"><i id="pprog"></i></div><div class="ptime" id="ptime"></div></div><button id="pback" class="iconbtn" aria-label="15 Sekunden zurück">−15</button><button id="pfwd" class="iconbtn" aria-label="30 Sekunden vor">+30</button><button id="pclose" class="iconbtn" aria-label="Schließen">✕</button></div>
 <script src="content.js"></script>
 <script>
@@ -538,7 +584,7 @@ function render(){
   renderTabs();setTimeout(showVer,0);
   const v=route.v;
   const html=v==="home"?vHome():v==="discover"?vDiscover():v==="cat"?vCat():v==="book"?vBook():v==="library"?vLibrary():v==="search"?vSearch():v==="trainer"?vTrainer():v==="studien"?vStudien():v==="news"?vNews():v==="fragen"?vFragen():v==="hoeren"?vHoeren():v==="settings"?vSettings():vHome();
-  $("#app").innerHTML=`<div class="view">${html}</div>`;fx();
+  $("#app").innerHTML=`<div class="view">${html}</div>`;fx();splitWords();if(route.v==="home")setTimeout(wmGlint,700);
   if(v==="studien"){const i=$("#sq");i.value=route.sq||"";i.addEventListener("input",()=>{route.sq=i.value;route.sn=0;$("#stuhits").innerHTML=stuHits();});}
   if(v==="search"){const i=$("#q");i.value=route.q||"";i.addEventListener("input",()=>{route.q=i.value;$("#hits").innerHTML=hits(i.value);});if(!route.q)setTimeout(()=>i.focus(),50);}
 }
@@ -607,7 +653,7 @@ function vHome(){
   const picks=[];while(picks.length<6&&pool.length){picks.push(pool.splice(Math.floor(rnd()*pool.length),1)[0]);}
   const cont=prog[0];
   return `
-  <div class="wm"><div class="wmt">Tiefgang</div><div class="wms">${new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})} · ${greet()}${S.settings.name?", "+esc(S.settings.name):""}</div></div>
+  <div class="wm"><div class="wmt" id="wmt" data-t="Tiefgang">Tiefgang<span class="sparks"></span></div><div class="wms">${new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})} · ${greet()}${S.settings.name?", "+esc(S.settings.name):""}</div></div>
   ${cont?heroCont(cont):`<button class="snack glass" data-go="snack"><div class="lbl">${ic(I.spark)} Statt Scrollen</div><div class="ttl">Ein Häppchen lesen</div><div class="sub">Zwei Minuten, ein Gedanke. Zufällig aus allem, was du noch nicht kennst.</div><div class="go">${ic(I.shuffle)} Los</div></button>`}
   <div class="pills">
     ${cont?pill(I.shuffle,"Ein Häppchen lesen","Zwei Minuten, zufällig aus allem Neuen",'data-go="snack"'):""}
@@ -1107,6 +1153,17 @@ document.addEventListener("pointerdown",e=>{if(RM)return;const t=e.target.closes
   const r=t.getBoundingClientRect(),d=Math.max(r.width,r.height)*1.2,w=document.createElement("span");w.className="ripple";
   w.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px`;
   if(getComputedStyle(t).position==="static")t.style.position="relative";t.style.overflow=t.style.overflow||"hidden";t.appendChild(w);setTimeout(()=>w.remove(),650);},{passive:true});
+/* Schriftzug: Glanz und Funken, beim Tippen und alle paar Sekunden */
+function wmGlint(){const w=document.getElementById("wmt");if(!w||RM)return;w.classList.remove("is-glint");void w.offsetWidth;
+  const sp=w.querySelector(".sparks");sp.innerHTML=Array.from({length:9},(_,i)=>{const a=Math.random()*Math.PI*2,r=26+Math.random()*34;return `<i style="--dx:${Math.cos(a)*r}px;--dy:${Math.sin(a)*r}px;--sd:${i*28}ms;left:${15+Math.random()*70}%;top:${30+Math.random()*40}%"></i>`;}).join("");
+  w.classList.add("is-glint");}
+setInterval(()=>{if(document.visibilityState==="visible"&&route.v==="home"&&scrollY<200)wmGlint();},9000);
+document.addEventListener("click",e=>{if(e.target.closest("#wmt"))wmGlint();});
+// Icon-Hüpfer beim Antippen
+document.addEventListener("pointerdown",e=>{if(RM)return;const t=e.target.closest("#tabbar button,.pill,.cont,.cat,.iconbtn");if(!t)return;const i=t.querySelector(".pi svg,.cover,.glyph,svg");if(!i)return;i.classList.remove("hop");void i.getBoundingClientRect();i.classList.add("hop");setTimeout(()=>i.classList.remove("hop"),600);},{passive:true});
+// Überschriften Wort für Wort
+function splitWords(){if(RM)return;document.querySelectorAll("#app .htitle:not(.sw),#app .h-big:not(.sw)").forEach(h=>{h.classList.add("sw");let k=0;
+  const walk=n=>{[...n.childNodes].forEach(c=>{if(c.nodeType===3){const f=document.createDocumentFragment();c.textContent.split(/(\s+)/).forEach(w=>{if(!w)return;if(/^\s+$/.test(w)){f.appendChild(document.createTextNode(w));return;}const sp=document.createElement("span");sp.className="w";sp.style.animationDelay=(120+k++*55)+"ms";sp.textContent=w;f.appendChild(sp);});c.replaceWith(f);}else if(c.nodeType===1&&!c.classList.contains("w"))walk(c);});};walk(h);});}
 /* Globaler Player: lebt außerhalb von #app, überlebt Ansichtswechsel, Neuzeichnen und Hintergrund */
 const PL={id:null};const G=()=>document.getElementById("gplay");
 function fmtT(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
