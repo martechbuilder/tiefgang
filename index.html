@@ -602,6 +602,15 @@ input,textarea,select{font-size:16px}
 .cat .c{font-size:11px}
 .cat .pr{left:50%;transform:translateX(-50%);bottom:auto;top:73px;border-radius:2px;max-width:56px}
 .toast{bottom:calc(var(--sb) + 84px)}
+
+/* ---------- Ausgleich für zu kurz gemeldete Höhe (iOS-Web-App) ---------- */
+html{height:calc(100% + var(--vgap,0px))}
+#tabbar{bottom:calc(-1 * var(--vgap,0px))}
+#deep,#reader{bottom:calc(-1 * var(--vgap,0px))}
+#reader .rbot{padding-bottom:calc(var(--sb) + 12px)}
+#player{bottom:calc(var(--sb) + 70px - var(--vgap,0px))}
+.toast{bottom:calc(var(--sb) + 84px - var(--vgap,0px))}
+#fpop{bottom:calc(var(--sb) + 140px - var(--vgap,0px))}
 </style>
 </head>
 <body>
@@ -676,6 +685,11 @@ let _ALL=null;
 function loadAll(){if(allLoaded())return Promise.resolve();if(!_ALL)_ALL=ALLCATS.reduce((p,c)=>p.then(()=>loadCat(c)),Promise.resolve()).then(()=>{_ALL=null;});return _ALL;}
 const DEBN=()=>BOOKS.reduce((a,b)=>a+(b.nd!=null?b.nd:(b.debatte||[]).length),0);
 
+/* iOS meldet frisch hinzugefügten Web-Apps teils eine zu kurze Höhe: Lücke messen und ausgleichen (sonst 0) */
+function vgapMeasure(){const sa=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone;
+  const scr=Math.max(screen.height,screen.width)===Math.max(innerHeight,innerWidth)?0:(innerHeight<innerWidth?0:screen.height-innerHeight);
+  const g=sa&&scr>0&&scr<160?scr:0;document.documentElement.style.setProperty("--vgap",g+"px");window._vgap=g;}
+vgapMeasure();addEventListener("resize",vgapMeasure);addEventListener("orientationchange",()=>setTimeout(vgapMeasure,300));
 /* ================= Zustand ================= */
 const KEY="tiefgang.v1";
 const defState=()=>({read:{},pos:{},last:null,saved:[],days:{},settings:{size:19,font:"serif",icon:"nacht",name:""}});
@@ -858,7 +872,7 @@ function vHome(){
   <div class="h-sec"><h2>Kategorien</h2></div>
   <div class="chips" style="flex-wrap:wrap;overflow:visible">${CAT_ORDER.filter(c=>BOOKS.some(b=>b.cat===c)).map(c=>`<button class="chip" data-go="cat" data-cat="${c}">${CATS[c].n}</button>`).join("")}</div>
   <p class="small" style="text-align:center;margin-top:26px">${BOOKS.length} Titel · ${totalCh} Häppchen · rund ${Math.round(BOOKS.reduce((a,b)=>a+b._min,0)/60)} Stunden Lesestoff</p>
-  <div style="text-align:center;margin-top:10px"><button class="chip" data-go="update">${ic(I.shuffle).replace('class="ic"','class="ic" style="width:14px;height:14px"')} Nach Updates suchen</button><div class="small" id="verline" style="margin-top:8px"></div></div>`;
+  <div style="text-align:center;margin-top:10px"><button class="chip" data-go="update">${ic(I.shuffle).replace('class="ic"','class="ic" style="width:14px;height:14px"')} Nach Updates suchen</button><div class="small" id="verline" style="margin-top:8px"></div><div class="small" style="margin-top:4px;opacity:.5">Bildschirm: ${innerWidth}×${innerHeight} / ${screen.width}×${screen.height} · Ausgleich ${window._vgap||0}px</div></div>`;
 }
 function vDiscover(){
   const sn=allLoaded()?stuIndex().length:(window.TG_NSTU||0),pn=BOOKS.filter(b=>b.cat==="schluesselpaper").length;
