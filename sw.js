@@ -1,4 +1,4 @@
-const CACHE = "tiefgang-202611261826";
+const CACHE = "tiefgang-202611261828";
 const CORE = ["./", "./index.html", "./content.js", "./manifest.json",
   "./icons/icon-nacht-180.png", "./icons/icon-glas-180.png", "./icons/icon-hell-180.png", "./icons/icon-getoent-180.png",
   "./icons/preview-nacht.svg", "./icons/preview-glas.svg", "./icons/preview-hell.svg", "./icons/preview-getoent.svg",
@@ -31,6 +31,8 @@ function putCache(req, res) { if (res && res.ok) { const copy = res.clone(); cac
 self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
+  // Audio (Regen) direkt aus dem Netz: Safari braucht Range-Antworten
+  if (req.headers.has("range") || /\.(m4a|mp3)$/.test(new URL(req.url).pathname)) return;
   // Seite: Netz mit 3 s Timeout, sonst Cache (neue Version kommt beim nächsten Start)
   if (req.mode === "navigate") {
     e.respondWith(new Promise(resolve => {

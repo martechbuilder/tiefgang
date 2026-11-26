@@ -507,6 +507,11 @@ body:has(#reader:not(.hidden)) #deep .rays{opacity:.7}
 .pill .pi svg path{stroke-dasharray:1.2;animation:piDraw 9s ease-in-out infinite}
 @keyframes piDraw{0%,70%,100%{stroke-dashoffset:0}78%{stroke-dashoffset:1.2}86%{stroke-dashoffset:0}}
 @media (prefers-reduced-motion:reduce){.cat .glyph.img,.cont .cover,.row .cover,.cat .glyph::after,.cont .cover::before,#tabbar button svg,#tabbar button svg path,.pill .pi svg,.pill .pi svg path{animation:none!important}}
+#prain{color:var(--txt3)}#prain.on{color:var(--accent-hi);filter:drop-shadow(0 0 6px rgba(76,210,236,.7))}
+#prain.on svg path{animation:rainFall 1.4s linear infinite}
+@keyframes rainFall{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-6}}
+#prain svg path{stroke-dasharray:none}
+#player .iconbtn{min-width:34px}
 .cats{grid-template-columns:repeat(3,1fr);gap:18px 10px}
 .cat{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 2px;min-height:0;align-items:center;justify-content:flex-start;text-align:center;overflow:visible}
 .cat .glyph,.cat .glyph.img{width:70px;height:70px;border-radius:20px;box-shadow:0 0 22px rgba(36,178,216,.16),0 8px 20px rgba(0,0,0,.5)}
@@ -525,7 +530,7 @@ body:has(#reader:not(.hidden)) #deep .rays{opacity:.7}
 <div id="minihead" aria-hidden="true"><span class="mt">Tiefgang</span><span class="md" id="mdepth">0 m</span></div>
 <div id="intro" class="hidden"><canvas id="introc"></canvas><div class="iwm">Tiefgang</div><div class="isub" id="isub">Tauche ab …</div><i class="fisch p1 ifisch"></i><div class="iskip">Tippen zum Überspringen</div></div>
 <div id="fpop" class="hidden" role="status"><i class="fisch p4"></i><div class="fb"><div class="ft" id="fpt"></div><button class="fa hidden" id="fpa"></button></div></div>
-<div id="player" class="glass hidden"><audio id="gplay" preload="none"></audio><button id="pplay" class="iconbtn" aria-label="Abspielen"></button><div class="pm"><div class="pt" id="ptitle"></div><div class="pbar"><i id="pprog"></i></div><div class="ptime" id="ptime"></div></div><button id="pback" class="iconbtn" aria-label="15 Sekunden zurück">−15</button><button id="pfwd" class="iconbtn" aria-label="30 Sekunden vor">+30</button><button id="pclose" class="iconbtn" aria-label="Schließen">✕</button></div>
+<div id="player" class="glass hidden"><audio id="gplay" preload="none"></audio><button id="pplay" class="iconbtn" aria-label="Abspielen"></button><div class="pm"><div class="pt" id="ptitle"></div><div class="pbar"><i id="pprog"></i></div><div class="ptime" id="ptime"></div></div><button id="pback" class="iconbtn" aria-label="15 Sekunden zurück">−15</button><button id="pfwd" class="iconbtn" aria-label="30 Sekunden vor">+30</button><button id="prain" class="iconbtn" aria-label="Regen im Hintergrund"><svg class="ic" viewBox="0 0 24 24"><path d="M7 15a4 4 0 01-.6-7.95A6 6 0 0118 8a3.5 3.5 0 01-.5 7H7zM8 18l-1 2M12 18l-1 2M16 18l-1 2"/></svg></button><button id="pclose" class="iconbtn" aria-label="Schließen">✕</button><audio id="rain" src="art/regen.m4a" loop preload="none"></audio></div>
 <script src="content.js"></script>
 <script>
 "use strict";
@@ -1380,6 +1385,12 @@ let HID=0;document.addEventListener("visibilitychange",()=>{if(document.visibili
   function goBack(){const r=$("#reader");if(r&&!r.classList.contains("hidden")){if($("#nclose"))closeNews();else closeReader();return;}
     if(hist.length)back();else go({v:"home"},false);}
 })();
+/* Regen im Hintergrund: Schalter im Player, läuft nur mit der Hörfolge */
+(function(){const r=document.getElementById("rain"),a=document.getElementById("gplay"),b=document.getElementById("prain");
+  const ui=()=>{b.classList.toggle("on",!!S.rain);b.setAttribute("aria-pressed",S.rain?"true":"false");};
+  const sync=()=>{if(S.rain&&!a.paused){if(r.paused)r.play().catch(()=>{});}else r.pause();};
+  b.onclick=()=>{S.rain=!S.rain;save();ui();sync();toast(S.rain?"Regen an":"Regen aus");};
+  ["play","playing","pause","ended"].forEach(ev=>a.addEventListener(ev,sync));ui();})();
 /* Globaler Player: lebt außerhalb von #app, überlebt Ansichtswechsel, Neuzeichnen und Hintergrund */
 const PL={id:null};const G=()=>document.getElementById("gplay");
 function fmtT(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
