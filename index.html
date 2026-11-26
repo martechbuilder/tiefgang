@@ -887,7 +887,7 @@ function vBook(){
     <div class="facts"><span>${b._min} Min</span><span>${n} Häppchen</span>${r?`<span class="done">${r}/${n} gelesen</span>`:""}</div>
     <button class="cta" data-go="read" data-id="${b.id}">${ic(I.play)} ${r===0?"Lesen":r===n?"Nochmal lesen":"Weiterlesen"}</button>
   </div>
-  <button class="flag" style="margin-top:12px" data-ask="${b.id}">💬 Frage zu diesem Titel</button> <button class="flag" data-audio="${b.id}">${AUD.ids.has(b.id)?"🎧 In der Hörliste":"🎧 Zur Hörliste"}</button>
+  <button class="flag" style="margin-top:12px" data-ask="${b.id}">💬 Frage zu diesem Titel</button> <button class="flag" data-audio="${b.id}">${AUD.ids.has(audId(b.id))?"🎧 In der Hörliste":"🎧 Zur Hörliste"}</button>
   ${b.paper?paperBox(b.paper,b):""}${b.person?personBox(b.person):""}
   ${b.summary?`<div class="summary glass">${md(b.summary)}</div>`:""}
   <div class="h-sec"><h2>Häppchen</h2></div>
@@ -1031,8 +1031,8 @@ function drawReader(){
   let st0=0;sc.addEventListener("scroll",()=>{upd();const now=Date.now();if(now-st0>800){st0=now;S.cur={id:b.id,i,y:sc.scrollTop,t:now};save();}},{passive:true});upd();
   S.cur={id:b.id,i,y:(R.restoreY||0),t:Date.now()};save();if(R.restoreY){sc.scrollTop=R.restoreY;R.restoreY=0;}
   $("#rclose").onclick=closeReader;
-  $("#rtts").onclick=()=>{const af=AUD.items.find(x=>x.id===b.id&&x.state==="done"&&x.url);
-    if(af){playAud(b.id);return;}
+  $("#rtts").onclick=()=>{const okA=x=>x&&x.state==="done"&&x.url;const af=[audId(b.id),audId(b.id,VOICE()==="w"?"m":"w")].map(id=>AUD.items.find(x=>x.id===id)).find(okA);
+    if(af){playAud(af.id);return;}
     if(!TTS.on&&!S.ttsHint){S.ttsHint=1;save();toast("Für die schöne Chatterbox-Stimme: Titelseite → 🎧 Zur Hörliste. Bis dahin liest die iPhone-Stimme.");}
     if(TTS.on){ttsStop();}else{ttsUnlock();ttsStart();}drawReaderBar();};
   if(TTS.on)setTimeout(ttsStart,250);
@@ -1269,10 +1269,12 @@ function vHoeren(){
   const top=`<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button></div><div class="h-big" style="font-size:30px">Hörliste</div>`;
   const done=AUD.items.filter(x=>x.state==="done");
   return top+`<p class="small" style="margin:-6px 2px 14px">Titel, die du mit „🎧 Zur Hörliste“ markierst, spricht eine freie KI-Stimme (Chatterbox, Stimme Thorsten) automatisch ein. Das dauert etwa eine Stunde pro Titel. Fertige Folgen hörst du hier oder im Auto über Apple Podcasts, auch bei gesperrtem Bildschirm und neben Google Maps.</p>
+  <div class="glass set" style="margin-bottom:14px"><div class="setrow"><span>Stimme für neue Folgen</span><span class="chips" style="margin:0">${["m","w"].map(v=>`<button class="chip ${VOICE()===v?"on":""}" data-voice="${v}">${v==="m"?"Thorsten (männlich)":"Kerstin (weiblich)"}</button>`).join("")}</span></div>
+   <div class="hint" style="padding:10px 16px">Beide Stimmen sind frei (CC0), ruhig eingelesen. Schon fertige Folgen behalten ihre Stimme; für die andere Stimme den Titel einfach nochmal zur Hörliste hinzufügen.</div></div>
   <div class="glass set" style="margin-bottom:14px"><div class="setrow"><span>Als Podcast abonnieren</span><a class="chip" style="text-decoration:none" href="${"podcast://"+feedUrl().replace(/^https:\/\//,"")}">In Podcasts öffnen</a></div>
    <div class="setrow"><span class="small" style="flex:1;word-break:break-all">${esc(feedUrl())}</span><button class="copy" data-copy="${esc(feedUrl())}">Kopieren</button></div>
    <div class="hint" style="padding:10px 16px">Einmalig: auf „In Podcasts öffnen“ tippen. Falls das nicht klappt: Link kopieren, in Apple Podcasts unter Mediathek, oben rechts „…“, „Sendung per URL folgen“ einfügen. Der Link ist privat, nicht teilen.</div></div>
-  ${AUD.items.length?`<div class="glass" style="padding:2px 0">${AUD.items.map(x=>{const b=BY_ID[x.id];return `<div class="qa"><div class="m">${audState(x)}${x.dur?" · "+fmtDur(x.dur):""}</div><div class="q">${esc(b?b.title:x.title)}</div>
+  ${AUD.items.length?`<div class="glass" style="padding:2px 0">${AUD.items.map(x=>{const b=BY_ID[audBase(x.id)];return `<div class="qa"><div class="m">${audState(x)}${x.dur?" · "+fmtDur(x.dur):""} · Stimme ${VNAME[audVoice(x.id)]}</div><div class="q">${esc(b?b.title:x.title)}</div>
     ${x.state==="done"?`<button class="chip" style="margin-top:10px" data-play="${esc(x.id)}">${PL.id===x.id&&!G().paused?"❚❚ Pause":(S.apos||{})[x.id]>20?"▶ Weiterhören ("+fmtT(S.apos[x.id])+")":"▶ Abspielen"}</button>`:""}</div>`;}).join("")}</div>`:`<div class="empty">Noch nichts in der Hörliste. Auf einer Titelseite „🎧 Zur Hörliste“ tippen.</div>`}`;
 }
 /* ================= Nachrichten-Leser: Artikeltext über den Worker, im App-Design ================= */
@@ -1524,10 +1526,16 @@ function openDive(k,b,i,ref){let h="";
 document.addEventListener("click",e=>{const d=e.target.closest("[data-dive]");if(d){const b=BY_ID[d.dataset.b];if(b)openDive(d.dataset.dive,b,+d.dataset.i,d.dataset.ref);return;}
   const r=e.target.closest("[data-dread]");if(r){closeSheet();const id=r.dataset.dread;if(typeof closeReader==="function"&&R)closeReader();setTimeout(()=>openReader(id,0),50);}});
 zoneApply();
+/* Stimmen: m = Thorsten, w = Kerstin. Folgen-ID = Titel-ID bzw. Titel-ID + "--w" */
+const VOICE=()=>S.voice==="w"?"w":"m";
+const audId=(id,v)=>id+((v||VOICE())==="w"?"--w":"");
+const audBase=id=>String(id).replace(/--w$/,"");
+const audVoice=id=>/--w$/.test(id)?"w":"m";
+const VNAME={m:"Thorsten",w:"Kerstin"};
 /* Globaler Player: lebt außerhalb von #app, überlebt Ansichtswechsel, Neuzeichnen und Hintergrund */
 const PL={id:null};const G=()=>document.getElementById("gplay");
 function fmtT(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
-function playAud(id){const a=G(),b=BY_ID[id];if(!a)return;
+function playAud(id){const a=G(),b=BY_ID[audBase(id)];if(!a)return;
   if(PL.id===id){if(a.paused)a.play().catch(()=>{});else a.pause();return;}
   PL.id=id;a.src=API+"/a/"+id+".mp3";const st=(S.apos||{})[id]||0;
   a.addEventListener("loadedmetadata",()=>{if(st>5&&st<a.duration-10)a.currentTime=st;},{once:true});
@@ -1548,14 +1556,15 @@ function plUI(){const a=G();if(!a)return;$("#pplay").innerHTML=a.paused?"▶":"�
   const bar=document.querySelector("#player .pbar");const seek=e=>{const r=bar.getBoundingClientRect();const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;if(a.duration)a.currentTime=Math.max(0,Math.min(1,x/r.width))*a.duration;};
   bar.addEventListener("click",seek);bar.addEventListener("touchmove",seek,{passive:true});
   // zuletzt gehörte Folge als pausierten Player wiederherstellen
-  if(S.pid&&BY_ID[S.pid]){PL.id=S.pid;a.src=API+"/a/"+S.pid+".mp3";const st=(S.apos||{})[S.pid]||0;a.addEventListener("loadedmetadata",()=>{if(st>5)a.currentTime=st;},{once:true});$("#ptitle").textContent=BY_ID[S.pid].title;$("#player").classList.remove("hidden");document.body.classList.add("hasplayer");plUI();}
+  if(S.pid&&BY_ID[audBase(S.pid)]){PL.id=S.pid;a.src=API+"/a/"+S.pid+".mp3";const st=(S.apos||{})[S.pid]||0;a.addEventListener("loadedmetadata",()=>{if(st>5)a.currentTime=st;},{once:true});$("#ptitle").textContent=BY_ID[audBase(S.pid)].title;$("#player").classList.remove("hidden");document.body.classList.add("hasplayer");plUI();}
 })();
 document.addEventListener("click",e=>{const b=e.target.closest("[data-play]");if(b)playAud(b.dataset.play);});
+document.addEventListener("click",e=>{const v=e.target.closest("[data-voice]");if(v){S.voice=v.dataset.voice;save();render();toast("Stimme: "+VNAME[VOICE()]);}});
 document.addEventListener("click",async e=>{const a=e.target.closest("[data-audio]");if(!a)return;const b=BY_ID[a.dataset.audio];if(!b)return;
-  if(AUD.ids.has(b.id)){go({v:"hoeren",tab:"library"});return;}
+  const aid=audId(b.id);if(AUD.ids.has(aid)){go({v:"hoeren",tab:"library"});return;}
   a.textContent="🎧 Wird angelegt …";
-  try{const r=await tfetch(API+"/audio/queue",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({k:devKey(),id:b.id,title:b.title,sub:b.subtitle||""})});if(!r.ok)throw 0;
-    AUD.ids.add(b.id);AUD.items.unshift({id:b.id,title:b.title,state:"queued",added:Date.now()});localStorage.setItem("tiefgang.aud",JSON.stringify(AUD.items));toast("In der Hörliste, wird eingesprochen");render();}
+  try{const r=await tfetch(API+"/audio/queue",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({k:devKey(),id:aid,title:b.title,sub:b.subtitle||""})});if(!r.ok)throw 0;
+    AUD.ids.add(aid);AUD.items.unshift({id:aid,title:b.title,state:"queued",added:Date.now()});localStorage.setItem("tiefgang.aud",JSON.stringify(AUD.items));toast("In der Hörliste, wird eingesprochen");render();}
   catch(_){toast("Keine Verbindung, bitte später nochmal");a.textContent="🎧 Zur Hörliste";}});
 function argCard(a){
   const m=String(a).match(/^\s*(?:Wenn jemand sagt:?)?\s*[„"]?(.+?)[“"]?\s*(?:→|->)\s*(?:Antwort:?)?\s*(.+)$/s);

@@ -5,7 +5,7 @@ Liest den Text aus data/<kat>.<hash>.js im Repo."""
 import argparse, glob, json, re, sys, pathlib
 ap = argparse.ArgumentParser()
 ap.add_argument("--id", required=True); ap.add_argument("--chapter", type=int, required=True)
-ap.add_argument("--out", required=True); ap.add_argument("--list", action="store_true"); ap.add_argument("--max-paras", type=int, default=0)
+ap.add_argument("--out", required=True); ap.add_argument("--voice", default="m", choices=["m", "w"]); ap.add_argument("--list", action="store_true"); ap.add_argument("--max-paras", type=int, default=0)
 a = ap.parse_args()
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
@@ -112,7 +112,9 @@ from chatterbox.mtl_tts import ChatterboxMultilingualTTS
 torch.manual_seed(7)
 dev = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
 m = ChatterboxMultilingualTTS.from_pretrained(device=dev)
-REF = str(pathlib.Path(__file__).with_name("thorsten_ref.wav"))
+# Stimmen: m = Thorsten-Voice (CC0), w = Kerstin (CC0, github.com/rhasspy/dataset-voice-kerstin)
+REF = str(pathlib.Path(__file__).with_name("kerstin_ref.wav" if a.voice == "w" else "thorsten_ref.wav"))
+EXAG = 0.45 if a.voice == "w" else 0.52
 SR = m.sr
 def clean(w):
     """Gibt (audio, sprache_gefunden, geraeusch) zurück. Entfernt nur Stille an den Rändern (sehr niedrige Schwelle,
@@ -221,7 +223,7 @@ for pi, p in enumerate(paras):
     for ci, c in enumerate(chunks):
         best = None
         for versuch in range(5):
-            w = m.generate(c, language_id="de", audio_prompt_path=REF, exaggeration=0.52, cfg_weight=0.35, temperature=0.68)
+            w = m.generate(c, language_id="de", audio_prompt_path=REF, exaggeration=EXAG, cfg_weight=0.35, temperature=0.68)
             y = w.squeeze().detach().cpu().numpy().astype(np.float32)
             note, gr, info = pruefe(y, c)
             if abgebrochen(w): note -= .25; info += " | Abbruch"

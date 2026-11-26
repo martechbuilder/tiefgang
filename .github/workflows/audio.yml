@@ -24,6 +24,8 @@ jobs:
     outputs:
       id: ${{ steps.p.outputs.id }}
       chapters: ${{ steps.p.outputs.chapters }}
+      book: ${{ steps.p.outputs.book }}
+      voice: ${{ steps.p.outputs.voice }}
     steps:
       - uses: actions/checkout@v4
       - id: p
@@ -36,8 +38,10 @@ jobs:
           if [ -z "$ID" ]; then ID=$(curl -s -H "X-Admin: $ADMIN" "$API/admin/audio-next" | python3 -c "import json,sys;print(json.load(sys.stdin).get('id') or '')"); fi
           if [ -z "$ID" ]; then echo "id=" >> $GITHUB_OUTPUT; echo "chapters=[]" >> $GITHUB_OUTPUT; exit 0; fi
           pip install -q num2words >/dev/null
-          N=$(python3 .github/tts/tts.py --id "$ID" --chapter 0 --out x --list)
-          echo "id=$ID" >> $GITHUB_OUTPUT
+          # Folge "<titel>--w" = Frauenstimme (Kerstin), sonst Thorsten
+          BOOK="${ID%--w}"; VOICE=m; if [ "$BOOK" != "$ID" ]; then VOICE=w; fi
+          N=$(python3 .github/tts/tts.py --id "$BOOK" --chapter 0 --out x --list)
+          echo "id=$ID" >> $GITHUB_OUTPUT; echo "book=$BOOK" >> $GITHUB_OUTPUT; echo "voice=$VOICE" >> $GITHUB_OUTPUT
           python3 -c "import json;print('chapters='+json.dumps(list(range(-1,$N))))" >> $GITHUB_OUTPUT
           curl -s -X POST -H "X-Admin: $ADMIN" -H "Content-Type: application/json" -d "{\"id\":\"$ID\",\"state\":\"running\",\"n\":$N}" "$API/admin/audio-state"
   speak:
@@ -63,7 +67,7 @@ jobs:
           key: hf-chatterbox-0.1.7-whisper-small
       - run: pip install -q --extra-index-url https://download.pytorch.org/whl/cpu -r .github/tts/requirements.txt
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
-      - run: python .github/tts/tts.py --id "${{ needs.plan.outputs.id }}" --chapter ${{ matrix.ch }} --out part.wav
+      - run: python .github/tts/tts.py --id "${{ needs.plan.outputs.book }}" --voice "${{ needs.plan.outputs.voice }}" --chapter ${{ matrix.ch }} --out part.wav
       - run: ffmpeg -loglevel error -y -i part.wav -ac 1 -ar 24000 -c:a libmp3lame -b:a 64k "part_$(printf '%03d' $(( ${{ matrix.ch }} + 1 ))).mp3"
       - uses: actions/upload-artifact@v4
         with:
