@@ -457,7 +457,7 @@ body.diving{overflow:hidden}
 @keyframes fpIn{from{transform:translate(-120%,20px) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
 @keyframes fbIn{from{transform:scale(.6);transform-origin:0 100%;opacity:0}to{transform:none;opacity:1}}
 @keyframes fpOut{to{transform:translate(-110%,10px);opacity:0}}
-html,body{overflow-x:hidden;overscroll-behavior-x:none;max-width:100%}
+html{overflow-x:hidden;overscroll-behavior-x:none}body{overflow-x:clip;max-width:100%}
 #app{overflow-x:clip;max-width:100vw}
 .view{overflow-x:clip}
 html{scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar,body::-webkit-scrollbar,#rscroll::-webkit-scrollbar{display:none;width:0;height:0}
@@ -694,7 +694,8 @@ function renderTabs(){
   const top=["home","discover","trainer","library","search"].includes(route.v)?route.v:(route.tab||"discover");
   $("#tabbar").innerHTML=TABS.map(([k,l,p])=>`<button data-tab="${k}" class="t-${k} ${top===k?"on":""}">${ic(p).replace(/<path /g,'<path pathLength="1" ')}<span>${l}</span></button>`).join("");
 }
-$("#tabbar").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;hist.length=0;go({v:b.dataset.tab},false);});
+$("#tabbar").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;const r=$("#reader");if(r&&!r.classList.contains("hidden")){if($("#nclose"))closeNews();else closeReader();}
+  if(route.v===b.dataset.tab){window.scrollTo({top:0,behavior:"smooth"});return;}hist.length=0;go({v:b.dataset.tab},false);});
 
 async function curVer(){return window.TG_VER||"";}
 const fmtVer=v=>v&&v.length>=12?`${+v.slice(6,8)}.${+v.slice(4,6)}.${v.slice(0,4)}, ${v.slice(8,10)}:${v.slice(10,12)} Uhr`:"unbekannt";
