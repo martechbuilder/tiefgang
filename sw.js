@@ -1,4 +1,4 @@
-const CACHE = "tiefgang-202611261848";
+const CACHE = "tiefgang-202611261852";
 const CORE = ["./", "./index.html", "./content.js", "./manifest.json",
   "./icons/icon-nacht-180.png", "./icons/icon-glas-180.png", "./icons/icon-hell-180.png", "./icons/icon-getoent-180.png",
   "./icons/preview-nacht.svg", "./icons/preview-glas.svg", "./icons/preview-hell.svg", "./icons/preview-getoent.svg",
