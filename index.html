@@ -699,7 +699,10 @@ function renderTabs(){
   const top=["home","discover","trainer","library","search"].includes(route.v)?route.v:(route.tab||"discover");
   $("#tabbar").innerHTML=TABS.map(([k,l,p])=>`<button data-tab="${k}" class="t-${k} ${top===k?"on":""}">${ic(p).replace(/<path /g,'<path pathLength="1" ')}<span>${l}</span></button>`).join("");
 }
-$("#tabbar").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;hist.length=0;go({v:b.dataset.tab},false);});
+$("#tabbar").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;
+  // schon auf diesem Tab: nach oben springen (Dokument und body, je nachdem, was scrollt)
+  if(route.v===b.dataset.tab){const o={top:0,behavior:"smooth"};try{window.scrollTo(o);}catch(_){}try{document.body.scrollTo(o);}catch(_){}return;}
+  hist.length=0;go({v:b.dataset.tab},false);});
 
 async function curVer(){return window.TG_VER||"";}
 const fmtVer=v=>v&&v.length>=12?`${+v.slice(6,8)}.${+v.slice(4,6)}.${v.slice(0,4)}, ${v.slice(8,10)}:${v.slice(10,12)} Uhr`:"unbekannt";
