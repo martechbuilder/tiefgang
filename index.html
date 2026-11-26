@@ -1382,7 +1382,7 @@ function fishTick(){const f=document.getElementById("fhome");if(!f){FS.on=false;
 addEventListener("scroll",scene,{passive:true});
 const FSAY=["Noch ein Häppchen?","Wissen ist mein Licht.","Ich lese mit.","Tief durchatmen.","Gut gemacht heute!","Hier unten ist es ruhig."];
 document.addEventListener("click",e=>{const f=e.target.closest("#fhome");if(!f)return;const i=f.querySelector(".fisch"),s=f.querySelector(".say");i.className="fisch p4 hop";s.textContent=FSAY[Math.floor(Math.random()*FSAY.length)];f.classList.add("talk");clearTimeout(f._t);f._t=setTimeout(()=>{i.className="fisch p2";f.classList.remove("talk");},2600);});
-setTimeout(()=>{depInit();intro();},0);
+setTimeout(()=>{depInit();},0);  // Abtauch-Intro auf Wunsch entfernt (26.11.)
 /* ================= Anglerfisch feuert an: fast geschafft, Tagesziele, gegen Doomscrollen ================= */
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 let FPT=null;
