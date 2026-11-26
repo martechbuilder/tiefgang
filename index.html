@@ -301,7 +301,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 .wm{text-align:center;margin:6px 0 26px}
 .wmt{font-size:44px;font-weight:250;letter-spacing:.01em;line-height:1.05;background:linear-gradient(180deg,#f0fbff,#8fdcf2 60%,#3fa6cf);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px rgba(72,208,236,.35))}
 .wms{font-size:13px;color:var(--txt3);margin-top:8px;letter-spacing:.02em}
-.hero{display:flex;align-items:center;gap:22px;margin:4px 0 16px}
+.hhero{display:flex;align-items:center;gap:22px;margin:4px 0 16px}
 .hcov{flex:none;padding:0}
 .hcov .cover{width:132px;height:184px;border-radius:12px;box-shadow:0 0 34px rgba(36,178,216,.28),0 14px 30px rgba(0,0,0,.55)}
 .hcov .cover svg:not(.art){width:44px;height:44px}
@@ -361,7 +361,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 #tabbar button.on::after{animation:dotIn .4s ease-out}
 @keyframes dotIn{from{transform:scale(0);opacity:0}to{transform:none;opacity:1}}
 .ring .rv{transition:stroke-dashoffset 1.2s cubic-bezier(.2,.7,.2,1)}
-.wm,.hero{will-change:transform}
+.wm,.hhero{will-change:transform}
 #reader:not(.hidden){animation:rdIn .38s cubic-bezier(.2,.7,.2,1)}
 @keyframes rdIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 .hscroll .card{transition:transform .35s}
@@ -414,7 +414,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 /* ---------- Tiefe: Schrift, Figur, Intro, Mini-Kopf ---------- */
 @font-face{font-family:"Fraunces";src:url(art/fraunces.woff2) format("woff2");font-weight:300 600;font-display:swap}
 .wmt,.iwm,#minihead .mt{font-family:"Fraunces",ui-serif,Georgia,serif;font-variation-settings:"SOFT" 100,"opsz" 144;font-weight:300}
-.h-big,.htitle,.rin h2,.snack .ttl{font-family:"Fraunces",ui-serif,Georgia,serif;font-variation-settings:"SOFT" 100,"opsz" 72}
+.h-big,.htitle,.rin h2,.snack .ttl,.hero h1{font-family:"Fraunces",ui-serif,Georgia,serif;font-variation-settings:"SOFT" 100,"opsz" 72}
 .htitle{font-weight:450;font-size:23px}.h-big{font-weight:330}
 #deep canvas{position:absolute;inset:0}
 #deep .bub{display:none}
@@ -698,7 +698,7 @@ function row(b,extra=""){
 }
 function pill(icon,t,sub,attrs){return `<button class="pill" ${attrs}><span class="pi"><svg class="ic" viewBox="0 0 24 24"><path d="${icon}"/></svg></span><span class="pt"><b>${t}</b><small>${sub}</small></span><span class="chev">›</span></button>`;}
 function heroCont(b){const n=b.chapters.length,r=readCount(b),pct=Math.round(r/n*100),C=2*Math.PI*44,nx=nextChapter(b);
-  return `<div class="hero"><button class="hcov" data-go="book" data-id="${b.id}">${cover(b)}</button>
+  return `<div class="hhero"><button class="hcov" data-go="book" data-id="${b.id}">${cover(b)}</button>
   <div class="ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9ff0ff"/><stop offset="1" stop-color="#1592b8"/></linearGradient></defs><circle cx="50" cy="50" r="44" class="rt"/><circle cx="50" cy="50" r="44" class="rv" stroke="url(#rg)" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-Math.max(pct,2)/100)}"/></svg><div class="rp">${pct}%</div><div class="rl">${r} von ${n} Häppchen</div></div></div>
   <div class="htitle">${esc(b.title)}</div><div class="hsub">Weiter mit Häppchen ${nx+1}: ${esc(b.chapters[nx].h)}</div>
   <button class="pill pri" data-go="read" data-id="${b.id}"><span class="pt"><b>Weiterlesen</b></span><span class="chev">›</span></button>`;}
@@ -1196,7 +1196,7 @@ document.addEventListener("click",e=>{const a=e.target.closest("[data-news]");if
   const r=e.target.closest("[data-nrel]");if(r){closeNews();go({v:"book",id:r.dataset.nrel,tab:"home"});}});
 /* ================= Bewegung: Einblenden beim Scrollen, Tipp-Feedback, Parallax ================= */
 const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
-const FXSEL=".pill,.cont,.card,.cat,.row,.news,.h-sec,.statline,.hero,.htitle,.hsub,.snack,.qa,.list>*,.set,.box,.paper,.stu";
+const FXSEL=".pill,.cont,.card,.cat,.row,.news,.h-sec,.statline,.hhero,.htitle,.hsub,.snack,.qa,.list>*,.set,.box,.paper,.stu";
 let FXIO=null;
 function fx(){if(RM)return;const els=[...document.querySelectorAll("#app .view "+FXSEL.split(",").join(",#app .view "))];
   const key=route.v+"|"+(route.id||"")+"|"+(route.cat||"")+"|"+(route.lt||"");const same=key===fx.last;fx.last=key;if(same){const v=document.querySelector("#app .view");if(v)v.style.animation="none";}
@@ -1206,7 +1206,7 @@ function fx(){if(RM)return;const els=[...document.querySelectorAll("#app .view "
 }
 // Parallax: Schriftzug und Hero gleiten beim Scrollen langsamer
 addEventListener("scroll",()=>{if(RM)return;const y=scrollY;const w=document.querySelector(".wm");if(w&&y<500){w.style.transform=`translateY(${y*.35}px)`;w.style.opacity=Math.max(0,1-y/260);}
-  const h=document.querySelector(".hero");if(h&&y<700)h.style.transform=`translateY(${y*.12}px)`;},{passive:true});
+  const h=document.querySelector(".hhero");if(h&&y<700)h.style.transform=`translateY(${y*.12}px)`;},{passive:true});
 // Tipp-Welle an der Fingerposition
 document.addEventListener("pointerdown",e=>{if(RM)return;const t=e.target.closest(".pill,.cont,.card,.cat,.row,.chip,.snack,#tabbar button,.iconbtn,.next,.nrel");if(!t)return;
   const r=t.getBoundingClientRect(),d=Math.max(r.width,r.height)*1.2,w=document.createElement("span");w.className="ripple";
@@ -1224,7 +1224,7 @@ document.addEventListener("pointerdown",e=>{if(RM)return;const t=e.target.closes
 function splitWords(){if(RM)return;document.querySelectorAll("#app .htitle:not(.sw),#app .h-big:not(.sw)").forEach(h=>{h.classList.add("sw");let k=0;
   const walk=n=>{[...n.childNodes].forEach(c=>{if(c.nodeType===3){const f=document.createDocumentFragment();c.textContent.split(/(\s+)/).forEach(w=>{if(!w)return;if(/^\s+$/.test(w)){f.appendChild(document.createTextNode(w));return;}const sp=document.createElement("span");sp.className="w";sp.style.animationDelay=(120+k++*55)+"ms";sp.textContent=w;f.appendChild(sp);});c.replaceWith(f);}else if(c.nodeType===1&&!c.classList.contains("w"))walk(c);});};walk(h);});}
 /* ================= Tiefe: Canvas-Ebenen, Intro, scrollgekoppelte Szenen ================= */
-const DEP={c:null,x:null,w:0,h:0,dpr:1,parts:[],jel:[],t0:performance.now(),last:0,run:true};
+const DEP={c:null,x:null,w:0,h:0,dpr:1,parts:[],jel:[],sim:0,prev:0,last:0,run:true,loop:false};
 function depInit(){const c=document.getElementById("depth");if(!c)return;DEP.c=c;DEP.x=c.getContext("2d");depSize();addEventListener("resize",depSize);
   const R=(a,b)=>a+Math.random()*(b-a);
   // drei Tiefen: fern (klein, langsam), mittel, nah (groß, unscharf, schnell)
@@ -1232,12 +1232,14 @@ function depInit(){const c=document.getElementById("depth");if(!c)return;DEP.c=c
   for(let i=0;i<34;i++)DEP.parts.push({l:1,x:Math.random(),y:Math.random(),r:R(1,2),a:R(.25,.55),sp:R(.008,.02),ph:R(0,6.3)});
   for(let i=0;i<10;i++)DEP.parts.push({l:2,x:Math.random(),y:Math.random(),r:R(3,6),a:R(.06,.16),sp:R(.012,.03),ph:R(0,6.3)});
   DEP.jel=[{x:.82,y:.32,s:30,ph:0,l:1,hue:195},{x:.14,y:.78,s:20,ph:2.1,l:0,hue:210},{x:.6,y:1.25,s:38,ph:4,l:2,hue:188}];
-  document.addEventListener("visibilitychange",()=>{DEP.run=document.visibilityState==="visible";if(DEP.run)requestAnimationFrame(depDraw);});
-  requestAnimationFrame(depDraw);}
+  document.addEventListener("visibilitychange",()=>{DEP.run=document.visibilityState==="visible";DEP.prev=0;if(DEP.run&&!DEP.loop){DEP.loop=true;requestAnimationFrame(depDraw);}});
+  addEventListener("pageshow",()=>{DEP.prev=0;});DEP.loop=true;requestAnimationFrame(depDraw);}
 function depSize(){const c=DEP.c;DEP.dpr=Math.min(2,devicePixelRatio||1);DEP.w=innerWidth;DEP.h=innerHeight;c.width=DEP.w*DEP.dpr;c.height=DEP.h*DEP.dpr;c.style.width=DEP.w+"px";c.style.height=DEP.h+"px";}
 const PAR=[.06,.22,.55];
-function depDraw(now){if(!DEP.run)return;if(!RM)requestAnimationFrame(depDraw);if(now-DEP.last<33&&!RM)return;DEP.last=now;
-  const x=DEP.x,w=DEP.w,h=DEP.h,t=(now-DEP.t0)/1000,sy=scrollY;x.setTransform(DEP.dpr,0,0,DEP.dpr,0,0);x.clearRect(0,0,w,h);
+function depDraw(now){if(!DEP.run){DEP.loop=false;return;}if(!RM)requestAnimationFrame(depDraw);else DEP.loop=false;if(now-DEP.last<33&&!RM)return;DEP.last=now;
+  // eigene Uhr: nach Pause oder Hintergrund kein Aufholen, höchstens 50 ms pro Bild
+  const dt=DEP.prev?Math.min(.05,Math.max(0,(now-DEP.prev)/1000)):0;DEP.prev=now;DEP.sim+=dt*.75;
+  const x=DEP.x,w=DEP.w,h=DEP.h,t=DEP.sim,sy=scrollY;x.setTransform(DEP.dpr,0,0,DEP.dpr,0,0);x.clearRect(0,0,w,h);
   for(const p of DEP.parts){const yy=((p.y*h*1.2-sy*PAR[p.l]-t*p.sp*60)%(h*1.2)+h*1.2)%(h*1.2)-h*.1;const xx=p.x*w+Math.sin(t*.5+p.ph)*(4+p.l*6);
     const tw=.6+.4*Math.sin(t*1.7+p.ph*3);x.beginPath();x.fillStyle=`rgba(150,225,255,${p.a*tw})`;if(p.l===2){x.shadowBlur=14;x.shadowColor="rgba(120,210,250,.5)";}else x.shadowBlur=0;x.arc(xx,yy,p.r,0,6.283);x.fill();}
   x.shadowBlur=0;for(const j of DEP.jel)drawJelly(x,j,t,sy,w,h);}
