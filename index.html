@@ -680,7 +680,9 @@ const DEBN=()=>BOOKS.reduce((a,b)=>a+(b.nd!=null?b.nd:(b.debatte||[]).length),0)
 /* iOS meldet frisch hinzugefügten Web-Apps teils eine zu kurze Höhe: Lücke messen und ausgleichen (sonst 0) */
 function vgapMeasure(){const sa=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone;
   const scr=Math.max(screen.height,screen.width)===Math.max(innerHeight,innerWidth)?0:(innerHeight<innerWidth?0:screen.height-innerHeight);
-  const g=sa&&scr>0&&scr<160?scr:0;document.documentElement.style.setProperty("--vgap",g+"px");window._vgap=g;}
+  const g=sa&&scr>0&&scr<160?scr:0;document.documentElement.style.setProperty("--vgap",g+"px");window._vgap=g;
+  // iOS hat den Bereich der Home-Leiste schon abgezogen: dann keinen zusätzlichen Abstand unten
+  document.documentElement.style.setProperty("--sb",g>0?"0px":"env(safe-area-inset-bottom,0px)");}
 vgapMeasure();addEventListener("resize",vgapMeasure);addEventListener("orientationchange",()=>setTimeout(vgapMeasure,300));
 /* ================= Zustand ================= */
 const KEY="tiefgang.v1";
