@@ -1,7 +1,7 @@
-const CACHE = "tiefgang-202611270003";
+const CACHE = "tiefgang-202611270013";
 const CORE = ["./", "./index.html", "./content.js", "./manifest.json",
   "./icons/icon-nacht-180.png", "./icons/icon-glas-180.png", "./icons/icon-hell-180.png", "./icons/icon-getoent-180.png",
-  "./icons/preview-nacht.svg", "./icons/preview-glas.svg", "./icons/preview-hell.svg", "./icons/preview-getoent.svg",
+  "./icons/preview-nacht.png", "./icons/preview-glas.svg", "./icons/preview-hell.svg", "./icons/preview-getoent.svg",
   "./art/fraunces.woff2", "./art/fisch.webp"];
 const ART = ["biologie","debatten","denken","digital","eu","geschichte","klima","koepfe","patriarchat","philosophie","physik","politik",
   "populismus","psychologie","schluesselpaper","sozialismus","streitfragen","technologie","waswaerewenn","weltall","werkzeugkasten","wirtschaft"]

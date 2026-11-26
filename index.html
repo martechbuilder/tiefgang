@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Deep Dive">
 <title>Deep Dive</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/icon-nacht.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
 <link id="touchicon" rel="apple-touch-icon" href="icons/icon-nacht-180.png">
 <style>
 :root{
@@ -959,7 +959,7 @@ function hits(q){
 }
 function vSettings(){
   const st=S.settings;
-  const styles=[["nacht","Nacht"],["glas","Glas"],["hell","Hell"],["getoent","Getönt"]];
+  const styles=[["nacht","Tiefsee"],["glas","Glas"],["hell","Hell"],["getoent","Getönt"]];
   return `<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button></div>
   <div class="h-big" style="font-size:30px">Einstellungen</div>
   <div class="glass set" style="margin-bottom:14px"><div class="setrow"><span>App-Version<br><span class="small" id="verline"></span></span><button class="chip" data-go="update">Nach Updates suchen</button></div></div>
@@ -970,7 +970,7 @@ function vSettings(){
   </div>
   <div class="h-sec"><h2>App-Icon</h2></div>
   <div class="glass set">
-    <div class="icons" id="icsel">${styles.map(([k,l])=>`<button data-i="${k}" class="${st.icon===k?"on":""}"><img src="icons/preview-${k}.svg" alt=""><span>${l}</span></button>`).join("")}</div>
+    <div class="icons" id="icsel">${styles.map(([k,l])=>`<button data-i="${k}" class="${st.icon===k?"on":""}"><img src="icons/preview-${k}.${k==="nacht"?"png":"svg"}" alt=""><span>${l}</span></button>`).join("")}</div>
     <div class="hint">Der Stil gilt nur beim Hinzufügen und muss in <b>Safari</b> gewählt werden (nicht in der installierten App). Achtung: Wer das Icon vom Homescreen löscht, löscht auch den Lesefortschritt der App. Vorher unten „Sichern“ und danach „Wiederherstellen“. Die iOS-Modi Dunkel, Getönt und Klar (Homescreen lange drücken → Bearbeiten → Anpassen) wirken ohne Neuinstallation auf jedes Icon.</div>
   </div>
   <div class="h-sec"><h2>Vorlesen</h2></div>
