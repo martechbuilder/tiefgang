@@ -108,48 +108,74 @@ m = ChatterboxMultilingualTTS.from_pretrained(device=dev)
 REF = str(pathlib.Path(__file__).with_name("thorsten_ref.wav"))
 SR = m.sr
 def clean(w):
-    """Gibt (audio, sprache_gefunden) zurück."""
+    """Gibt (audio, sprache_gefunden) zurück. Schneidet nie innerhalb eines Wortes:
+    entfernt nur eigenständige Geräusch-Inseln ohne Stimme vor der ersten und nach der letzten Sprech-Insel."""
     y = w.squeeze().detach().cpu().numpy().astype(np.float32)
+    raw = len(y)
+    import os
+    if os.environ.get("TTS_RAWDIR"):
+        global _rawn
+        _rawn = globals().get("_rawn", 0) + 1
+        sf.write(f"{os.environ['TTS_RAWDIR']}/raw{_rawn:02d}.wav", y, SR)
+    y, _ = librosa.effects.trim(y, top_db=42, frame_length=1024, hop_length=256)
+    hop = int(SR * 0.01)
+    fr = librosa.feature.rms(y=y, frame_length=hop * 3, hop_length=hop)[0]
     found = False
-    y, _ = librosa.effects.trim(y, top_db=38, frame_length=1024, hop_length=256)  # Ruhe am Rand entfernen
-    # Atmer und Rauschen am Rand: dort schneiden, wo die eigentliche Sprache beginnt bzw. endet
-    hop = int(SR * 0.01); fr = librosa.feature.rms(y=y, frame_length=hop * 3, hop_length=hop)[0]
     if len(fr) > 20:
-        # stimmhafte Abschnitte finden: Rauschen/Atmen ohne Stimme vor dem ersten und nach dem letzten Laut abschneiden
+        thr = 0.03 * np.percentile(fr, 95)
+        act = fr > thr
+        # Inseln: aktive Bereiche, Lücken unter 180 ms zählen nicht als Trennung
+        isl, i, n = [], 0, len(act)
+        while i < n:
+            if act[i]:
+                j = i
+                while j < n and (act[j] or (j + 18 < n and act[j:j + 18].any())): j += 1
+                isl.append([i, j]); i = j
+            else: i += 1
         f0, vf, _ = librosa.pyin(y, fmin=60, fmax=320, sr=SR, frame_length=2048, hop_length=hop)
-        n = min(len(vf), len(fr))
-        loud = fr[:n] > 0.15 * np.percentile(fr, 90)
-        vi = np.where(vf[:n] & loud)[0]
-        if len(vi) >= 8:
+        vf = np.asarray(vf, dtype=bool)
+        sp = [k for k, (a0, a1) in enumerate(isl) if vf[a0:min(a1, len(vf))].sum() >= 6]
+        if sp:
             found = True
-            # Inseln: letzte stimmhafte Gruppe mit mindestens 80 ms, damit einzelne Fehlklassifikationen nicht zählen
-            groups, start = [], vi[0]
-            for i0, i1 in zip(vi[:-1], vi[1:]):
-                if i1 - i0 > 3: groups.append((start, i0)); start = i1
-            groups.append((start, vi[-1]))
-            groups = [g for g in groups if g[1] - g[0] >= 8] or groups
-            a0 = max(0, groups[0][0] * hop - int(SR * 0.12)); a1 = min(len(y), groups[-1][1] * hop + int(SR * 0.10))
+            a0 = max(0, isl[sp[0]][0] * hop - int(SR * 0.05))
+            a1 = min(len(y), isl[sp[-1]][1] * hop + int(SR * 0.08))
             y = y[a0:a1]
-        # lange Lücken im Inneren auf 0,35 s kürzen und laute stimmlose Stöße darin dämpfen
-        fr = librosa.feature.rms(y=y, frame_length=hop * 3, hop_length=hop)[0]
+    import os
+    if os.environ.get("TTS_DEBUG"): print(f"  Abschnitt: roh {raw/SR:.2f}s, behalten {len(y)/SR:.2f}s, Sprache {found}", flush=True)
     f = int(SR * 0.012)
     if len(y) > 4 * f:
-        y[:f] *= np.linspace(0, 1, f); y[-f:] *= np.linspace(1, 0, f)  # weiche Ränder, keine Knackser
+        y[:f] *= np.linspace(0, 1, f); y[-f:] *= np.linspace(1, 0, f)
     rms = np.sqrt(np.mean(y ** 2)) + 1e-9
-    return y * min(0.08 / rms, 4.0), found  # gleiche Lautheit je Abschnitt
+    return y * min(0.08 / rms, 4.0), found
+
+def abgebrochen(w):
+    """True, wenn das Modell mitten im Laut aufhört: letzter aktiver Frame noch hörbar, direkt danach digitale Stille."""
+    y = w.squeeze().detach().cpu().numpy().astype(np.float32)
+    hop = int(SR * 0.01)
+    r = librosa.feature.rms(y=y, frame_length=hop * 2, hop_length=hop)[0]
+    if len(r) < 10: return False
+    p = np.percentile(r, 95) + 1e-9
+    act = np.where(r > 0.03 * p)[0]
+    if not len(act): return False
+    e = act[-1]
+    return bool(r[e] / p > 0.04 and r[min(len(r) - 1, e + 1)] / p < 0.002)
+
 stille = lambda s: np.zeros(int(SR * s), dtype=np.float32)
 out = []
 for pi, p in enumerate(paras):
     chunks = abschnitte(norm(p))
     for ci, c in enumerate(chunks):
-        for versuch in range(3):  # Abschnitt ohne erkennbare Sprache (nur Rauschen) neu erzeugen
+        bester = None
+        for versuch in range(3):  # Neuversuch bei fehlender Sprache, zu kurzem Audio oder abgebrochenem Satzende
             w = m.generate(c, language_id="de", audio_prompt_path=REF, exaggeration=0.52, cfg_weight=0.35, temperature=0.68)
             yc, ok = clean(w)
             erwartet = len(c) / 16.0  # grob 16 Zeichen pro Sekunde
-            if ok and len(yc) / SR >= 0.45 * erwartet: break
-            ok = False
-            print("Neuversuch wegen fehlender Sprache:", c[:60], flush=True)
-        out.append(yc)
+            ok = ok and len(yc) / SR >= 0.45 * erwartet
+            ab = ok and abgebrochen(w)
+            if ok and not ab: bester = yc; break
+            if ok and bester is None: bester = yc  # notfalls lieber abgebrochen als ohne Sprache
+            print("Neuversuch wegen", "abgebrochenem Ende:" if ab else "fehlender Sprache:", c[:60], flush=True)
+        out.append(bester if bester is not None else yc)
         if ci < len(chunks) - 1: out.append(stille(0.32))
     out.append(stille(1.05 if pi == 0 else 0.75))
 y = np.concatenate(out)

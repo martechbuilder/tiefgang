@@ -163,10 +163,18 @@ input{font:inherit;color:inherit}
 .rin h2{font-size:28px;line-height:1.15;letter-spacing:-.02em;margin:8px 0 22px;font-weight:740}
 .rin .body p{font-family:var(--read-font);font-size:var(--read-size);line-height:1.62;margin:0 0 1.05em;color:#dfe7f2}
 .rin .body strong{color:#fff;font-weight:700}
+.rin .body h3{font-size:19px;line-height:1.25;margin:1.4em 0 .6em;color:#fff;font-weight:700}
+.rin .lead{font-family:var(--read-font);font-size:calc(var(--read-size) + 1px);line-height:1.55;color:#fff;font-weight:600;margin:0 0 1.2em}
 .rin .end{display:flex;flex-direction:column;gap:10px;margin:30px 0 10px}
 .ta{padding:16px 18px;border-radius:var(--r-l);font-family:var(--read-font);font-size:17px;line-height:1.5}
 .ta+.ta{margin-top:10px}
 .ta.arg b{display:block;font-family:var(--ui);font-size:14.5px;line-height:1.4;font-weight:600;color:var(--warm);margin-bottom:8px}
+#player{position:fixed;left:12px;right:12px;bottom:calc(var(--sb) + 84px);z-index:45;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:18px;max-width:560px;margin:0 auto}
+#player.hidden{display:none}
+#player .pm{flex:1;min-width:0}#player .pt{font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#player .pbar{height:4px;border-radius:2px;background:rgba(255,255,255,.12);margin:6px 0 3px;position:relative;touch-action:none}#player .pbar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:linear-gradient(90deg,#9fb6d6,#e8eef8);width:0}
+#player .ptime{font-size:11px;opacity:.6}#player .iconbtn{flex:none;font-size:12px;font-weight:700;min-width:38px}
+body.hasplayer .view{padding-bottom:170px}
 .rbot{flex:none;display:flex;gap:10px;padding:10px 16px calc(var(--sb) + 12px);border-top:1px solid var(--line);background:rgba(1,2,4,.75);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
 .rbot button{flex:1;padding:14px;border-radius:999px;font-weight:700;font-size:15px}
 .rbot .prev{flex:none;width:52px;background:var(--glass-lo);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
@@ -267,6 +275,7 @@ input{font:inherit;color:inherit}
 <nav id="tabbar" class="glass"></nav>
 <div id="reader" class="hidden"></div>
 <div id="sheet"></div>
+<div id="player" class="glass hidden"><audio id="gplay" preload="none"></audio><button id="pplay" class="iconbtn" aria-label="Abspielen"></button><div class="pm"><div class="pt" id="ptitle"></div><div class="pbar"><i id="pprog"></i></div><div class="ptime" id="ptime"></div></div><button id="pback" class="iconbtn" aria-label="15 Sekunden zurück">−15</button><button id="pfwd" class="iconbtn" aria-label="30 Sekunden vor">+30</button><button id="pclose" class="iconbtn" aria-label="Schließen">✕</button></div>
 <script src="content.js"></script>
 <script>
 "use strict";
@@ -466,7 +475,7 @@ function toggleSave(id){const i=S.saved.indexOf(id);if(i>=0)S.saved.splice(i,1);
 /* ================= Views ================= */
 function greet(){const h=new Date().getHours();return h<5?"Gute Nacht":h<11?"Guten Morgen":h<17?"Hallo":h<22?"Guten Abend":"Gute Nacht";}
 function nextChapter(b){const p=S.pos[b.id];if(p!=null&&p<b.chapters.length&&!isRead(b.id,p))return p;const i=b.chapters.findIndex((_,j)=>!isRead(b.id,j));return i<0?0:i;}
-function inProgress(){return BOOKS.filter(b=>{const r=readCount(b);return r>0&&r<b.chapters.length;}).sort((a,b)=>lastTouch(b)-lastTouch(a));}
+function inProgress(){const O=S.open||{};return BOOKS.filter(b=>{const r=readCount(b);return (r>0||O[b.id])&&r<b.chapters.length;}).sort((a,b)=>Math.max(lastTouch(b),O[b.id]||0)-Math.max(lastTouch(a),O[a.id]||0));}
 function lastTouch(b){let m=0;b.chapters.forEach((_,i)=>{const t=S.read[ck(b.id,i)];if(t>m)m=t;});return m;}
 function bookCard(b){
   const r=readCount(b);
@@ -675,11 +684,11 @@ function openReader(id,i,y){
   const needGl=!GLRX&&(window.TG_FILES||{})._gl&&!GLPEND.tried;
   if(!LOADED[b.cat]||needGl){if(!LOADED[b.cat])toast("Lädt …");GLPEND.tried=true;Promise.all([loadCat(b.cat),loadGloss()]).then(()=>{if(LOADED[b.cat])openReader(id,i,y);else toast("Text nicht verfügbar, bitte online öffnen");});return;}
   if(i==null)i=nextChapter(b);
-  R={b,i,restoreY:y||0};S.last=id;save();
+  R={b,i,restoreY:y||0};S.last=id;S.open=S.open||{};S.open[id]=Date.now();save();
   $("#reader").classList.remove("hidden");document.body.style.overflow="hidden";
   drawReader();
 }
-function closeReader(){if(TTS.on)ttsStop();const ra=$("#raud");if(ra){ra.pause();ra.remove();}$("#reader").classList.add("hidden");document.body.style.overflow="";R=null;S.cur=null;save();render();}
+function closeReader(){if(TTS.on)ttsStop();$("#reader").classList.add("hidden");document.body.style.overflow="";R=null;S.cur=null;save();render();}
 function drawReader(){
   const {b,i}=R;const n=b.chapters.length;const atEnd=i>=n;
   const c=b.chapters[Math.min(i,n-1)];
@@ -710,8 +719,7 @@ function drawReader(){
   S.cur={id:b.id,i,y:(R.restoreY||0),t:Date.now()};save();if(R.restoreY){sc.scrollTop=R.restoreY;R.restoreY=0;}
   $("#rclose").onclick=closeReader;
   $("#rtts").onclick=()=>{const af=AUD.items.find(x=>x.id===b.id&&x.state==="done"&&x.url);
-    if(af){let el=$("#raud");if(!el){el=document.createElement("audio");el.id="raud";el.controls=true;el.src=API+"/a/"+af.id+".mp3";el.dataset.aud=b.id;el.style.cssText="position:fixed;left:12px;right:12px;bottom:calc(var(--sb) + 84px);width:calc(100% - 24px);z-index:90";document.body.appendChild(el);}
-      if(el.paused)el.play().catch(()=>{});else el.pause();return;}
+    if(af){playAud(b.id);return;}
     if(!TTS.on&&!S.ttsHint){S.ttsHint=1;save();toast("Für die schöne Chatterbox-Stimme: Titelseite → 🎧 Zur Hörliste. Bis dahin liest die iPhone-Stimme.");}
     if(TTS.on){ttsStop();}else{ttsUnlock();ttsStart();}drawReaderBar();};
   if(TTS.on)setTimeout(ttsStart,250);
@@ -837,7 +845,7 @@ try{const c=JSON.parse(localStorage.getItem("tiefgang.news")||"null");if(c&&c.it
 function ago(t){const m=Math.round((Date.now()/1e3-t)/60);if(m<60)return "vor "+Math.max(1,m)+" Min.";const h=Math.round(m/60);if(h<24)return "vor "+h+" Std.";return new Date(t*1e3).toLocaleDateString("de-DE",{day:"numeric",month:"short"});}
 function newsItem(x){
   const rel=(x.rel||[]).map(id=>BY_ID[id]).filter(Boolean);
-  return `<div class="news"><div class="m">${esc(x.src)} · ${ago(x.t)}</div><a href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.title)}</a>${x.teaser?`<div class="s">${esc(x.teaser)}</div>`:""}${rel.map(b=>`<button class="nrel" data-go="book" data-id="${b.id}">→ Hintergrund: ${esc(b.title)}</button>`).join("")}</div>`;
+  return `<div class="news"><div class="m">${esc(x.src)} · ${ago(x.t)}</div><a href="${esc(x.link)}" data-news="${esc(x.link)}">${esc(x.title)}</a>${x.teaser?`<div class="s">${esc(x.teaser)}</div>`:""}${rel.map(b=>`<button class="nrel" data-go="book" data-id="${b.id}">→ Hintergrund: ${esc(b.title)}</button>`).join("")}</div>`;
 }
 function newsMix(n){const seen=new Set(),out=[];for(const x of NEWS.items){if(!seen.has(x.src)){seen.add(x.src);out.push(x);}if(out.length>=n)break;}
   for(const x of NEWS.items){if(out.length>=n)break;if(!out.includes(x))out.push(x);}return out.sort((a,b)=>b.t-a.t);}
@@ -952,10 +960,58 @@ function vHoeren(){
    <div class="setrow"><span class="small" style="flex:1;word-break:break-all">${esc(feedUrl())}</span><button class="copy" data-copy="${esc(feedUrl())}">Kopieren</button></div>
    <div class="hint" style="padding:10px 16px">Einmalig: auf „In Podcasts öffnen“ tippen. Falls das nicht klappt: Link kopieren, in Apple Podcasts unter Mediathek, oben rechts „…“, „Sendung per URL folgen“ einfügen. Der Link ist privat, nicht teilen.</div></div>
   ${AUD.items.length?`<div class="glass" style="padding:2px 0">${AUD.items.map(x=>{const b=BY_ID[x.id];return `<div class="qa"><div class="m">${audState(x)}${x.dur?" · "+fmtDur(x.dur):""}</div><div class="q">${esc(b?b.title:x.title)}</div>
-    ${x.state==="done"?`<audio controls preload="none" src="${esc(API+"/a/"+x.id+".mp3")}" data-aud="${esc(x.id)}" style="width:100%;margin-top:10px"></audio>`:""}</div>`;}).join("")}</div>`:`<div class="empty">Noch nichts in der Hörliste. Auf einer Titelseite „🎧 Zur Hörliste“ tippen.</div>`}`;
+    ${x.state==="done"?`<button class="chip" style="margin-top:10px" data-play="${esc(x.id)}">${PL.id===x.id&&!G().paused?"❚❚ Pause":(S.apos||{})[x.id]>20?"▶ Weiterhören ("+fmtT(S.apos[x.id])+")":"▶ Abspielen"}</button>`:""}</div>`;}).join("")}</div>`:`<div class="empty">Noch nichts in der Hörliste. Auf einer Titelseite „🎧 Zur Hörliste“ tippen.</div>`}`;
 }
-document.addEventListener("play",e=>{const a=e.target;if(!a||!a.dataset||!a.dataset.aud)return;document.querySelectorAll("audio[data-aud]").forEach(x=>{if(x!==a)x.pause();});
-  const b=BY_ID[a.dataset.aud];if("mediaSession" in navigator&&b){navigator.mediaSession.metadata=new MediaMetadata({title:b.title,artist:"Tiefgang",album:(CATS[b.cat]||{}).n||"",artwork:[{src:"icons/icon-nacht-512.png",sizes:"512x512",type:"image/png"}]});}},true);
+/* ================= Nachrichten-Leser: Artikeltext über den Worker, im App-Design ================= */
+const NEWSC={};
+function newsReaderHTML(x,d,loading){
+  const it=NEWS&&NEWS.items.find(n=>n.link===x)||{};
+  const host=(()=>{try{return new URL(x).hostname.replace(/^www\./,"");}catch(_){return "";}})();
+  let body="";
+  if(loading)body=`<p class="small" style="opacity:.6">Artikel wird geladen …</p>`;
+  else if(d&&d.blocks&&d.words>=40)body=d.blocks.map(b=>b.h?`<h3>${esc(b.h)}</h3>`:`<p>${esc(b.p)}</p>`).join("");
+  else body=`<p class="small" style="opacity:.75">${d&&d.error?"Der Artikel ließ sich gerade nicht laden.":"Zu dieser Meldung gibt es keinen Lesetext (oft ein Video oder Liveticker)."} Unten kannst du das Original öffnen.</p>`;
+  const lead=(d&&d.lead)||it.teaser||"";
+  return `<div class="rtop"><div class="rbar"><button class="iconbtn" aria-label="Schließen" id="nclose">${ic(I.close)}</button><div class="rt">${esc(it.src||host)}</div><span style="width:40px"></span></div></div>
+  <div id="rscroll"><div class="rin"><div class="k">${esc(it.src||host)}${it.t?" · "+ago(it.t):""}</div><h2>${esc((d&&d.title)||it.title||"")}</h2>
+  <div class="body">${lead&&!(d&&d.blocks&&d.blocks[0]&&d.blocks[0].p===lead)?`<p class="lead">${esc(lead)}</p>`:""}${body}</div>
+  <div class="end">${(it.rel||[]).map(id=>BY_ID[id]).filter(Boolean).map(b=>`<button class="nrel" data-nrel="${b.id}">→ Hintergrund in Tiefgang: ${esc(b.title)}</button>`).join("")}
+  <a class="chip" style="text-decoration:none;align-self:flex-start" href="${esc(x)}" target="_blank" rel="noopener">Original bei ${esc(host)} öffnen ↗</a>
+  <p class="small" style="opacity:.5">Text von ${esc(host)}, nur zum privaten Lesen abgerufen.</p></div></div></div>`;}
+async function openNews(x){const el=$("#reader");el.classList.remove("hidden");document.body.style.overflow="hidden";
+  const draw=(d,l)=>{el.innerHTML=newsReaderHTML(x,d,l);$("#nclose").onclick=closeNews;};
+  if(NEWSC[x]){draw(NEWSC[x]);return;}draw(null,true);
+  try{const r=await tfetch(API+"/read?u="+encodeURIComponent(x),{},15000);const d=await r.json();if(r.ok)NEWSC[x]=d;if(!el.classList.contains("hidden")&&$("#nclose"))draw(d);}catch(_){if($("#nclose"))draw({error:1});}}
+function closeNews(){$("#reader").classList.add("hidden");$("#reader").innerHTML="";document.body.style.overflow="";}
+document.addEventListener("click",e=>{const a=e.target.closest("[data-news]");if(a){e.preventDefault();openNews(a.dataset.news);return;}
+  const r=e.target.closest("[data-nrel]");if(r){closeNews();go({v:"book",id:r.dataset.nrel,tab:"home"});}});
+/* Globaler Player: lebt außerhalb von #app, überlebt Ansichtswechsel, Neuzeichnen und Hintergrund */
+const PL={id:null};const G=()=>document.getElementById("gplay");
+function fmtT(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
+function playAud(id){const a=G(),b=BY_ID[id];if(!a)return;
+  if(PL.id===id){if(a.paused)a.play().catch(()=>{});else a.pause();return;}
+  PL.id=id;a.src=API+"/a/"+id+".mp3";const st=(S.apos||{})[id]||0;
+  a.addEventListener("loadedmetadata",()=>{if(st>5&&st<a.duration-10)a.currentTime=st;},{once:true});
+  a.play().catch(()=>{});S.open=S.open||{};S.open[id]=Date.now();S.pid=id;save();
+  $("#ptitle").textContent=b?b.title:id;$("#player").classList.remove("hidden");document.body.classList.add("hasplayer");
+  if("mediaSession" in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:b?b.title:id,artist:"Tiefgang",album:b?((CATS[b.cat]||{}).n||""):"",artwork:[{src:"icons/icon-nacht-512.png",sizes:"512x512",type:"image/png"}]});
+    const ms=navigator.mediaSession;try{ms.setActionHandler("play",()=>a.play());ms.setActionHandler("pause",()=>a.pause());ms.setActionHandler("seekbackward",()=>{a.currentTime=Math.max(0,a.currentTime-15);});ms.setActionHandler("seekforward",()=>{a.currentTime+=30;});ms.setActionHandler("seekto",d=>{a.currentTime=d.seekTime;});}catch(_){}}
+  plUI();}
+function plUI(){const a=G();if(!a)return;$("#pplay").innerHTML=a.paused?"▶":"❚❚";const d=a.duration||0;$("#pprog").style.width=(d?a.currentTime/d*100:0)+"%";$("#ptime").textContent=fmtT(a.currentTime)+(d?" / "+fmtT(d):"");
+  document.querySelectorAll("[data-play]").forEach(x=>{if(x.dataset.play===PL.id)x.textContent=a.paused?"▶ Weiterhören":"❚❚ Pause";});
+  const rt=$("#rtts");if(rt&&R&&R.b.id===PL.id)rt.classList.toggle("on",!a.paused);}
+(function(){const a=G();let t0=0;
+  a.addEventListener("timeupdate",()=>{plUI();const n=Date.now();if(PL.id&&n-t0>4000){t0=n;S.apos=S.apos||{};S.apos[PL.id]=a.currentTime;save();}});
+  ["play","pause","ended","loadedmetadata"].forEach(ev=>a.addEventListener(ev,()=>{if(PL.id){S.apos=S.apos||{};S.apos[PL.id]=ev==="ended"?0:a.currentTime;save();}plUI();}));
+  $("#pplay").onclick=()=>{if(a.paused)a.play().catch(()=>{});else a.pause();};
+  $("#pback").onclick=()=>{a.currentTime=Math.max(0,a.currentTime-15);};$("#pfwd").onclick=()=>{a.currentTime=Math.min((a.duration||1e9)-1,a.currentTime+30);};
+  $("#pclose").onclick=()=>{a.pause();$("#player").classList.add("hidden");document.body.classList.remove("hasplayer");PL.id=null;S.pid=null;save();};
+  const bar=document.querySelector("#player .pbar");const seek=e=>{const r=bar.getBoundingClientRect();const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;if(a.duration)a.currentTime=Math.max(0,Math.min(1,x/r.width))*a.duration;};
+  bar.addEventListener("click",seek);bar.addEventListener("touchmove",seek,{passive:true});
+  // zuletzt gehörte Folge als pausierten Player wiederherstellen
+  if(S.pid&&BY_ID[S.pid]){PL.id=S.pid;a.src=API+"/a/"+S.pid+".mp3";const st=(S.apos||{})[S.pid]||0;a.addEventListener("loadedmetadata",()=>{if(st>5)a.currentTime=st;},{once:true});$("#ptitle").textContent=BY_ID[S.pid].title;$("#player").classList.remove("hidden");document.body.classList.add("hasplayer");plUI();}
+})();
+document.addEventListener("click",e=>{const b=e.target.closest("[data-play]");if(b)playAud(b.dataset.play);});
 document.addEventListener("click",async e=>{const a=e.target.closest("[data-audio]");if(!a)return;const b=BY_ID[a.dataset.audio];if(!b)return;
   if(AUD.ids.has(b.id)){go({v:"hoeren",tab:"library"});return;}
   a.textContent="🎧 Wird angelegt …";
