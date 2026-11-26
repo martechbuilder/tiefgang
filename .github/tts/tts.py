@@ -174,26 +174,66 @@ def abgebrochen(w):
     e = act[-1]
     return bool(r[e] / p > 0.04 and r[min(len(r) - 1, e + 1)] / p < 0.002)
 
+# ---------- Prüfen per Spracherkennung (faster-whisper, MIT) ----------
+import os, difflib
+from faster_whisper import WhisperModel
+ASR = WhisperModel(os.environ.get("TTS_ASR", "small"), device="cpu", compute_type="int8")
+def toks(t):
+    t = re.sub(r"\d+", lambda m: num2words(int(m.group()), lang="de"), t.lower())
+    return re.sub(r"[^a-zäöüß ]+", " ", t).split()
+sim = lambda a, b: difflib.SequenceMatcher(None, a, b).ratio()
+def pruefe(y, c):
+    """Hört den Abschnitt ab. Gibt (note, (start, ende) in s oder None, info) zurück."""
+    y16 = librosa.resample(y, orig_sr=SR, target_sr=16000)
+    segs, _ = ASR.transcribe(y16, language="de", word_timestamps=True, beam_size=1, condition_on_previous_text=False, vad_filter=False)
+    words = [w for sg in segs for w in (sg.words or [])]
+    if not words: return -1.0, None, "nichts erkannt"
+    rec, exp = toks(" ".join(w.word for w in words)), toks(c)
+    if not rec or not exp: return -1.0, None, "leer"
+    ratio = sim(" ".join(exp), " ".join(rec))
+    # Anfang und Ende: die ersten/letzten zwei erwarteten Wörter müssen am Rand auftauchen
+    end_ok = all(any(sim(e, r) >= .6 for r in rec[-4:]) for e in exp[-2:])
+    start_ok = all(any(sim(e, r) >= .6 for r in rec[:4]) for e in exp[:2])
+    note = ratio + (.2 if end_ok else -.4) + (.15 if start_ok else -.3)
+    return note, (words[0].start, words[-1].end), f"{ratio:.2f} Anfang {'ok' if start_ok else 'FEHLT'} Ende {'ok' if end_ok else 'FEHLT'} | {' '.join(rec[-4:])}"
+
+def zuschnitt(y, grenzen):
+    """Schneidet nur Stille außerhalb der erkannten Wörter weg: vorn bis 0,25 s, hinten 0,5 s Luft."""
+    hop = int(SR * 0.01)
+    _, (t0, t1) = librosa.effects.trim(y, top_db=50, frame_length=1024, hop_length=256)
+    if grenzen:
+        ws, we = int(grenzen[0] * SR), int(grenzen[1] * SR)
+        a0 = min(t0, max(0, ws - int(SR * .25)))
+        a1 = min(len(y), we + int(SR * .5))
+        if t1 > a1 and (t1 - we) < int(SR * .9): a1 = t1   # leiser Nachklang nah am letzten Wort bleibt
+    else:
+        a0, a1 = t0, t1
+    y = y[a0:a1].copy()
+    f = int(SR * 0.015)
+    if len(y) > 4 * f: y[:f] *= np.linspace(0, 1, f); y[-f:] *= np.linspace(1, 0, f)
+    rms = np.sqrt(np.mean(y ** 2)) + 1e-9
+    return y * min(0.08 / rms, 4.0)
+
 stille = lambda s: np.zeros(int(SR * s), dtype=np.float32)
-out = []
+out, log = [], []
 for pi, p in enumerate(paras):
     chunks = abschnitte(norm(p))
     for ci, c in enumerate(chunks):
-        bester, bestnote = None, -1
-        for versuch in range(4):  # Neuversuch bei fehlender Sprache, zu kurzem Audio, Abbruch am Ende oder Geräusch
+        best = None
+        for versuch in range(5):
             w = m.generate(c, language_id="de", audio_prompt_path=REF, exaggeration=0.52, cfg_weight=0.35, temperature=0.68)
-            yc, ok, ger = clean(w)
-            erwartet = len(c) / 16.0  # grob 16 Zeichen pro Sekunde
-            ok = ok and len(yc) / SR >= 0.45 * erwartet
-            ab = ok and abgebrochen(w)
-            note = 0 if not ok else (3 if not (ab or ger) else (2 if not ab else 1))
-            if note > bestnote: bester, bestnote = yc, note
-            if note == 3: break
-            print("Neuversuch wegen", "Abbruch am Ende:" if ab else ("Geräusch:" if ger else "fehlender Sprache:"), c[:60], flush=True)
-        out.append(bester if bester is not None else yc)
+            y = w.squeeze().detach().cpu().numpy().astype(np.float32)
+            note, gr, info = pruefe(y, c)
+            if abgebrochen(w): note -= .25; info += " | Abbruch"
+            if best is None or note > best[0]: best = (note, y, gr, info)
+            if os.environ.get("TTS_DEBUG"): print(f"  [{versuch}] {note:.2f} {info} :: {c[-50:]}", flush=True)
+            if note >= 1.1: break   # Text fast vollständig, Anfang und Ende da
+        if best[0] < 1.1: print("WARNUNG bester Versuch unter Schwelle:", round(best[0], 2), best[3], "::", c[:70], flush=True)
+        log.append(round(best[0], 2))
+        out.append(zuschnitt(best[1], best[2]))
         if ci < len(chunks) - 1: out.append(stille(0.32))
     out.append(stille(1.05 if pi == 0 else 0.75))
 y = np.concatenate(out)
 y = y / max(1e-6, np.max(np.abs(y))) * 0.89
 sf.write(a.out, y, SR)
-print("ok", a.out, round(len(y) / SR, 1), "s")
+print("ok", a.out, round(len(y) / SR, 1), "s", "| Prüfnoten min", min(log), "Schnitt", round(sum(log) / len(log), 2))

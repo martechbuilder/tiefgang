@@ -5,6 +5,9 @@ on:
       id:
         description: "Titel-ID (leer = nächster aus der Warteschlange)"
         required: false
+  push:
+    branches: [main]
+    paths: [".github/tts/neu.txt"]   # Liste von Titeln, die mit der aktuellen Technik neu eingesprochen werden
   schedule:
     - cron: "41 * * * *"   # Reserve, falls ein Auslöser verloren geht
 permissions:
@@ -29,6 +32,7 @@ jobs:
           IN_ID: ${{ github.event.inputs.id }}
         run: |
           ID="$IN_ID"
+          if [ -z "$ID" ] && [ "${{ github.event_name }}" = "push" ]; then ID=$(grep -v '^#' .github/tts/neu.txt | grep -m1 . || true); fi
           if [ -z "$ID" ]; then ID=$(curl -s -H "X-Admin: $ADMIN" "$API/admin/audio-next" | python3 -c "import json,sys;print(json.load(sys.stdin).get('id') or '')"); fi
           if [ -z "$ID" ]; then echo "id=" >> $GITHUB_OUTPUT; echo "chapters=[]" >> $GITHUB_OUTPUT; exit 0; fi
           pip install -q num2words >/dev/null
@@ -56,7 +60,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.cache/huggingface
-          key: hf-chatterbox-0.1.7
+          key: hf-chatterbox-0.1.7-whisper-small
       - run: pip install -q --extra-index-url https://download.pytorch.org/whl/cpu -r .github/tts/requirements.txt
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
       - run: python .github/tts/tts.py --id "${{ needs.plan.outputs.id }}" --chapter ${{ matrix.ch }} --out part.wav
@@ -71,6 +75,9 @@ jobs:
     if: needs.plan.outputs.id != '' && !cancelled()
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/tts
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
       - uses: actions/download-artifact@v4
         with:
@@ -97,6 +104,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ADMIN: ${{ secrets.TG_ADMIN }}
+          ID: ${{ needs.plan.outputs.id }}
         run: |
+          NEXT=$(grep -v '^#' .github/tts/neu.txt 2>/dev/null | grep -A1 -x "$ID" | sed -n 2p || true)
+          if [ -n "$NEXT" ]; then gh workflow run audio.yml -R "$GITHUB_REPOSITORY" -f id="$NEXT" || true; exit 0; fi
           NEXT=$(curl -s -H "X-Admin: $ADMIN" "$API/admin/audio-next" | python3 -c "import json,sys;print(json.load(sys.stdin).get('id') or '')")
           if [ -n "$NEXT" ]; then gh workflow run audio.yml -R "$GITHUB_REPOSITORY" -f id="$NEXT" || true; fi
