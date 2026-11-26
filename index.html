@@ -348,7 +348,6 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 #tabbar button.on{color:var(--accent-hi)}
 #tabbar button.on::after{content:"";position:absolute;bottom:4px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--accent-hi);box-shadow:0 0 10px var(--accent-hi)}
 #player{bottom:calc(var(--sb) + 70px)}
-
 .fx{opacity:0;transform:translateY(18px) scale(.985);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
 .fx.in{opacity:1;transform:none}
 .pill,.cont,.card,.cat,.row,.chip,.snack,.iconbtn,#tabbar button,.next{transition:transform .18s cubic-bezier(.3,.7,.3,1.4),box-shadow .25s,background .25s}
@@ -397,7 +396,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 .cat .glyph{animation:catFloat 6s ease-in-out infinite}
 .cat:nth-child(3n+2) .glyph{animation-delay:-2s}.cat:nth-child(3n) .glyph{animation-delay:-4s}
 @keyframes catFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-
+.cat.fx .glyph{opacity:0}.cat.fx.in .glyph{animation:catPop .6s cubic-bezier(.3,.7,.3,1.5) both,catFloat 6s ease-in-out .6s infinite}
 @keyframes catPop{0%{transform:scale(.4) rotate(-12deg);opacity:0}100%{transform:none;opacity:1}}
 .hcov .cover{animation:covFloat 7s ease-in-out infinite}
 @keyframes covFloat{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-7px) rotate(1deg)}}
@@ -486,7 +485,7 @@ body:has(#reader:not(.hidden)) #deep .rays{opacity:.7}
 .cat .glyph::after,.cont .cover::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 35%,rgba(200,245,255,.35) 50%,transparent 65%);transform:translateX(-140%);animation:glyphShine 7s ease-in-out infinite}
 .cat:nth-child(2n) .glyph::after{animation-delay:-2.3s}.cat:nth-child(3n) .glyph::after{animation-delay:-4.6s}
 @keyframes glyphShine{0%,78%{transform:translateX(-140%)}92%,100%{transform:translateX(140%)}}
-
+.cat.fx.in .glyph{animation:catPop .6s cubic-bezier(.3,.7,.3,1.5) both,catFloat 6s ease-in-out .6s infinite,kb 14s ease-in-out infinite alternate}
 /* Tab-Symbole: Linien zeichnen sich beim Aktivieren nach, jedes Symbol hat eine eigene kleine Geste */
 #tabbar button.on svg path{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .7s cubic-bezier(.3,.7,.2,1) forwards}
 @keyframes draw{to{stroke-dashoffset:0}}
@@ -513,11 +512,6 @@ body:has(#reader:not(.hidden)) #deep .rays{opacity:.7}
 @keyframes rainFall{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-6}}
 #prain svg path{stroke-dasharray:none}
 #player .iconbtn{min-width:34px}
-.fxl{background:none!important}
-.fxl .gl{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat}
-@keyframes gScanS{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-4%,-3%) rotate(-6deg)}50%{transform:translate(-6%,1%) rotate(0)}75%{transform:translate(-2%,3%) rotate(5deg)}}
-@keyframes gRock{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
-@keyframes gGrow{0%{clip-path:inset(0 100% 0 0);opacity:1}28%{clip-path:inset(0 0 0 0)}90%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 0 0 0);opacity:0}}
 .fxg{background:none!important}
 .fxg .gb{position:absolute;inset:-25%;background:var(--img) center/cover;filter:blur(18px) saturate(.9) brightness(.95)}
 .fxg .gp{position:absolute;inset:0;background:var(--img) center/100% 100%;will-change:transform}
@@ -626,10 +620,6 @@ let _ALL=null;
 function loadAll(){if(allLoaded())return Promise.resolve();if(!_ALL)_ALL=ALLCATS.reduce((p,c)=>p.then(()=>loadCat(c)),Promise.resolve()).then(()=>{_ALL=null;});return _ALL;}
 const DEBN=()=>BOOKS.reduce((a,b)=>a+(b.nd!=null?b.nd:(b.debatte||[]).length),0);
 
-// Scrollen: je nach Browser scrollt das Dokument (iPhone) oder der body (Chrome). Alle Helfer bedienen beide.
-const scrTop=()=>Math.max(window.scrollY||0,document.documentElement.scrollTop||0,document.body.scrollTop||0);
-function scrTo(a,b){const o=typeof a==="object"?a:{top:b||0,left:0};try{window.scrollTo(o);}catch(_){}try{document.body.scrollTo(o);}catch(_){}}
-const onScroll=fn=>document.addEventListener("scroll",fn,{passive:true,capture:true});
 /* ================= Zustand ================= */
 const KEY="tiefgang.v1";
 const defState=()=>({read:{},pos:{},last:null,saved:[],days:{},settings:{size:19,font:"serif",icon:"nacht",name:""}});
@@ -697,15 +687,14 @@ function seeded(seed){let x=0;for(const ch of seed)x=(x*31+ch.charCodeAt(0))>>>0
 /* ================= Router ================= */
 let route={v:"home"};
 const hist=[];
-function go(r,push=true){if(push)hist.push(route);route=r;render();scrTo(0,0);if(typeof scene==="function")scene();}
+function go(r,push=true){if(push)hist.push(route);route=r;render();window.scrollTo(0,0);if(typeof scene==="function")scene();}
 function back(){route=hist.pop()||{v:"home"};render();if(typeof scene==="function")scene();}
 const TABS=[["home","Heute",I.home],["discover","Entdecken",I.grid],["trainer","Trainer",I.target],["library","Bibliothek",I.lib],["search","Suche",I.search]];
 function renderTabs(){
   const top=["home","discover","trainer","library","search"].includes(route.v)?route.v:(route.tab||"discover");
   $("#tabbar").innerHTML=TABS.map(([k,l,p])=>`<button data-tab="${k}" class="t-${k} ${top===k?"on":""}">${ic(p).replace(/<path /g,'<path pathLength="1" ')}<span>${l}</span></button>`).join("");
 }
-$("#tabbar").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;const r=$("#reader");if(r&&!r.classList.contains("hidden")){if($("#nclose"))closeNews();else closeReader();}
-  if(route.v===b.dataset.tab){scrTo({top:0,behavior:"smooth"});return;}hist.length=0;go({v:b.dataset.tab},false);});
+$("#tabbar").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;hist.length=0;go({v:b.dataset.tab},false);});
 
 async function curVer(){return window.TG_VER||"";}
 const fmtVer=v=>v&&v.length>=12?`${+v.slice(6,8)}.${+v.slice(4,6)}.${v.slice(0,4)}, ${v.slice(8,10)}:${v.slice(10,12)} Uhr`:"unbekannt";
@@ -750,7 +739,7 @@ document.addEventListener("click",e=>{
   else if(d.go==="trrate"){if(TR&&!TR.rated){const st=trState();const ok=d.k==="1";st.total++;if(ok)st.right++;trRate(ok);TR.rated=true;render();}}
   else if(d.go==="trmode"){trState().mode=d.k;save();TR=null;render();}
   else if(d.go==="trread"){route.tr=route.tr==="read"?null:"read";TR=null;render();}
-  else if(d.go==="trbook"){if(d.id){hist.length=0;route={v:"trainer",tb:d.id};}else route.tb=null;TR=null;render();scrTo(0,0);}
+  else if(d.go==="trbook"){if(d.id){hist.length=0;route={v:"trainer",tb:d.id};}else route.tb=null;TR=null;render();window.scrollTo(0,0);}
   else if(d.go==="studien")go({v:"studien",tab:"discover"});
   else if(d.go==="news")go({v:"news",tab:"home"});
   else if(d.go==="fragen")go({v:"fragen",tab:route.tab||tabOf()});
@@ -761,7 +750,7 @@ document.addEventListener("click",e=>{
   else if(d.go==="stuok"){route.so=!route.so;route.sn=0;render();}
   else if(d.go==="stumore"){route.sn=(route.sn||0)+1;$("#stuhits").innerHTML=stuHits();}
   else if(d.go==="update")checkUpdate(a);
-  else if(d.go==="trnext"){trNext();render();scrTo(0,0);}
+  else if(d.go==="trnext"){trNext();render();window.scrollTo(0,0);}
 });
 const tabOf=()=>["home","discover","trainer","library","search"].includes(route.v)?route.v:route.tab;
 function toggleSave(id){const i=S.saved.indexOf(id);if(i>=0)S.saved.splice(i,1);else S.saved.unshift(id);save();render();toast(i>=0?"Entfernt":"Gemerkt");}
@@ -858,7 +847,7 @@ function subOf(b){
 }
 function vBook(){
   const b=BY_ID[route.id];if(!b)return `<div class="empty">Titel nicht gefunden.</div>`;
-  if(!LOADED[b.cat])loadCat(b.cat).then(()=>{if(route.v==="book"&&route.id===b.id){const y=scrTop();render();scrTo(0,y);}});
+  if(!LOADED[b.cat])loadCat(b.cat).then(()=>{if(route.v==="book"&&route.id===b.id){const y=window.scrollY;render();window.scrollTo(0,y);}});
   const r=readCount(b),n=b.chapters.length,saved=S.saved.includes(b.id);
   return `<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button><div style="flex:1"></div><button class="iconbtn ${saved?"on":""}" data-go="save" data-id="${b.id}">${ic(I.bm).replace('fill="none"','')}</button></div>
   <div class="hero glass">${cover(b)}<div class="h-eyebrow" style="margin-bottom:6px">${CATS[b.cat].n}</div><h1>${esc(b.title)}</h1><div class="sub">${esc(b.subtitle)}</div>
@@ -1131,7 +1120,7 @@ async function loadNews(force){
   if(API.startsWith("https"))try{const r=await tfetch(API+"/news");if(r.ok)d=await r.json();}catch(_){}
   if(!d||!d.items||!d.items.length)try{const r=await fetch("news.json");if(r.ok)d=await r.json();}catch(_){}
   if(d&&Array.isArray(d.items)&&d.items.length){d.items.forEach(x=>{if(!x.rel)x.rel=newsRel(x);});NEWS=d;try{localStorage.setItem("tiefgang.news",JSON.stringify(d));}catch(_){}
-    if(["home","news"].includes(route.v)){const y=scrTop();render();scrTo(0,y);}}
+    if(["home","news"].includes(route.v)){const y=window.scrollY;render();window.scrollTo(0,y);}}
 }
 try{const c=JSON.parse(localStorage.getItem("tiefgang.news")||"null");if(c&&c.items)NEWS=c;}catch(_){}
 function ago(t){const m=Math.round((Date.now()/1e3-t)/60);if(m<60)return "vor "+Math.max(1,m)+" Min.";const h=Math.round(m/60);if(h<24)return "vor "+h+" Std.";return new Date(t*1e3).toLocaleDateString("de-DE",{day:"numeric",month:"short"});}
@@ -1159,7 +1148,7 @@ let QA=[];try{QA=JSON.parse(localStorage.getItem("tiefgang.qa")||"[]");}catch(_)
 async function loadQA(){
   if(!API.startsWith("https"))return;await flushQ();
   try{const r=await tfetch(API+"/answers?k="+devKey());if(!r.ok)return;const d=await r.json();QA=mergeQA(d.items||[]);localStorage.setItem("tiefgang.qa",JSON.stringify(QA));
-    if(["home","fragen"].includes(route.v)){const y=scrTop();render();scrTo(0,y);}}catch(_){}
+    if(["home","fragen"].includes(route.v)){const y=window.scrollY;render();window.scrollTo(0,y);}}catch(_){}
 }
 function mergeQA(srv){S.sent=(S.sent||[]).filter(r=>!srv.some(x=>x.qid===r.qid)&&Date.now()-r.t<864e5);save();
   const m=new Map();[...srv,...S.sent,...(S.qq||[]).map(q=>({...q,qid:"p"+q.t,pending:true}))].forEach(x=>{if(!m.has(x.qid))m.set(x.qid,x);});return [...m.values()].sort((a,b)=>b.t-a.t);}
@@ -1238,7 +1227,7 @@ document.addEventListener("click",e=>{const r=e.target.closest("#ttsrate [data-r
 /* ================= Hörliste (Chatterbox über GitHub Actions, Podcast-Feed im Worker) ================= */
 const AUD={items:[],ids:new Set()};
 try{const c=JSON.parse(localStorage.getItem("tiefgang.aud")||"[]");AUD.items=c;AUD.ids=new Set(c.map(x=>x.id));}catch(_){}
-async function loadAud(){if(!API.startsWith("https"))return;try{const r=await tfetch(API+"/audio/list?k="+devKey());if(!r.ok)return;const d=await r.json();AUD.items=d.items||[];AUD.ids=new Set(AUD.items.map(x=>x.id));localStorage.setItem("tiefgang.aud",JSON.stringify(AUD.items));if(["hoeren","book"].includes(route.v)){const y=scrTop();render();scrTo(0,y);}}catch(_){}}
+async function loadAud(){if(!API.startsWith("https"))return;try{const r=await tfetch(API+"/audio/list?k="+devKey());if(!r.ok)return;const d=await r.json();AUD.items=d.items||[];AUD.ids=new Set(AUD.items.map(x=>x.id));localStorage.setItem("tiefgang.aud",JSON.stringify(AUD.items));if(["hoeren","book"].includes(route.v)){const y=window.scrollY;render();window.scrollTo(0,y);}}catch(_){}}
 const feedUrl=()=>API+"/feed/"+devKey()+".xml";
 function audState(x){return x.state==="done"?"Fertig":x.state==="running"?"Wird gerade eingesprochen":x.state==="failed"?"Fehlgeschlagen, wird erneut versucht":"In der Warteschlange";}
 function fmtDur(s){s=+s||0;const m=Math.round(s/60);return m+" Min";}
@@ -1279,19 +1268,17 @@ document.addEventListener("click",e=>{const a=e.target.closest("[data-news]");if
   const r=e.target.closest("[data-nrel]");if(r){closeNews();go({v:"book",id:r.dataset.nrel,tab:"home"});}});
 /* ================= Bewegung: Einblenden beim Scrollen, Tipp-Feedback, Parallax ================= */
 const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
-const FXSEL=".pill,.cont,.card,.cats,.row,.news,.h-sec,.statline,.hhero,.htitle,.hsub,.snack,.qa,.list>*,.set,.box,.paper,.stu";
+const FXSEL=".pill,.cont,.card,.cat,.row,.news,.h-sec,.statline,.hhero,.htitle,.hsub,.snack,.qa,.list>*,.set,.box,.paper,.stu";
 let FXIO=null;
 function fx(){if(RM)return;const els=[...document.querySelectorAll("#app .view "+FXSEL.split(",").join(",#app .view "))];
   const key=route.v+"|"+(route.id||"")+"|"+(route.cat||"")+"|"+(route.lt||"");const same=key===fx.last;fx.last=key;if(same){const v=document.querySelector("#app .view");if(v)v.style.animation="none";}
-  if(!FXIO)FXIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");FXIO.unobserve(e.target);}});},{root:null,rootMargin:"0px 0px 12% 0px",threshold:0});
+  if(!FXIO)FXIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");FXIO.unobserve(e.target);}});},{rootMargin:"0px 0px -6% 0px",threshold:.05});
   let k=0;els.forEach(el=>{if(el.classList.contains("fx"))return;const r=el.getBoundingClientRect();const vis=r.top<innerHeight;
     if(same&&vis){return;}el.classList.add("fx");if(vis)el.style.transitionDelay=Math.min(k++,10)*45+"ms";FXIO.observe(el);});
 }
-// Sicherheitsnetz: beim Scrollen alles aufdecken, was schon (fast) sichtbar ist, damit nie Lücken stehen bleiben
-let FXR=0;onScroll(()=>{if(FXR)return;FXR=requestAnimationFrame(()=>{FXR=0;const lim=innerHeight*1.15;document.querySelectorAll("#app .fx:not(.in)").forEach(el=>{if(el.getBoundingClientRect().top<lim){el.classList.add("in");el.style.transitionDelay="0ms";}});});});
 // Parallax: Schriftzug und Hero gleiten beim Scrollen langsamer
-onScroll(()=>{if(RM)return;const y=scrTop();const w=document.querySelector(".wm");if(w&&y<500){w.style.transform=`translateY(${y*.35}px)`;w.style.opacity=Math.max(0,1-y/260);}
-  const h=document.querySelector(".hhero");if(h&&y<700)h.style.transform=`translateY(${y*.12}px)`;});
+addEventListener("scroll",()=>{if(RM)return;const y=scrollY;const w=document.querySelector(".wm");if(w&&y<500){w.style.transform=`translateY(${y*.35}px)`;w.style.opacity=Math.max(0,1-y/260);}
+  const h=document.querySelector(".hhero");if(h&&y<700)h.style.transform=`translateY(${y*.12}px)`;},{passive:true});
 // Tipp-Welle an der Fingerposition
 document.addEventListener("pointerdown",e=>{if(RM)return;const t=e.target.closest(".pill,.cont,.card,.cat,.row,.chip,.snack,#tabbar button,.iconbtn,.next,.nrel");if(!t)return;
   const r=t.getBoundingClientRect(),d=Math.max(r.width,r.height)*1.2,w=document.createElement("span");w.className="ripple";
@@ -1301,7 +1288,7 @@ document.addEventListener("pointerdown",e=>{if(RM)return;const t=e.target.closes
 function wmGlint(){const w=document.getElementById("wmt");if(!w||RM)return;w.classList.remove("is-glint");void w.offsetWidth;
   const sp=w.querySelector(".sparks");sp.innerHTML=Array.from({length:9},(_,i)=>{const a=Math.random()*Math.PI*2,r=26+Math.random()*34;return `<i style="--dx:${Math.cos(a)*r}px;--dy:${Math.sin(a)*r}px;--sd:${i*28}ms;left:${15+Math.random()*70}%;top:${30+Math.random()*40}%"></i>`;}).join("");
   w.classList.add("is-glint");}
-setInterval(()=>{if(document.visibilityState==="visible"&&route.v==="home"&&scrTop()<200)wmGlint();},9000);
+setInterval(()=>{if(document.visibilityState==="visible"&&route.v==="home"&&scrollY<200)wmGlint();},9000);
 document.addEventListener("click",e=>{if(e.target.closest("#wmt"))wmGlint();});
 // Icon-Hüpfer beim Antippen
 document.addEventListener("pointerdown",e=>{if(RM)return;const t=e.target.closest("#tabbar button,.pill,.cont,.cat,.iconbtn");if(!t)return;const i=t.querySelector(".pi svg,.cover,.glyph,svg");if(!i)return;i.classList.remove("hop");void i.getBoundingClientRect();i.classList.add("hop");setTimeout(()=>i.classList.remove("hop"),600);},{passive:true});
@@ -1324,7 +1311,7 @@ const PAR=[.06,.22,.55];
 function depDraw(now){if(!DEP.run){DEP.loop=false;return;}if(!RM)requestAnimationFrame(depDraw);else DEP.loop=false;if(now-DEP.last<33&&!RM)return;DEP.last=now;
   // eigene Uhr: nach Pause oder Hintergrund kein Aufholen, höchstens 50 ms pro Bild
   const dt=DEP.prev?Math.min(.05,Math.max(0,(now-DEP.prev)/1000)):0;DEP.prev=now;DEP.sim+=dt*.75;
-  const rs=document.querySelector("#reader:not(.hidden) #rscroll");const x=DEP.x,w=DEP.w,h=DEP.h,t=DEP.sim,sy=rs?rs.scrollTop:scrTop();x.setTransform(DEP.dpr,0,0,DEP.dpr,0,0);x.clearRect(0,0,w,h);
+  const rs=document.querySelector("#reader:not(.hidden) #rscroll");const x=DEP.x,w=DEP.w,h=DEP.h,t=DEP.sim,sy=rs?rs.scrollTop:scrollY;x.setTransform(DEP.dpr,0,0,DEP.dpr,0,0);x.clearRect(0,0,w,h);
   for(const p of DEP.parts){const yy=((p.y*h*1.2-sy*PAR[p.l]-t*p.sp*60)%(h*1.2)+h*1.2)%(h*1.2)-h*.1;const xx=p.x*w+Math.sin(t*.5+p.ph)*(4+p.l*6);
     const tw=.6+.4*Math.sin(t*1.7+p.ph*3);x.beginPath();x.fillStyle=`rgba(150,225,255,${p.a*tw})`;if(p.l===2){x.shadowBlur=14;x.shadowColor="rgba(120,210,250,.5)";}else x.shadowBlur=0;x.arc(xx,yy,p.r,0,6.283);x.fill();}
   x.shadowBlur=0;for(const j of DEP.jel)drawJelly(x,j,t,sy,w,h);}
@@ -1371,7 +1358,7 @@ function intro(){let seen=false;try{seen=sessionStorage.getItem("tg.intro");sess
     sub.textContent=p<.98?"Tauche ab … "+Math.round(p*p*3800).toLocaleString("de-DE")+" m":"Willkommen in der Tiefe";
     if(n-t0>D+700)end();else requestAnimationFrame(fr);};requestAnimationFrame(fr);}
 /* Scroll-Szene auf Heute: Cover dreht und sinkt mit, Mini-Kopf mit Tiefenmesser */
-function scene(){const y=scrTop();const v=route.v;const mh=document.getElementById("minihead");
+function scene(){const y=scrollY;const v=route.v;const mh=document.getElementById("minihead");
   if(mh){const on=v==="home"&&y>140;mh.classList.toggle("on",on);if(on)document.getElementById("mdepth").textContent=Math.round(y*1.6).toLocaleString("de-DE")+" m";}
   if(RM||v!=="home")return;const hc=document.querySelector(".hcov");if(hc){const p=Math.min(1,y/420);hc.style.transform=`perspective(700px) rotateY(${p*-28}deg) rotateX(${p*8}deg) scale(${1-p*.18})`;hc.style.opacity=1-p*.6;}
   const rg=document.querySelector(".ring svg");if(rg){rg.style.rotate=(y*.25)+"deg";}
@@ -1384,7 +1371,7 @@ function fishTick(){const f=document.getElementById("fhome");if(!f){FS.on=false;
   const dx=FS.tx-FS.x;FS.x+=dx*.09;FS.y+=(FS.ty-FS.y)*.09;FS.r+=((dx*.6)-FS.r)*.12;
   f.style.transform=`translate3d(${FS.x.toFixed(2)}px,${FS.y.toFixed(2)}px,0) rotate(${Math.max(-12,Math.min(12,FS.r)).toFixed(2)}deg)`;
   if(Math.abs(dx)>.05||Math.abs(FS.ty-FS.y)>.05||Math.abs(FS.r)>.05)requestAnimationFrame(fishTick);else FS.on=false;}
-onScroll(scene);
+addEventListener("scroll",scene,{passive:true});
 const FSAY=["Noch ein Häppchen?","Wissen ist mein Licht.","Ich lese mit.","Tief durchatmen.","Gut gemacht heute!","Hier unten ist es ruhig."];
 document.addEventListener("click",e=>{const f=e.target.closest("#fhome");if(!f)return;const i=f.querySelector(".fisch"),s=f.querySelector(".say");i.className="fisch p4 hop";s.textContent=FSAY[Math.floor(Math.random()*FSAY.length)];f.classList.add("talk");clearTimeout(f._t);f._t=setTimeout(()=>{i.className="fisch p2";f.classList.remove("talk");},2600);});
 setTimeout(()=>{depInit();intro();},0);
@@ -1403,9 +1390,9 @@ function fishMilestone(id,i){const b=BY_ID[id];if(!b)return;const n=b.chapters.l
   if([3,5,10,15,20].includes(today_))return fishPop(pick([today_+" Häppchen heute. Mehr Tiefgang als jeder Feed.",today_+" Häppchen heute. Dein Hirn sagt danke.",today_+" Häppchen. Kein Reel hat dir je so viel gebracht."]),"p4",null,true);
   if(r===1&&n>3&&Math.random()<.4)fishPop(pick(["Guter Start! Ich leuchte dir den Weg.","Erstes Häppchen sitzt. Schön, dass du dabei bist."]),"p1");}
 // Doomscroll-Erkennung: viel gescrollt, nichts geöffnet
-const DS={d:0,t:Date.now(),y:scrTop()};
-onScroll(()=>{if(R||$("#reader:not(.hidden)"))return;const y=scrTop(),now=Date.now();if(now-DS.t>60000){DS.d=0;DS.t=now;}DS.d+=Math.abs(y-DS.y);DS.y=y;
-  if(DS.d>6000){DS.d=0;DS.t=now;fishPop(pick(["Daumen-Marathon? Hier wird gelesen, nicht gescrollt.","Endlos scrollen ist was für Insta. Lies lieber ein Häppchen.","Scrollen macht nicht schlauer. Zwei Minuten lesen schon.","Hey, das ist kein Feed. Such dir was aus, ich leuchte."]),"p2",{label:"Ein Häppchen",fn:()=>snack()});}});
+const DS={d:0,t:Date.now(),y:scrollY};
+addEventListener("scroll",()=>{if(R||$("#reader:not(.hidden)"))return;const y=scrollY,now=Date.now();if(now-DS.t>60000){DS.d=0;DS.t=now;}DS.d+=Math.abs(y-DS.y);DS.y=y;
+  if(DS.d>6000){DS.d=0;DS.t=now;fishPop(pick(["Daumen-Marathon? Hier wird gelesen, nicht gescrollt.","Endlos scrollen ist was für Insta. Lies lieber ein Häppchen.","Scrollen macht nicht schlauer. Zwei Minuten lesen schon.","Hey, das ist kein Feed. Such dir was aus, ich leuchte."]),"p2",{label:"Ein Häppchen",fn:()=>snack()});}},{passive:true});
 document.addEventListener("click",e=>{if(e.target.closest("[data-go],[data-tab],[data-news]")){DS.d=0;}},true);
 // Rückkehr in die App nach längerer Pause
 let HID=0;document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"){HID=Date.now();return;}
@@ -1433,34 +1420,33 @@ let HID=0;document.addEventListener("visibilitychange",()=>{if(document.visibili
   ["play","playing","pause","ended"].forEach(ev=>a.addEventListener(ev,sync));ui();})();
 /* ================= Lebendige Kategorie-Symbole: Bildteile bewegen sich einzeln ================= */
 // Jedes Teil ist dieselbe Grafik, per clip-path auf einen Bereich beschnitten; darunter liegt die stark weichgezeichnete Grafik als Hintergrund.
-// Saubere Ebenen je Symbol (art/fx/<kat>-bg.webp + Teile <kat>-<n>.webp, aus tools/_design/layers.py): [Animation, Drehpunkt] je Teil
 const GFX={
-  sozialismus:[["gTilt 5s ease-in-out infinite","50% 23%"],["",""]],
-  populismus:[["gSplitL 4.5s ease-in-out infinite","40% 60%"],["gSplitR 4.5s ease-in-out infinite","60% 40%"]],
-  eu:[["gSpin 40s linear infinite","50% 50%"],["",""]],
-  geschichte:[["gLift 5.5s ease-in-out infinite","100% 60%"],["",""]],
-  debatten:[["gBobA 4s ease-in-out infinite","30% 40%"],["",""]],
-  denken:[["gGlow 3.6s ease-in-out infinite","50% 45%"]],
-  digital:[["gUnlock 5s ease-in-out infinite","50% 44%"],["",""]],
-  biologie:[["gTwist 6s ease-in-out infinite","50% 50%"]],
-  klima:[["gLeaf 4.8s ease-in-out infinite","62% 58%"],["",""]],
-  koepfe:[["gNod 6s ease-in-out infinite","50% 85%"]],
-  patriarchat:[["gBreak 4.6s ease-in-out infinite","58% 52%"],["",""]],
-  philosophie:[["gNod 7s ease-in-out infinite","50% 95%"]],
-  physik:[["gSpin 30s linear infinite","50% 50%"],["",""]],
-  politik:[["gFloat 5s ease-in-out infinite","50% 46%"],["",""]],
-  psychologie:[["gSpin 18s linear infinite","46% 41%"],["",""]],
-  schluesselpaper:[["gScanS 5s ease-in-out infinite","72% 66%"],["",""]],
-  streitfragen:[["gClashL 3.2s ease-in-out infinite","50% 50%"],["gClashR 3.2s ease-in-out infinite","50% 50%"]],
-  technologie:[["gGlow 3s ease-in-out infinite","50% 50%"]],
-  waswaerewenn:[["gWobble 3.8s ease-in-out infinite","50% 85%"],["",""]],
-  weltall:[["gOrbit 7s ease-in-out infinite","50% 50%"],["",""]],
-  werkzeugkasten:[["gRock 4.4s ease-in-out infinite","50% 50%"]],
-  wirtschaft:[["gGrow 7s cubic-bezier(.4,0,.2,1) infinite","0 100%"]]
+  sozialismus:[["polygon(0 0,100% 0,100% 64%,0 64%)","gTilt 5s ease-in-out infinite","50% 23%"],["polygon(0 64%,100% 64%,100% 100%,0 100%)",""]],
+  populismus:[["polygon(0 0,74% 0,71% 22%,62% 36%,54% 47%,47% 60%,40% 76%,35% 100%,0 100%)","gSplitL 4.5s ease-in-out infinite","40% 60%"],["polygon(74% 0,100% 0,100% 100%,35% 100%,40% 76%,47% 60%,54% 47%,62% 36%,71% 22%)","gSplitR 4.5s ease-in-out infinite","60% 40%"]],
+  eu:[["circle(46% at 50% 50%)","gSpin 40s linear infinite","50% 50%"]],
+  geschichte:[["polygon(0 0,100% 0,100% 47%,80% 52%,66% 60%,52% 66%,0 70%)","gLift 5.5s ease-in-out infinite","100% 60%"],["polygon(0 70%,52% 66%,66% 60%,80% 52%,100% 47%,100% 100%,0 100%)",""]],
+  debatten:[["polygon(0 0,62% 0,62% 72%,0 72%)","gBobA 4s ease-in-out infinite","30% 40%"],["polygon(62% 0,100% 0,100% 100%,0 100%,0 72%,62% 72%)","gBobB 4s ease-in-out infinite","70% 60%"]],
+  denken:[["inset(0)","gGlow 3.6s ease-in-out infinite","50% 45%"]],
+  digital:[["polygon(0 0,100% 0,100% 44%,0 44%)","gUnlock 5s ease-in-out infinite","50% 44%"],["polygon(0 44%,100% 44%,100% 100%,0 100%)",""]],
+  biologie:[["inset(0)","gTwist 6s ease-in-out infinite","50% 50%"]],
+  klima:[["polygon(58% 10%,100% 10%,100% 62%,58% 62%)","gLeaf 4.8s ease-in-out infinite","62% 58%"],["polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,58% 10%,100% 10%,100% 62%,58% 62%,58% 10%)",""]],
+  koepfe:[["inset(0)","gNod 6s ease-in-out infinite","50% 85%"]],
+  patriarchat:[["polygon(0 0,58% 0,58% 52%,0 52%)","gBreak 4.6s ease-in-out infinite","58% 52%"],["polygon(58% 0,100% 0,100% 100%,0 100%,0 52%,58% 52%)",""]],
+  philosophie:[["inset(0)","gNod 7s ease-in-out infinite","50% 95%"]],
+  physik:[["circle(48% at 50% 50%)","gSpin 30s linear infinite","50% 50%"]],
+  politik:[["polygon(0 0,100% 0,100% 46%,0 46%)","gFloat 5s ease-in-out infinite","50% 46%"],["polygon(0 46%,100% 46%,100% 100%,0 100%)",""]],
+  psychologie:[["circle(19% at 46% 41%)","gSpin 18s linear infinite","46% 41%"],["polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,65.0% 41.0%,64.4% 45.9%,62.5% 50.5%,59.4% 54.4%,55.5% 57.5%,50.9% 59.4%,46.0% 60.0%,41.1% 59.4%,36.5% 57.5%,32.6% 54.4%,29.5% 50.5%,27.6% 45.9%,27.0% 41.0%,27.6% 36.1%,29.5% 31.5%,32.6% 27.6%,36.5% 24.5%,41.1% 22.6%,46.0% 22.0%,50.9% 22.6%,55.5% 24.5%,59.4% 27.6%,62.5% 31.5%,64.4% 36.1%,65.0% 41.0%)",""]],
+  schluesselpaper:[["polygon(52% 48%,100% 48%,100% 100%,52% 100%)","gScan 6s ease-in-out infinite","74% 70%"],["polygon(0 0,100% 0,100% 48%,52% 48%,52% 100%,0 100%)",""]],
+  streitfragen:[["polygon(0 0,50% 0,50% 100%,0 100%)","gClashL 3.2s ease-in-out infinite","50% 50%"],["polygon(50% 0,100% 0,100% 100%,50% 100%)","gClashR 3.2s ease-in-out infinite","50% 50%"]],
+  technologie:[["inset(0)","gGlow 3s ease-in-out infinite","50% 50%"]],
+  waswaerewenn:[["polygon(30% 28%,70% 28%,70% 92%,30% 92%)","gWobble 3.8s ease-in-out infinite","50% 85%"],["polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,30% 28%,70% 28%,70% 92%,30% 92%,30% 28%)",""]],
+  weltall:[["circle(9% at 12% 18%)","gOrbit 7s ease-in-out infinite","50% 50%"],["polygon(20% 0,100% 0,100% 100%,0 100%,0 32%,20% 32%)","gTiltS 8s ease-in-out infinite","55% 60%"]],
+  werkzeugkasten:[["polygon(0 0,52% 0,52% 100%,0 100%)","gWrench 4.4s ease-in-out infinite","25% 25%"],["polygon(52% 0,100% 0,100% 100%,52% 100%)","gFeather 4.4s ease-in-out infinite","70% 80%"]],
+  wirtschaft:[["polygon(45% 0,100% 0,100% 42%,45% 42%)","gRise 3.6s ease-in-out infinite","70% 30%"],["polygon(56% 66%,100% 66%,100% 100%,56% 100%)","gCoins 3.6s ease-in-out infinite","78% 90%"],["polygon(0 0,45% 0,45% 42%,100% 42%,100% 66%,56% 66%,56% 100%,0 100%)",""]]
 };
-function glyphFx(c){const p=GFX[c];
-  if(!p||RM)return `<div class="glyph img" style="background:url(art/${c}.jpg) center/cover"></div>`;
-  return `<div class="glyph img fxl"><i class="gl" style="background-image:url(art/fx/${c}-bg.webp)"></i>${p.map(([an,o],k)=>`<i class="gl" style="background-image:url(art/fx/${c}-${k}.webp);${an?`animation:${an};`:""}transform-origin:${o||"50% 50%"}"></i>`).join("")}</div>`;}
+function glyphFx(c){const p=GFX[c];const img=`url(art/${c}.jpg)`;
+  if(!p||RM)return `<div class="glyph img" style="background:${img} center/cover"></div>`;
+  return `<div class="glyph img fxg" style="--img:${img}"><i class="gb"></i>${p.map(([cl,an,o])=>`<i class="gp" style="clip-path:${cl};-webkit-clip-path:${cl};${an?`animation:${an};`:""}transform-origin:${o||"50% 50%"}"></i>`).join("")}</div>`;}
 /* Globaler Player: lebt außerhalb von #app, überlebt Ansichtswechsel, Neuzeichnen und Hintergrund */
 const PL={id:null};const G=()=>document.getElementById("gplay");
 function fmtT(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
