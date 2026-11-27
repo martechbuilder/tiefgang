@@ -705,10 +705,18 @@ vgapMeasure();addEventListener("resize",vgapMeasure);addEventListener("orientati
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")[100,600].forEach(t=>setTimeout(vgapMeasure,t));});
 /* ================= Zustand ================= */
 const KEY="tiefgang.v1";
+/* Umzug: Fortschritt per Code von der alten Adresse übernehmen */
+document.addEventListener("click",async e=>{const b=e.target.closest(".umbtn");if(!b)return;const box=b.closest(".setrow"),inp=box.querySelector(".umcode"),c=(inp.value||"").trim();
+  if(!/^\d{6}$/.test(c)){toast("Bitte den 6-stelligen Code eingeben");return;}b.disabled=true;
+  try{const r=await fetch("/api/umzug/"+c);const d=await r.json();if(!r.ok){toast(d.error||"Code unbekannt");b.disabled=false;return;}
+    const o=d.v1?JSON.parse(d.v1):{};o.umzug=Date.now();window._noSave=true;localStorage.setItem("tiefgang.v1",JSON.stringify(o));
+    if(d.aud)localStorage.setItem("tiefgang.aud",d.aud);if(d.qa)localStorage.setItem("tiefgang.qa",d.qa);
+    toast("Fortschritt übernommen");setTimeout(()=>location.reload(),700);}catch(_){toast("Keine Verbindung");b.disabled=false;}});
+
 const defState=()=>({read:{},pos:{},last:null,saved:[],days:{},settings:{size:19,font:"serif",icon:"nacht",name:""}});
 let S=defState();
 try{const raw=localStorage.getItem(KEY);if(raw){S=Object.assign(defState(),JSON.parse(raw));S.settings=Object.assign(defState().settings,S.settings||{});}}catch(e){}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function save(){if(window._noSave)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 const hkey=h=>String(h).toLowerCase().replace(/[^a-z0-9äöüß]+/g,"-").slice(0,48);
 const ck=(id,i)=>{const b=BY_ID[id];if(!b)return id+"#"+i;const k=b._ck||(b._ck=b.chapters.map(c=>id+"#"+hkey(c.h)));return k[i]||(id+"#"+i);};
 // alte Index-Schlüssel (id#3) auf Überschrift umstellen
@@ -877,7 +885,7 @@ function vHome(){
     ${cont?pill(I.shuffle,"Ein Häppchen lesen","Zwei Minuten, zufällig aus allem Neuen",'data-go="snack"'):""}
     ${pill(I.target,"Erkenne die Taktik",DEBN()+" Fälle aus echten Debatten",'data-tab="trainer" onclick="hist.length=0;go({v:\'trainer\'},false)"')}
   </div>
-  <button class="fisch-home" id="fhome" aria-label="Fisch"><i class="fisch p2"></i><span class="say" id="fsay"></span></button><div class="statline"><span><b>${streak()}</b> ${streak()===1?"Tag":"Tage"} in Folge</span><span><b>${S.days[today()]||0}</b> heute</span><span><b>${Math.round(readN/Math.max(1,totalCh)*100)} %</b> von ${totalCh}</span></div>${zoneLine()}
+  <button class="fisch-home" id="fhome" aria-label="Fisch"><i class="fisch p2"></i><span class="say" id="fsay"></span></button><div class="statline"><span><b>${streak()}</b> ${streak()===1?"Tag":"Tage"} in Folge</span><span><b>${S.days[today()]||0}</b> heute</span><span><b>${Math.round(readN/Math.max(1,totalCh)*100)} %</b> von ${totalCh}</span></div>${NEWHOST&&!S.umzug&&!(S.dm>0)?`<div style="margin:18px 0 6px"><div class="glass set" style="margin-bottom:14px"><div class="setrow" style="flex-wrap:wrap"><span>Umzug von der alten Adresse<br><span class="small">Code aus der alten App eingeben</span></span><span style="display:flex;gap:8px"><input class="umcode" inputmode="numeric" maxlength="6" placeholder="Code" style="width:92px;font-size:16px;padding:8px 12px;border-radius:999px;border:1px solid var(--line-hi);background:var(--glass-lo);color:var(--txt)"><button class="chip umbtn">Übernehmen</button></span></div></div></div>`:""}${zoneLine()}
   ${qaBlock()}${audBlock()}${newsBlock()}
   <div class="h-sec"><h2>Für heute</h2><button data-tab="discover" onclick="hist.length=0;go({v:'discover'},false)">Alle</button></div>
   <div class="hscroll">${picks.map(bookCard).join("")}</div>
@@ -989,7 +997,7 @@ function vSettings(){
   const styles=[["nacht","Tiefsee"],["glas","Glas"],["hell","Hell"],["getoent","Getönt"]];
   return `<div class="topnav"><button class="iconbtn" aria-label="Zurück" data-go="back">${ic(I.back)}</button></div>
   <div class="h-big" style="font-size:30px">Einstellungen</div>
-  <div class="glass set" style="margin-bottom:14px"><div class="setrow"><span>App-Version<br><span class="small" id="verline"></span></span><button class="chip" data-go="update">Nach Updates suchen</button></div></div>
+  ${NEWHOST?`<div class="glass set" style="margin-bottom:14px"><div class="setrow" style="flex-wrap:wrap"><span>Umzug von der alten Adresse<br><span class="small">Code aus der alten App eingeben</span></span><span style="display:flex;gap:8px"><input class="umcode" inputmode="numeric" maxlength="6" placeholder="Code" style="width:92px;font-size:16px;padding:8px 12px;border-radius:999px;border:1px solid var(--line-hi);background:var(--glass-lo);color:var(--txt)"><button class="chip umbtn">Übernehmen</button></span></div></div>`:""}<div class="glass set" style="margin-bottom:14px"><div class="setrow"><span>App-Version<br><span class="small" id="verline"></span></span><button class="chip" data-go="update">Nach Updates suchen</button></div></div>
   <div class="glass set">
     <div class="setrow"><span>Schriftgröße</span><div class="seg" id="sz">${[17,19,21,23].map(s=>`<button data-s="${s}" class="${st.size===s?"on":""}">${s}</button>`).join("")}</div></div>
     <div class="setrow"><span>Dein Name</span><input id="nm" value="${esc(st.name||"")}" placeholder="optional" style="background:var(--glass-lo);border:1px solid var(--line);border-radius:999px;padding:7px 12px;width:140px;font-size:16px;outline:0"></div>
@@ -1182,7 +1190,9 @@ function paperBox(p,b){
   return `<div class="paper glass"><div class="k">Das Paper</div><div class="zi">${esc(p.zitat||"")}</div><div class="pm">${[p.feld,p.typ,p.jahr].filter(Boolean).map(esc).join(" · ")}${p.geprueft?` · <span class="ok">✓ DOI geprüft</span>`:""}</div>${link?`<a href="${esc(link)}" target="_blank" rel="noopener">Original lesen${p.doi?": doi:"+esc(p.doi):""} ↗</a>`:""}</div>`;
 }
 /* ================= Nachrichten (news.json, alle 3 Std. per GitHub Actions) ================= */
-const API="https://tiefgang-api.teamplaner.workers.dev";
+const API_PUB="https://tiefgang-api.teamplaner.workers.dev";
+const NEWHOST=/\.workers\.dev$/.test(location.hostname)||location.port==="8787";
+const API=NEWHOST?location.origin+"/api":API_PUB;
 let NEWS=null,_newsAt=0,_KW=null;
 function tfetch(u,o={},ms=7000){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);return fetch(u,{...o,signal:c.signal}).finally(()=>clearTimeout(t));}
 // Schlagwort-Abgleich: Wörter, die für höchstens 3 Titel typisch sind; Nachname 3, Titelwort 2, sonst 1
@@ -1316,7 +1326,7 @@ document.addEventListener("click",e=>{const r=e.target.closest("#ttsrate [data-r
 const AUD={items:[],ids:new Set()};
 try{const c=JSON.parse(localStorage.getItem("tiefgang.aud")||"[]");AUD.items=c;AUD.ids=new Set(c.map(x=>x.id));}catch(_){}
 async function loadAud(){if(!API.startsWith("https"))return;try{const r=await tfetch(API+"/audio/list?k="+devKey());if(!r.ok)return;const d=await r.json();AUD.items=d.items||[];AUD.ids=new Set(AUD.items.map(x=>x.id));localStorage.setItem("tiefgang.aud",JSON.stringify(AUD.items));if(["hoeren","book"].includes(route.v)){const y=window.scrollY;render();window.scrollTo(0,y);}}catch(_){}}
-const feedUrl=()=>API+"/feed/"+devKey()+".xml";
+const feedUrl=()=>API_PUB+"/feed/"+devKey()+".xml";
 function audState(x){return x.state==="done"?"Fertig":x.state==="running"?"Wird gerade eingesprochen":x.state==="failed"?"Fehlgeschlagen, wird erneut versucht":"In der Warteschlange";}
 function fmtDur(s){s=+s||0;const m=Math.round(s/60);return m+" Min";}
 function audBlock(){const d=AUD.items.filter(x=>x.state==="done").length,w=AUD.items.length-d;

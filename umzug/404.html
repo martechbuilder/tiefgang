@@ -1,0 +1,25 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#00040a"><title>Deep Dive ist umgezogen</title>
+<style>html,body{margin:0;min-height:100%;background:radial-gradient(120% 80% at 50% 0%,#03263a,#00040a 65%) fixed;color:#e5f2f8;font:16px/1.5 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:420px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 48px) 24px 48px}
+h1{font:300 40px/1.1 ui-serif,Georgia,serif;margin:0 0 10px;background:linear-gradient(180deg,#f0fbff,#8fdcf2 60%,#3fa6cf);-webkit-background-clip:text;background-clip:text;color:transparent}
+p,li{color:#a3c4d3}.code{font:600 46px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.18em;text-align:center;padding:22px 10px;margin:22px 0 8px;border-radius:22px;background:rgba(10,40,60,.55);border:1px solid rgba(150,226,246,.26);color:#fff}
+.small{font-size:13px;color:#7b9fb1;text-align:center}ol{padding-left:20px}li{margin:8px 0}a{color:#8fdcf2}
+.btn{display:block;text-align:center;margin-top:22px;padding:15px;border-radius:999px;background:linear-gradient(180deg,#f0fbff,#9edcf0);color:#021827;font-weight:700;text-decoration:none}
+button.link{background:none;border:0;color:#8fdcf2;font:inherit;font-size:14px;margin:6px auto 0;display:block}</style></head>
+<body><main><h1>Deep Dive ist umgezogen</h1><p>Die App gibt es nur noch unter einer neuen, passwortgeschützten Adresse.</p>
+<div id="box"><p class="small">Einen Moment …</p></div>
+<ol><li>Neue Adresse in Safari öffnen und anmelden.</li><li>Teilen, dann „Zum Home-Bildschirm“. Das alte Symbol kannst du danach löschen.</li><li id="step3">In der neuen App auf der Startseite oder in den Einstellungen den Code eingeben.</li></ol>
+<a class="btn" href="https://deepdive.teamplaner.workers.dev/">Zur neuen Adresse</a></main>
+<script>
+const NEU="https://deepdive.teamplaner.workers.dev";
+async function code(){const box=document.getElementById("box");let v1=null,aud=null,qa=null;
+  try{v1=localStorage.getItem("tiefgang.v1");aud=localStorage.getItem("tiefgang.aud");qa=localStorage.getItem("tiefgang.qa");}catch(_){}
+  if(!v1){box.innerHTML='<p>Auf diesem Gerät ist kein Fortschritt gespeichert. Du kannst direkt neu starten.</p>';document.getElementById("step3").remove();return;}
+  try{const r=await fetch(NEU+"/umzug",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({v1,aud,qa})});const d=await r.json();
+    if(!r.ok)throw 0;box.innerHTML='<p>Dein Umzugscode für Fortschritt, Tauchtiefe und Hörliste:</p><div class="code">'+d.code+'</div><p class="small">Gilt 24 Stunden und nur einmal.</p><button class="link" onclick="code()">Neuen Code erzeugen</button>';}
+  catch(_){box.innerHTML='<p>Der Code konnte gerade nicht erzeugt werden. Bitte später nochmal öffnen.</p><button class="link" onclick="code()">Nochmal versuchen</button>';}}
+code();
+if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
+if(window.caches)caches.keys().then(k=>k.forEach(c=>caches.delete(c))).catch(()=>{});
+</script></body></html>
