@@ -603,6 +603,21 @@ input,textarea,select{font-size:16px}
 .cat .pr{left:50%;transform:translateX(-50%);bottom:auto;top:73px;border-radius:2px;max-width:56px}
 .toast{bottom:calc(var(--sb) + 84px)}
 
+/* Lesbarkeit (Review Carsten, 27.11.): ruhigere Schrift, mehr Luft */
+.rin .body p{line-height:1.7;margin:0 0 1.45em;color:#d3e2ea;letter-spacing:.004em;text-wrap:pretty;font-optical-sizing:auto}
+.rin .lead{line-height:1.6;margin:0 0 1.6em;text-wrap:pretty}
+.rin h2{margin:10px 0 30px;text-wrap:balance}
+.rin .body h3{margin:1.9em 0 .7em;text-wrap:balance}
+.summary,.ta,.tkw,.deb .cl,.tr-q{text-wrap:pretty}
+.summary{line-height:1.65;padding:20px 22px}
+.ta{line-height:1.6}
+.htitle,.hero h1,.snack .ttl,.h-big{text-wrap:balance}
+.row .s,.card .s,.news .s,.stu .be,.qa .a,.deb .more{line-height:1.5}
+.row .s,.card .s{font-size:14px}
+.cont .s,.chap .mm,.card .m,.row .m,.cat .c{font-size:12.5px}
+.stat b,.statline b,#rdm,.ring .rp,.ptime{font-variant-numeric:tabular-nums}
+.h-sec{margin-top:42px}
+.pill+.pill,.cont+.cont{margin-top:12px}
 </style>
 </head>
 <body>
@@ -862,7 +877,7 @@ function vHome(){
     ${cont?pill(I.shuffle,"Ein Häppchen lesen","Zwei Minuten, zufällig aus allem Neuen",'data-go="snack"'):""}
     ${pill(I.target,"Erkenne die Taktik",DEBN()+" Fälle aus echten Debatten",'data-tab="trainer" onclick="hist.length=0;go({v:\'trainer\'},false)"')}
   </div>
-  <button class="fisch-home" id="fhome" aria-label="Fisch"><i class="fisch p2"></i><span class="say" id="fsay"></span></button><div class="statline"><span><b>${streak()}</b> Tage in Folge</span><span><b>${S.days[today()]||0}</b> heute</span><span><b>${Math.round(readN/Math.max(1,totalCh)*100)} %</b> von ${totalCh}</span></div>${zoneLine()}
+  <button class="fisch-home" id="fhome" aria-label="Fisch"><i class="fisch p2"></i><span class="say" id="fsay"></span></button><div class="statline"><span><b>${streak()}</b> ${streak()===1?"Tag":"Tage"} in Folge</span><span><b>${S.days[today()]||0}</b> heute</span><span><b>${Math.round(readN/Math.max(1,totalCh)*100)} %</b> von ${totalCh}</span></div>${zoneLine()}
   ${qaBlock()}${audBlock()}${newsBlock()}
   <div class="h-sec"><h2>Für heute</h2><button data-tab="discover" onclick="hist.length=0;go({v:'discover'},false)">Alle</button></div>
   <div class="hscroll">${picks.map(bookCard).join("")}</div>
@@ -1440,7 +1455,7 @@ function intro(){let seen=false;try{seen=sessionStorage.getItem("tg.intro");sess
 /* Scroll-Szene auf Heute: Cover dreht und sinkt mit, Mini-Kopf mit Tiefenmesser */
 function scene(){const y=Math.max(window.scrollY||0,document.body.scrollTop||0);const v=route.v;const mh=document.getElementById("minihead");
   // Tiefenmesser auf jeder Seite, Anker sinkt mit dem Fortschritt der Seite
-  if(mh){const on=y>140;mh.classList.toggle("on",on);if(on){document.getElementById("mdepth").textContent=Math.round(y*1.6).toLocaleString("de-DE")+" m";
+  if(mh){const on=y>140;mh.classList.toggle("on",on);if(on){{const md=document.getElementById("mdepth"),t=(S.dm||0).toLocaleString("de-DE")+" m";if(md.textContent!==t)md.textContent=t;}
     const H=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight)-innerHeight;const p=H>0?Math.min(1,y/H):0;document.getElementById("mrope").style.height=(3+p*15).toFixed(1)+"px";}}
   if(RM||v!=="home")return;const hc=document.querySelector(".hcov");if(hc){const p=Math.min(1,y/420);hc.style.transform=`perspective(700px) rotateY(${p*-28}deg) rotateX(${p*8}deg) scale(${1-p*.18})`;hc.style.opacity=1-p*.6;}
   const rg=document.querySelector(".ring svg");if(rg){rg.style.rotate=(y*.25)+"deg";}
