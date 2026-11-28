@@ -1,4 +1,4 @@
-const CACHE = "tiefgang-202611271105";
+const CACHE = "tiefgang-202611281414";
 const CORE = ["./", "./index.html", "./content.js", "./manifest.json",
   "./icons/icon-nacht-180.png", "./icons/icon-glas-180.png", "./icons/icon-hell-180.png", "./icons/icon-getoent-180.png",
   "./icons/preview-nacht.png", "./icons/preview-glas.svg", "./icons/preview-hell.svg", "./icons/preview-getoent.svg",
@@ -35,6 +35,8 @@ self.addEventListener("fetch", e => {
   if (req.headers.has("range") || /\.(m4a|mp3)$/.test(new URL(req.url).pathname)) return;
   // sw.js selbst nie aus dem Cache (sonst meldet "Nach Updates suchen" fälschlich "aktuell")
   if (new URL(req.url).pathname.endsWith("/sw.js")) return;
+  // Server-Schnittstellen (Nachrichten, Artikel, Fragen, Hörliste) und Login immer live, nie aus dem Cache
+  if (/^\/(api|login|logout|umzug)(\/|$)/.test(new URL(req.url).pathname)) return;
   // Seite: Netz mit 3 s Timeout, sonst Cache (neue Version kommt beim nächsten Start)
   if (req.mode === "navigate") {
     e.respondWith(new Promise(resolve => {
